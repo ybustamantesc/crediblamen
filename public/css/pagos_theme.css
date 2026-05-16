@@ -1,0 +1,101 @@
+/* Pagos - elegant / futuristic accents built on branding.css variables */
+:root{--pg-bg:linear-gradient(180deg,#fbfdff,#f6fbff);}
+.pagos-page{padding-top:.25rem;}
+.pagos-page .pg-topbar{padding:.2rem 0 .35rem;border-bottom:1px solid rgba(16,67,107,.08);}
+.pagos-page .pg-search-hint{display:flex;align-items:center;gap:.45rem;color:#255b88;background:#eef7ff;border:1px solid #d4e7fb;border-radius:9px;padding:.45rem .7rem;font-size:.84rem;font-weight:600;}
+.pagos-page .pg-toolbar{border:1px solid #e6edf7;border-radius:10px;background:#f8fbff;padding:10px 12px;}
+.pagos-page .pg-summary-panel{border:1px solid #dde9f5;border-radius:14px;background:linear-gradient(180deg,#ffffff,#f7fbff);padding:12px 12px 8px;box-shadow:0 10px 28px rgba(2,18,28,.05);}
+.pagos-page .pg-summary-title{font-size:.76rem;font-weight:800;letter-spacing:.5px;text-transform:uppercase;color:#4a6d92;margin-bottom:10px;}
+.pagos-page .pg-kpi{border:1px solid #e6edf7;border-radius:10px;background:#f8fbff;padding:10px 12px;height:100%;}
+.pagos-page .pg-kpi .label{font-size:.78rem;color:#54739a;text-transform:uppercase;letter-spacing:.4px;font-weight:700;margin-bottom:3px;}
+.pagos-page .pg-kpi .value{font-size:1.04rem;color:#13315c;font-weight:700;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;}
+.pagos-page .pg-kpi.pg-kpi-soft-warning{background:linear-gradient(180deg,#fffaf0,#fffdf8);border-color:#f0d9a8;}
+.pagos-page .pg-kpi.pg-kpi-soft-warning .value{color:#8d6400;}
+.pagos-page .pg-kpi.pg-kpi-soft-danger{background:linear-gradient(180deg,#fff4f4,#fffdfd);border-color:#f0c5c5;}
+.pagos-page .pg-kpi.pg-kpi-soft-danger .value{color:#a83a3a;}
+.pagos-page .card-header{ background: linear-gradient(90deg,var(--logo-dark),var(--logo-teal)); color:#fff; border-bottom:none; }
+.pagos-page .card.chart-card{ border:1px solid rgba(7,48,72,0.04); box-shadow:0 18px 48px rgba(2,18,28,0.08); border-radius:1rem; }
+.pagos-page .card .card-body{ background:transparent; }
+.pagos-page h4.page-title{ color:var(--logo-dark); font-weight:800; letter-spacing:0.4px; }
+.pagos-page .subtitle{ color:rgba(7,48,72,0.6); }
+.pagos-page .list-group .list-group-item{ background: linear-gradient(90deg, rgba(255,255,255,0.96), rgba(250,250,250,0.98)); border:1px solid rgba(7,48,72,0.03); border-radius:.5rem; margin-bottom:.45rem; transition: transform .12s ease, box-shadow .12s ease; }
+.pagos-page .list-group .list-group-item:hover{ transform: translateY(-3px); box-shadow:0 12px 36px rgba(7,48,72,0.06); }
+.pagos-page label.solicitud-field-label{ color:rgba(7,48,72,0.75); font-weight:700; text-transform:uppercase; font-size:0.8rem; }
+.pagos-page .form-control:focus{ box-shadow:0 0 0 0.18rem rgba(0,163,137,0.08); border-color:var(--logo-teal); }
+.pagos-page .btn-pagar{ background: linear-gradient(90deg,#00b3ff,#007aa3); color:#fff; box-shadow:0 10px 36px rgba(0,163,137,0.08); border:none; }
+.pagos-page .btn-pagar:hover{ transform: translateY(-3px); }
+.pagos-page .btn-regresar{ background: transparent; border:1px solid rgba(7,48,72,0.06); color:var(--logo-dark); }
+.pagos-page .sidebar-card{ background: linear-gradient(180deg,#ffffff,#fbfdff); border-radius:.95rem; border:1px solid rgba(7,48,72,0.03); padding:0.6rem; }
+.pagos-page .muted-note{ color:var(--muted); }
+
+.pagos-page .select2-container--default .select2-selection--single{
+	height: 38px;
+	border: 1px solid #dce7f3;
+	border-radius: 8px;
+	background: #fff;
+}
+.pagos-page .select2-container--default .select2-selection--single .select2-selection__rendered{
+	line-height: 36px;
+	color:#1b466d;
+	font-size:.88rem;
+}
+.pagos-page .select2-container--default .select2-selection--single .select2-selection__arrow{
+	height: 36px;
+}
+
+.modal-pago-provisional .modal-content{
+	border:1px solid #dce8f4;
+	border-radius:12px;
+	overflow:hidden;
+	min-height: 560px;
+}
+.modal-pago-provisional .modal-body{
+	background:#f9fbff;
+	padding-top: 1.15rem;
+	padding-bottom: 1.25rem;
+}
+.modal-pago-provisional .solicitud-field-label{
+	display:block;
+	margin-bottom:.35rem;
+	color:#355d83;
+	font-size:.76rem;
+	font-weight:700;
+	letter-spacing:.4px;
+	text-transform:uppercase;
+}
+.modal-pago-provisional .form-control{
+	height:38px;
+	border:1px solid #cfdff0;
+	border-radius:8px;
+	font-size:.88rem;
+	color:#123b63;
+	background:#fff;
+}
+.modal-pago-provisional .modal-title{
+	font-weight:700;
+	letter-spacing:.2px;
+}
+.modal-pago-provisional .close{
+	opacity:.9;
+}
+.modal-pago-provisional .close:hover{
+	opacity:1;
+}
+
+@media(max-width:991px){
+	.pagos-page .card.chart-card .card-body{padding:.95rem;}
+	.modal-pago-provisional .modal-content{min-height: 520px;}
+}
+
+@media(max-width:767px){
+	.pagos-page h4.page-title{font-size:1.15rem;}
+	.pagos-page .subtitle{display:block;margin-top:2px;font-size:.78rem;}
+	.pagos-page .btn-pagar{width:100%;font-weight:700;}
+	.pagos-page .btn-regresar{padding:.28rem .6rem;}
+	.pagos-page .pg-search-hint{font-size:.77rem;}
+	.pagos-page .pg-summary-panel{padding:10px 10px 6px;}
+	.pagos-page .pg-toolbar{padding:8px 9px;}
+	.modal-pago-provisional .modal-dialog{margin:.35rem;}
+	.modal-pago-provisional .modal-footer .btn{flex:1;}
+	.modal-pago-provisional .modal-content{min-height:auto;}
+}

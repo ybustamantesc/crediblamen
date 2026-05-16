@@ -1,0 +1,160 @@
+Codigo,Denominacion,Cargos,Abonos,Saldo Actual
+11010101201,CAJA PRINCIPAL C$, -   , -   , -   
+11010101301,CAJA PRINCIPAL U$, 1'963'136.46 , 1'965'432.07 , 41'021.36 
+11020101301,Depósitos en Cuenta Corriente con intereses ME (LA FISE), -   , -   , -   
+11020102301,Depósito en Cuenta Corriente Sin Interes ME (LA FISE), 2'103'139.22 , 2'276'330.58 , 2'343'299.35 
+11040101201,Caja Chica, 27'069.80 , 27'069.80 , 7'630.01 
+14010101101,Cartera de Créditos vigentes (Préstamos Microcreditos) MN con MV, -   , -   , -   
+14010101301,Cartera sobre saldos créditos vigentes (Prestamos Microcreditos) U$, 1'812'152.42 , 1'812'380.59 , 8'147'145.48 
+14010201301,Cartera sobre saldos créditos vigentes (Prestamos Personales) U$, 13'800.40 , 53'045.17 , 726'467.16 
+14010301301,Cartera sobre saldos créditos vigentes (Prestamos Hipotecarios) U$, 73'429.89 , 50'028.06 , 1'521'754.32 
+14030101301,Cartera de Créditos Reestructurado (Préstamos Microcreditos) MN con MV, 15'447.76 , 24'559.89 , 191'697.08 
+14040101101,Cartera de Créditos vencidos (Préstamos Microcreditos) MN con MV, 474'444.24 , 708'301.87 , 445'134.67 
+14040201301,Cartera sobre saldos créditos vencidos (Prestamos Personales) U$, -   , 10'126.99 , -   
+14040301301,Cartera sobre saldos créditos vencidos (Prestamos Hipotecarios) U$, -   , 100'844.28 , -   
+14050101101,Cartera de Créditos cobro judicial (Préstamos Microcreditos) MN con MV, -   , -   , 107'895.19 
+14060101101,Intereses y Comisiones por Cobrar de Créditos Vigentes (Microcreditos) MN con MV, -   , -   , -   
+14060101301,Intereses y Comisiones por Cobrar Créditos Vigentes ( Microcréditos) U$, 614'431.28 , 555'330.57 , 68'488.91 
+14060102301,Intereses y Comisiones por Cobrar Creditos Vigentes (Personales) U$, 4'691.21 , -   , 4'691.21 
+14060103301,Interes y Comisiones por Cobrar Creditos Vigentes (Hipotecarios) U$, 16'004.45 , -   , 16'004.45 
+14060301301,Intereses y Comisiones por Cobrar Creditos Reestructurado  (Microcreditos) U$, -   , -   , -   
+14060401301,Intereses y Comisiones por Cobrar Creditos Vencidos (Microcreditos)U$, 22'252.19 , -   , 22'252.19 
+14080101101,Provisión para Incobrabilidad Cartera Vigente (Microcreditos) MN con MV, -   , -   , -   
+14080101301,Provisión para Incobrabilidad Cartera Vigente (Microcreditos) U$, 568'027.14 , 162'646.64 ,-487'449.43 
+15010101101,Bienes recibidos en Pago y adjudicados (Bienes Muebles e Inmuebles), -   , -   , -   
+15010901201,Otros Bienes Recibido en Recuperación de Créditos, -   , -   , -   
+15010101301,Bienes recibidos en Pago y adjudicados (Bienes Muebles e Inmuebles), -   , -   , 33'495.37 
+16020101101,Anticipos proveedores MNL, -   , -   , -   
+16020101201,Anticipos proveedores (Aporte CONAMI), -   , 3'502.92 , 3'502.93 
+16020101202,Anticipos proveedores (EFRAIN BLANDON), 17'710.78 , 17'710.78 , 10'987.29 
+16020101203,Anticipos proveedores (Varios), -   , -   , 65'923.74 
+16020601101,Cuentas por Cobrar al Personal, -   , -   , -   
+16020601201,Cuentas por Cobrar al Personal, 4'962.43 , 27'827.99 , 30'485.99 
+16020901201,Otras partidas pendientes de cobro, -   , 10'987.29 , 129'673.46 
+18030101201,MOBILIARIOS, -   , 1'815.92 , 84'832.63 
+18030201201,EQUIPOS , 19'845.04 , 5'152.67 , 64'914.17 
+18040101201,Equipos de computación, -   , 3'263.24 , 72'138.33 
+18050101201,Vehiculos, -   , -   , -   
+19010301201,Impuesto Pagados por Anticipado, 5'044.60 , -   , 54'240.96 
+19010601201,Mantenimientos Pagados Por Anticipado, -   , -   , -   
+19110101201,Gastos de Organización e Instalación, -   , -   , 19'398.14 
+19110201201,Mejoras a Propiedades Tomadas en Alquiler, -   , -   , -   
+19110801201,Licencias y permisos, 33'964.28 , 33'964.27 , 19'044.64 
+19110801202,Membresias, -   , -   , 4'211.80 
+19110801203,Afiliaciones y suscripciones, -   , -   , 4'211.79 
+19110801204,Licencia de Software, 17'153.72 , -   , 17'153.72 
+19110901201,Amortizacion acumulada de gastos de Organizacion e Instalacion, -   , 815.83 ,-13'053.30 
+19110909201,Amortizacion acumulada de gastos de Licencias y permisos, -   , 793.53 ,-2'380.59 
+19110909202,Amortizacion acumulada de gastos de Membresias, -   , 350.98 ,-701.96 
+19110909203,Amortizacion acumulada de gastos de Afiliaciones y suscirpciones, -   , -   , -   
+22029901301,OTRAS OBLIGACIONES A PLAZO MAYORES A UN AÑO (MEYRA LINA BLANDON), -   , -   ,-163.13 
+26010401201,Aportaciones Laborales Retenidas por Pagar (INSS Laboral), 18'087.43 , 18'260.33 ,-16'417.30 
+26010501201,Remuneraciones por Pagar, 214'299.87 , 214'299.88 , -   
+26019901201,Cuentas por Pagar Diversas , -   , 3'478.21 ,-3'478.21 
+26040101201,Impuesto sobre la renta por pagar, -   , -   , -   
+26040201101,IMPUESTOS MÍNIMO DEFINITIVO, -   , -   , -   
+26040201201,IMPUESTOS MÍNIMO DEFINITIVO, -   , -   , -   
+26040301201,Impuestos municipales por pagar (Basura), 750.00 , 750.00 ,-6'154.85 
+26040301202,Impuestos municipales por pagar (Matricula), -   , -   , -   
+26040301203,Impuestos municipales por pagar (S/I), 5'044.60 , 11'267.37 , 295.69 
+26050101201,Impuesto S/Renta en la Fuente (2% Y 10%), 20'768.46 , 6'393.65 ,-10'018.17 
+26050101202,Impuesto S/Renta en la Fuente (No Domiciliado 15% ), 5'109.53 , 5'109.53 ,-4'368.51 
+26050301101,Impuesto S/Renta sobre Salarios, 19'682.41 , 20'015.85 ,-22'603.30 
+26050301201,Impuesto S/Renta sobre Salarios, -   , -   , -   
+26050401201,Impuestos municipales, -   , -   , -   
+26050901201,OTROS IMPUESTOS, -   , -   , -   
+27010201201,Provisiones para Prestaciones Laborales (Aguinaldos), 1'507.22 , 24'743.25 ,-155'563.40 
+27010201202,Provisiones para Prestaciones Laborales (Vacaciones), 29'285.03 , 16'244.72 ,-66'294.34 
+27010201203,Provisiones para Prestaciones Laborales (Indemnización), -   , 16'244.72 ,-353'802.30 
+27010401101,Provisiones para Otros Gastos, 34'624.63 , 43'249.61 ,-43'249.61 
+27010401202,Provisiones para Otros Gastos (Internet), -   , -   , -   
+27010701101,Aportaciones Patronales Por Pagar, -   , -   , -   
+27010701201,Aportaciones Patronales por Pagar (INSS Patronal), 55'554.21 , 53'732.78 ,-40'098.30 
+27010701202,Aportaciones Patronales por Pagar (INATEC), 5'167.84 , 5'217.24 ,-6'527.79 
+27010901201,Otras Provisiones (Canasta Navideña), -   , 2'136.30 ,-22'535.48 
+27030101201,Reserva para Retiro, -   , -   , -   
+27030201101,RESERVAS POR PRIMAS DE ANTIGÜEDAD, -   , -   , -   
+29290103201,Otras operaciones pendientes de imputacion, 90'428.33 , 105'490.44 ,-15'413.71 
+31010101201,Capital Sucrito Ordinario, -   , -   ,-4'500'000.00 
+32010301201,Capital Adicional, -   , -   , -   
+32320103031,Donaciones pendientes de capitalizacion, -   , -   ,-3'479'308.50 
+38010101201,Utilidadades Acumuladas con Acuerdo de Distribución, -   , -   ,-4'026'425.24 
+39010101201,Utilidades del ejercicio, 91'898.94 , -   ,-981'984.61 
+41060101201,Intereses y comisiones Créditos Vigentes (Préstamos Microcréditos), -   , 598'983.57 ,-5'988'401.24 
+41060101202,Interés moratorios Vigentes (Prestamos Microcreditos), 183.12 , 3'103.60 ,-33'607.71 
+41060101203,Ingresos por Comisiones  de Desembolsos  (Préstamos Microcréditos), 915.61 , 6'958.62 ,-77'277.26 
+41060201201,Intereses y comisiones Créditos Vigentes (Préstamos Personales), -   , -   , -   
+41060201202,Interés moratorios Vigentes (Prestamos Personales), -   , -   , -   
+41080101201,Intereses y comisiones Créditos Vigentes (Préstamos Microcréditos Reestructurados), -   , -   , -   
+41080101202,Interés moratorios Vigentes (Prestamos Microcreditos Reestructurados), -   , -   , -   
+41090101201,Intereses y comisiones Créditos Vencidos (Préstamos Microcréditos), -   , 56'795.08 ,-132'652.12 
+41080101202,Interés moratorios Vencidos (Prestamos Microcreditos), -   , -   , -   
+41090201201,Intereses y comisiones Créditos Vencidos (Préstamos Personales), -   , -   , -   
+41090201202,Interés moratorios Vencidos (Prestamos Personales), -   , -   , -   
+41100101201,Intereses y comisiones Créditos Cobro Judicial (Préstamos Microcréditos), -   , -   , -   
+42030101201,Disminucion de provision para cartera de creditos, -   , -   ,-54'713.04 
+43020501201,OTROS INGRESOS GENERADOS POR OTROS ACTIVOS, -   , -   , -   
+43430301101,Ingresos Operativos varios, 36'148.55 , 353.99 ,-95'237.25 
+45450101101,Ingresos por efectos cambiarios (Fondos disponibles), 91.56 , 753.02 ,-987'084.56 
+51040501201,CARGOS POR PRESTAMOS DE OTRAS INSTITUCIONES DEL PAIS, -   , -   , -   
+51040801301,Cargos por Préstamos con Otras Instituciones Financieras del Pais Mayor a un año, -   , -   , -   
+51040901201,CARGOS POR OTRAS OBLIGACIONES POR FINANCIAMIENTOS, -   , -   , 62'505.59 
+52010101201,Constitución de Provisión por Cartera de Créditos, 153'288.52 , -   , 189'676.49 
+52020201201,Saneamiento sobre intereses y comisiones de cartera de credito, 1'033.90 , 631.04 , 402.87 
+53010102201,Comisiones por Giros y Transferencias, -   , -   , 5'933.14 
+53020401201,Amortización de Software, -   , -   , 1'403.81 
+54010101201,Sueldos de Personal Permanente, 248'109.97 , 29'285.04 , 2'430'743.66 
+54010102301,Sueldos de Personal Contratado, -   , -   , -   
+54010103301,Sobresueldos, -   , -   , -   
+54010104201,Comisiones, 12'751.69 , -   , 176'865.33 
+54010106201,Tiempo Extraordinario, -   , -   , -   
+54010107201,Viaticos , 3'090.00 , -   , 31'676.94 
+54010108201,Aguinaldos, 23'609.74 , 373.71 , 179'077.85 
+54010109201,Vacaciones, 16'244.72 , -   , 174'803.27 
+54010110201,Indemnización , 16'244.72 , -   , 171'182.78 
+54010111201,Jubilaciones y/o Retiros, -   , -   , -   
+54010113201,Bonificaciones e Incentivos (Celebraciones), 2'136.30 , -   , 31'112.05 
+54010113202,Bonificaciones e Incentivos (Convenio), 20'203.92 , 10'714.20 , 107'448.80 
+54010115201,Seguro Social Aporte Patronal, 53'732.78 , -   , 586'361.75 
+54010116201,Aporte al Instituto Nacional Tecnológico (INATEC), 5'217.24 , -   , 56'164.08 
+54010117201,Gastos de cafeteria, 1'665.37 , -   , 10'846.87 
+54010119201,Uniformes, -   , 1'300.00 , 21'085.12 
+54010121201,Capacitación , -   , -   , 14'832.84 
+54010199201,Otros Gastos de Personal , -   , -   , 7'498.94 
+54020301201,Servicios de Información, 3'662.43 , 3'662.43 , 43'949.16 
+54029901201,Honorarios profesionales, 40'241.46 , -   , 506'594.90 
+54029901202,Otros Servicios Contratados (Servicio de GPS ), 1'872.20 , -   , 22'778.17 
+54030101201,Pasajes y Traslados, -   , -   , -   
+54030201201,FLETES, 200.00 , 100.00 , 521.18 
+54030401201,"Combustible, Lubricantes y Otros", 15'372.10 , -   , 147'187.36 
+54030401301,"Combustible, Lubricantes y Otros", -   , -   , -   
+54030901201,Depreciacion de Vehiculos, 5'127.40 , -   , 48'310.01 
+54031001201,"Telefonos, Telefax, fax (Celulares)", 6'722.00 , -   , 72'217.98 
+54031001202,"Telefonos, Telefax, fax", 920.28 , -   , 8'398.00 
+54039901201,Otros Gastos de Transporte y Comunicación (Internet), 2'527.08 , -   , 20'314.67 
+54040301203,Mantenimiento y reparación de equipo de oficina y computo, -   , -   , 41'919.80 
+54040401201,Agua, 314.82 , 2'173.25 , 7'246.00 
+54040401202,Energía eléctrica, 1'697.00 , -   , 17'724.96 
+54040501201,Alquileres de Inmuebles, 34'063.53 , -   , 381'284.61 
+54040801201,Depreciación  de Equipos y Mobiliario, 2'321.42 , -   , 24'176.56 
+54040801301,Depreciación  de Equipos y Mobiliario, -   , -   , -   
+54040901201,Depreciación de Equipos de cómputo, 3'626.42 , -   , 30'477.53 
+54050101201,"Impuestos, Multas y Tasas Municipales", 6'038.39 , -   , 70'408.47 
+54050401201,Amortizacion de gastos de organización e instalacion, 815.83 , -   , 8'974.14 
+54050601201,Amortizaciones de otros cargos diferidos, 1'144.51 , -   , 3'082.55 
+54050701201,"Papeleria, utiles y otros materiales de Limpieza", 11'541.13 , -   , 161'869.77 
+54050701202,"Papeleria, utiles y otros materiales (Materiales de oficina)", 1'732.96 , -   , 27'113.87 
+54050701301,"Papeleria, utiles y otros materiales de Limpieza", -   , -   , -   
+54050801201,Gastos Legales, -   , -   , 88'713.46 
+54050901201,Suscripciones y afiliaciones, -   , -   , 6'317.69 
+54051001201,"Propaganda, Publicidad y Promociones", 15'473.05 , -   , 27'218.88 
+54059901201,Otros Gastos Generales (Beneficios a Clientes por Pronto pago), 10'332.11 , -   , 124'288.80 
+54059901202,Otros Gastos Generales (Gastos no deducibles), 33'713.79 , 125.69 , 118'916.12 
+54059901203,Otros Gastos Generales, -   , -   , -   
+54059901301,Otros Gastos Generales, 31'753.04 , -   , 61'947.43 
+55303091101,Gastos operativos varios, -   , -   , -   
+55550101101,Gastos por Efectos Cambiarios (Fondos Disponibles), 2'208.59 , 24'380.00 , 16'615.82 
+55114110901,Otros gastos financieros diversos, -   , -   , -   
+56010101201,Aportes al Presupuesto de la CONAMI, 3'502.92 , -   , 38'798.50 
+63010101201,Resultado Neto del Ejercicio, -   , -   , -   
+63010201201,Resultado Neto del Ejercicio, -   , 91'898.94 , 981'984.61 

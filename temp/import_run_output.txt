@@ -1,0 +1,148 @@
+
+Warning: mysqli::real_connect(): (HY000/2002): No se puede establecer una conexi+¦n ya que el equipo de destino deneg+¦ expresamente dicha conexi+¦n.
+ in C:\xampp\htdocs\Crediblamen\temp\import_run.php on line 16
+ERROR: No se puede establecer una conexi+¦n ya que el equipo de destino deneg+¦ expresamente dicha conexi+¦n.
+
+import_ok=NO
+errors=mysql.exe error code: 1
+stg_rows=3388
+prestamos_csv=212
+prestamos_importados=0
+
+import_ok=NO
+errors=mysql.exe error code: 1
+
+import_ok=NO
+errors=mysql.exe error code: 1
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito3.csv	1024	43	43
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito.csv	760	36	36
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito1.csv	757	29	29
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito2.csv	760	36	36
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito4.csv	1993	88	86
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito5.csv	2350	106	106
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito6.csv	2712	118	118
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito7.csv	2830	145	145
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito8.csv	3031	158	158
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito9.csv	3310	159	159
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito10.csv	3723	176	176
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito11.csv	3869	201	201
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito12p.csv	3378	201	201
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito13p.csv	2549	148	148
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito13p1.csv	2549	148	148
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito14p.csv	2549	148	148
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito13p1.csv	3319	205	204
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito14p.csv	3626	227	227
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito16p.csv	3432	211	211
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito17p.csv	3492	220	220
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito18p.csv	470	25	25
+
+import_ok=SI
+1
+1
+csv_file	stg_rows	stg_prestamos	imported_prestamos
+c:/xampp/htdocs/Conta/temp/CargaCredito19p2.csv	5380	153	153

@@ -1,0 +1,34 @@
+14040101101	Cartera de Cr?ditos vencidos (Pr?stamos Microcreditos) MN con MV	NULL	-10853638.16	-10853638.16
+26010401201	Aportaciones Laborales Retenidas por Pagar (INSS Laboral)	acreedora	-21889.56	21889.56
+26040301201	Impuestos municipales por pagar (Basura)	acreedora	16964.88	-16964.88
+26040301203	Impuestos municipales por pagar (S/I)	acreedora	-2540.03	2540.03
+26050101201	Impuesto S/Renta en la Fuente	acreedora	-6920.31	6920.31
+26050101202	Impuesto S/Renta en la Fuente (No Domiciliado 15% )	acreedora	-5109.52	5109.52
+26050301101	Impuesto S/Renta sobre Salarios	acreedora	61710.10	-61710.10
+26050301201	Impuesto S/Renta sobre Salarios	acreedora	-30771.30	30771.30
+27010201201	Provisiones para Prestaciones Laborales (Aguinaldos)	acreedora	-30019.67	30019.67
+27010201202	Provisiones para Prestaciones Laborales (Vacaciones)	acreedora	33391.25	-33391.25
+27010201203	Provisiones para Prestaciones Laborales (Indemnizaci?n)	acreedora	-403374.30	403374.30
+27010401101	Provisiones para Otros Gastos	acreedora	-35577.12	35577.12
+27010701201	Aportaciones Patronales por Pagar (INSS Patronal)	acreedora	-56870.78	56870.78
+27010701202	Aportaciones Patronales por Pagar (INATEC)	acreedora	-8088.02	8088.02
+27010901201	Otras Provisiones (Canasta Navide?a)	acreedora	-2136.36	2136.36
+29290103201	Otras operaciones pendientes de imputacion	NULL	-351.60	-351.60
+32010301201	Capital Adicional	acreedora	-3479308.50	3479308.50
+39010101201	Utilidades del ejercicio	acreedora	-1109327.73	1109327.73
+41060101201	Intereses y comisiones Cr?ditos Vigentes (Pr?stamos Microcr?ditos)	acreedora	19237952.65	-19237952.65
+41060101202	Inter?s y Comisiones Pr?stamos Microcr?ditos (Recargos cobrados por mora de clientes)	acreedora	-38782.80	38782.80
+41060101203	Ingresos por Comisiones  de Desembolsos  (Pr?stamos Microcr?ditos)	acreedora	450491.60	-450491.60
+41090101201	Intereses y comisiones Cr?ditos Vencidos (Pr?stamos Microcr?ditos)	NULL	-137078.90	-137078.90
+42030101201	Disminucion de provision para cartera de creditos	NULL	-116703.33	-116703.33
+43020501201	OTROS INGRESOS GENERADOS POR OTROS ACTIVOS	acreedora	-70402.00	70402.00
+43430301101	Ingresos Operativos varios	NULL	137172.22	137172.22
+45010101201	Ingresos por Ajustes Monetarios (Fondos Disponibles)	acreedora	-114.99	114.99
+45450101101	Ingresos por efectos cambiarios (Fondos disponibles)	NULL	-1607.30	-1607.30
+54030101201	Pasajes y Traslados	deudora	18190.19	18190.19
+54050701301	Papeleria, utiles y otros materiales de Limpieza	deudora	45313.09	45313.09
+54059901203	Otros Gastos Generales	deudora	18792.03	18792.03
+55010101201	Gastos por Ajustes Monetarios (Fondos Disponibles)	deudora	37331.86	37331.86
+55550101101	Gastos por Efectos Cambiarios (Fondos Disponibles)	NULL	-16509.47	-16509.47
+63010101201	Resultado Neto del Ejercicio	deudora	115709.82	115709.82
+9999	AJUSTE IMPORTACION	acreedora	-37659592.86	37659592.86

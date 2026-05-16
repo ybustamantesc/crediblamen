@@ -1,0 +1,72 @@
+Codigo Cuenta,Denominacion,Saldo Anterior
+11010101201,CAJA PRINCIPAL C$,88'074.85
+11010101301,CAJA PRINCIPAL U$,-0.15
+11020101301,Depósitos en Cuenta Corriente con intereses ME (LA FISE),1'729'674.80
+11040101201,Caja Chica,7'630.06
+14010101101,Cartera de Créditos vigentes (Préstamos Microcreditos) MN con MV,12'209'217.40
+14060101101,Intereses y Comisiones por Cobrar de Créditos Vigentes (Microcreditos) MN con MV,45'136.35
+14080101101,Provisión para Incobrabilidad Cartera Vigente (Microcreditos) MN con MV,-1'039'442.73
+15010101101,Bienes recibidos en Pago y adjudicados (Bienes Muebles e Inmuebles),21'876.49
+15010901201,Otros Bienes Recibido en Recuperación de Créditos,-5.05
+16020101101,Anticipos proveedores MNL,246'416.22
+16020601101,Cuentas por Cobrar al Personal,209'799.97
+18030101201,MOBILIARIOS,83'383.49
+18030201201,EQUIPOS ,9'415.49
+18040101201,Equipos de computación,67'225.72
+18050101201,Vehiculos,-1'468.21
+19010301201,Impuesto Pagados por Anticipado,28'134.42
+19010601201,Mantenimientos Pagados Por Anticipado,385
+19110101201,Gastos de Organización e Instalación,25'824.48
+26010401201,Aportaciones Laborales Retenidas por Pagar (INSS Laboral),-14'952.29
+26019901201,Cuentas por Pagar Diversas ,-69'341.84
+26040101201,Impuesto sobre la renta por pagar,-11'181.62
+26040201101,IMPUESTOS MÍNIMO DEFINITIVO,909.88
+26040301201,Impuestos municipales por pagar (Basura),-749.87
+26050101201,Impuesto S/Renta en la Fuente,-19'141.02
+26050301101,Impuesto S/Renta sobre Salarios,-23'034.28
+26050901201,OTROS IMPUESTOS,-5'488.75
+27010201202,Provisiones para Prestaciones Laborales (Vacaciones),-194'122.86
+27010401101,Provisiones para Otros Gastos,1.45
+27010701101,Aportaciones Patronales Por Pagar,-46'517.72
+27030101201,Reserva para Retiro,-41'752.25
+27030201101,RESERVAS POR PRIMAS DE ANTIGÜEDAD,-3'716'881.11
+31010101201,Capital Sucrito Ordinario,-4'500'000.00
+38010101201,Utilidadades Acumuladas con Acuerdo de Distribución,-4'026'425.24
+39010101201,Utilidades del ejercicio,-1'062'601.11
+41060101201,Intereses y comisiones Créditos Vigentes (Préstamos Microcréditos),-1'630'654.73
+43020501201,OTROS INGRESOS GENERADOS POR OTROS ACTIVOS,-94'464.97
+45010101201,Ingresos por Ajustes Monetarios (Fondos Disponibles), -   
+51040501201,CARGOS POR PRESTAMOS DE OTRAS INSTITUCIONES DEL PAIS,2'636.95
+51040801301,Cargos por Préstamos con Otras Instituciones Financieras del Pais Mayor a un año,62'505.59
+53020401201,Amortización de Software,1'403.81
+54010101201,Sueldos de Personal Permanente,573'003.14
+54010102301,Sueldos de Personal Contratado,97'891.63
+54010103301,Sobresueldos,118'235.79
+54010104201,Comisiones,17'064.72
+54010106201,Tiempo Extraordinario,3'479.50
+54010107201,Viaticos ,6'876.94
+54010108201,Aguinaldos,45'668.72
+54010109201,Vacaciones,45'269.24
+54010111201,Jubilaciones y/o Retiros,45'269.24
+54010113201,Bonificaciones e Incentivos (Celebraciones),71'543.69
+54010115201,Seguro Social Aporte Patronal,139'602.85
+54010116201,Aporte al Instituto Nacional Tecnológico (INATEC),14'747.70
+54010199201,Otros Gastos de Personal ,6'408.89
+54029901201,Honorarios profesionales,10'108.32
+54030401301,"Combustible, Lubricantes y Otros",39'516.85
+54030901201,Depreciacion de Vehiculos,10'499.09
+54031001201,"Telefonos, Telefax, fax",17'478.73
+54040301203,Mantenimiento y reparación de equipo de oficina y computo,13'786.02
+54040401202,Energía eléctrica,3'063.23
+54040501201,Alquileres de Inmuebles,102'190.59
+54040801301,Depreciación  de Equipos y Mobiliario,6'838.56
+54040901201,Depreciación de Equipos de cómputo,6'977.38
+54050101201,"Impuestos, Multas y Tasas Municipales",22'025.24
+54050701201,"Papeleria, utiles y otros materiales de Limpieza",44'578.72
+54050701301,"Papeleria, utiles y otros materiales de Limpieza",8'901.06
+54050801201,Gastos Legales,38'371.56
+54051001201,"Propaganda, Publicidad y Promociones",5'493.65
+54059901203,Otros Gastos Generales,57'765.76
+54059901301,Otros Gastos Generales,4'689.28
+55010101201,Gastos por Ajustes Monetarios (Fondos Disponibles),4'446.76
+63010201201,Resultado Neto del Ejercicio,76'780.53

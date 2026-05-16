@@ -1,0 +1,436 @@
+<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<title>Sistema | Control de Acceso </title>
+	<meta name="description" content="Sistema Administrac��n de Prestamos o Cr��ditos">
+	<meta name="keywords" content="Prestamos, Creditos, Cuotas diarias, semanales, quincenales y mensuales, sistema cooperativas">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="icon" type="image/png" href="http://localhost/lasminitas/public/src/img/favicon.png">
+
+	<link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,600,700,800" rel="stylesheet">
+
+	<link rel="stylesheet" href="http://localhost/lasminitas/public/plugins/bootstrap/dist/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://localhost/lasminitas/public/plugins/fontawesome-free/css/all.min.css">
+	<link rel="stylesheet" href="http://localhost/lasminitas/public/plugins/icon-kit/dist/css/iconkit.min.css">
+	<link rel="stylesheet" href="http://localhost/lasminitas/public/plugins/ionicons/dist/css/ionicons.min.css">
+	<link rel="stylesheet" href="http://localhost/lasminitas/public/plugins/perfect-scrollbar/css/perfect-scrollbar.css">
+
+	<link rel="stylesheet" href="http://localhost/lasminitas/public/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+	
+	<!-- Select2 for searchable dropdowns -->
+	<link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
+	
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.20/dist/sweetalert2.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.20/dist/sweetalert2.all.min.js"></script>
+	<!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.standalone.min.css"> -->
+		<link id="bsdp-css" href="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker3.min.css" rel="stylesheet">
+		
+		<link rel="stylesheet" href="http://localhost/lasminitas/public/dist/css/theme.min.css">
+		<link rel="stylesheet" href="http://localhost/lasminitas/public/css/branding.css">
+
+		<!-- Chart.js (global) -->
+		<!-- Load jQuery early so page scripts can use it (local fallback used in footer too) -->
+		<script src="http://localhost/lasminitas/public/src/js/vendor/jquery-3.3.1.min.js"></script>
+		<script>
+		if (typeof jQuery === 'undefined') {
+			// If for some reason local file didn't load, try CDN as fallback
+			document.write('\x3Cscript src="https://code.jquery.com/jquery-3.6.0.min.js">\x3C/script>');
+		}
+		</script>
+		<!-- Chart.js (global) -->
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	</head>
+
+	<body>
+		<div class="wrapper">
+<style>
+    .servicont-login-wrapper {
+        min-height: 100vh;
+        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .servicont-login-wrapper::before {
+        content: '';
+        position: absolute;
+        top: -50%;
+        left: -50%;
+        width: 200%;
+        height: 200%;
+        background: radial-gradient(circle, rgba(255,255,255,0.1) 1px, transparent 1px);
+        background-size: 50px 50px;
+        animation: moveBackground 20s linear infinite;
+    }
+    
+    @keyframes moveBackground {
+        0% { transform: translate(0, 0); }
+        100% { transform: translate(50px, 50px); }
+    }
+    
+    .servicont-login-card {
+        background: rgba(255, 255, 255, 0.98);
+        border-radius: 20px;
+        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        overflow: hidden;
+        max-width: 480px;
+        width: 100%;
+        position: relative;
+        z-index: 1;
+        backdrop-filter: blur(10px);
+    }
+    
+    .servicont-header {
+        background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+        padding: 40px 30px;
+        text-align: center;
+        position: relative;
+    }
+    
+    .servicont-header::after {
+        content: '';
+        position: absolute;
+        bottom: -1px;
+        left: 0;
+        right: 0;
+        height: 4px;
+        background: linear-gradient(90deg, #00d4ff, #0099ff, #00d4ff);
+        background-size: 200% 100%;
+        animation: shimmer 3s linear infinite;
+    }
+    
+    @keyframes shimmer {
+        0% { background-position: -200% 0; }
+        100% { background-position: 200% 0; }
+    }
+    
+    .servicont-icon {
+        width: 80px;
+        height: 80px;
+        margin: 0 auto 20px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 3px solid rgba(255, 255, 255, 0.3);
+    }
+    
+    .servicont-icon i {
+        font-size: 40px;
+        color: #ffffff;
+    }
+    
+    .servicont-title {
+        color: #ffffff;
+        font-size: 28px;
+        font-weight: 700;
+        margin: 0 0 8px 0;
+        letter-spacing: 1px;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.2);
+    }
+    
+    .servicont-subtitle {
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 14px;
+        margin: 0;
+        font-weight: 400;
+    }
+    
+    .servicont-body {
+        padding: 40px 35px;
+    }
+    
+    .servicont-form-group {
+        margin-bottom: 25px;
+    }
+    
+    .servicont-label {
+        display: block;
+        color: #1e3c72;
+        font-size: 14px;
+        font-weight: 600;
+        margin-bottom: 8px;
+        letter-spacing: 0.3px;
+    }
+    
+    .servicont-input-wrapper {
+        position: relative;
+    }
+    
+    .servicont-input {
+        width: 100%;
+        padding: 14px 20px 14px 50px;
+        border: 2px solid #e1e8ed;
+        border-radius: 10px;
+        font-size: 15px;
+        transition: all 0.3s ease;
+        background: #f8fafc;
+    }
+    
+    .servicont-input:focus {
+        outline: none;
+        border-color: #2a5298;
+        background: #ffffff;
+        box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.1);
+    }
+    
+    .servicont-input-icon {
+        position: absolute;
+        left: 18px;
+        top: 50%;
+        transform: translateY(-50%);
+        color: #2a5298;
+        font-size: 18px;
+    }
+    
+    .servicont-remember-row {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 30px;
+    }
+    
+    .servicont-checkbox {
+        display: flex;
+        align-items: center;
+        cursor: pointer;
+    }
+    
+    .servicont-checkbox input {
+        margin-right: 8px;
+        cursor: pointer;
+    }
+    
+    .servicont-checkbox label {
+        color: #5a6c7d;
+        font-size: 14px;
+        cursor: pointer;
+        margin: 0;
+    }
+    
+    .servicont-forgot-link {
+        color: #2a5298;
+        font-size: 14px;
+        text-decoration: none;
+        font-weight: 500;
+        transition: all 0.3s ease;
+    }
+    
+    .servicont-forgot-link:hover {
+        color: #1e3c72;
+        text-decoration: underline;
+    }
+    
+    .servicont-btn {
+        width: 100%;
+        padding: 16px;
+        background: linear-gradient(135deg, #2a5298 0%, #1e3c72 100%);
+        border: none;
+        border-radius: 10px;
+        color: #ffffff;
+        font-size: 16px;
+        font-weight: 700;
+        letter-spacing: 1px;
+        cursor: pointer;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 15px rgba(42, 82, 152, 0.3);
+        position: relative;
+        overflow: hidden;
+    }
+    
+    .servicont-btn::before {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: -100%;
+        width: 100%;
+        height: 100%;
+        background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
+        transition: left 0.5s ease;
+    }
+    
+    .servicont-btn:hover::before {
+        left: 100%;
+    }
+    
+    .servicont-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 20px rgba(42, 82, 152, 0.4);
+    }
+    
+    .servicont-btn:active {
+        transform: translateY(0);
+    }
+    
+    .servicont-footer {
+        padding: 20px;
+        text-align: center;
+        background: #f8fafc;
+        border-top: 1px solid #e1e8ed;
+    }
+    
+    .servicont-footer-text {
+        color: #5a6c7d;
+        font-size: 13px;
+        margin: 0;
+    }
+</style>
+
+<div class="servicont-login-wrapper">
+    <div class="servicont-login-card">
+        <div class="servicont-header">
+                        <div class="servicont-icon" style="background:transparent;border:none;">
+                <img src="http://localhost/lasminitas/public/img/sistema/6302417859.png" alt="logo" style="max-width:70px;max-height:70px;object-fit:contain;">
+            </div>
+            <h1 class="servicont-title">ServiCont</h1>
+            <p class="servicont-subtitle">Sistema de Contabilidad Integral</p>
+        </div>
+        
+        <div class="servicont-body">
+                        
+            <form method="POST" action="http://localhost/lasminitas/login/auth">
+                <div class="servicont-form-group">
+                    <label class="servicont-label">Correo electrónico</label>
+                    <div class="servicont-input-wrapper">
+                        <i class="ik ik-user servicont-input-icon"></i>
+                        <input type="email" name="email" class="servicont-input" placeholder="usuario@empresa.com" value="" required>
+                    </div>
+                </div>
+
+                <div class="servicont-form-group">
+                    <label class="servicont-label">Contraseña</label>
+                    <div class="servicont-input-wrapper">
+                        <i class="ik ik-lock servicont-input-icon"></i>
+                        <input type="password" name="password" class="servicont-input" placeholder="••••••••" required>
+                    </div>
+                </div>
+
+                <div class="servicont-remember-row">
+                    <div class="servicont-checkbox">
+                        <input type="checkbox" name="remember" id="remember" value="1">
+                        <label for="remember">Recordarme</label>
+                    </div>
+                    <a href="http://localhost/lasminitas/login/forgot" class="servicont-forgot-link">¿Olvidó su contraseña?</a>
+                </div>
+
+                <button type="submit" class="servicont-btn">
+                    <i class="ik ik-arrow-right-circle" style="margin-right: 8px;"></i>
+                    INICIAR SESIÓN
+                </button>
+            </form>
+        </div>
+        
+        <div class="servicont-footer">
+            <p class="servicont-footer-text">&copy; 2026 ServiCont · Todos los derechos reservados</p>
+        </div>
+    </div>
+</div>
+</div>
+<div class="modal fade apps-modal" id="appsModal" tabindex="-1" role="dialog" aria-labelledby="appsModalLabel" aria-hidden="true" data-backdrop="false">
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="ik ik-x-circle"></i></button>
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="quick-search">
+				<div class="container">
+					<div class="row">
+						<div class="col-md-4 ml-auto mr-auto">
+							<div class="input-wrap">
+								<input type="text" id="quick-search" class="form-control" placeholder="Buscar..." />
+								<i class="ik ik-search"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-body d-flex align-items-center">
+				<div class="container">
+					<div class="apps-wrap">
+						<div class="app-item">
+							<a href="http://localhost/lasminitas/"><i class="ik ik-home"></i><span>Inicio</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/lasminitas/estacionar"><i class="fas fa-parking"></i><span>Estacionar</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/lasminitas/clientes"><i class="ik ik-users"></i><span>Clientes</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/lasminitas/matriculas"><i class="ik ik-shopping-cart"></i><span>Matrículas</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/lasminitas/usuarios"><i class="ik ik-briefcase"></i><span>Usuarios</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/lasminitas/sistema"><i class="ik ik-server"></i><span>Sistema</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/lasminitas/formas"><i class="ik ik-clipboard"></i><span>Formas de Pago</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/lasminitas/precios"><i class="ik ik-message-square"></i><span>Precios</span></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	base_url = 'http://localhost/lasminitas/'
+</script>
+<style>
+	/* Ensure page layout keeps footer at bottom and allows dropdowns to overflow */
+	html, body { height: 100%; }
+	.page-wrap { display: flex; flex-direction: column; min-height: 100vh; }
+	.main-content { flex: 1 0 auto; }
+	footer.footer { flex-shrink: 0; margin-top: 12px; z-index: 1000; position: relative; }
+	/* Ensure dropdowns show above footer and other elements */
+	.dropdown-menu { z-index: 10550 !important; }
+</style>
+<script src="http://localhost/lasminitas/public/src/js/vendor/modernizr-2.8.3.min.js"></script>
+<script src="http://localhost/lasminitas/public/plugins/popper.js/dist/umd/popper.min.js"></script>
+<script src="http://localhost/lasminitas/public/plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="http://localhost/lasminitas/public/plugins/perfect-scrollbar/dist/perfect-scrollbar.min.js"></script>
+<script src="http://localhost/lasminitas/public/plugins/screenfull/dist/screenfull.js"></script>
+<script src="http://localhost/lasminitas/public/plugins/moment/moment.min.js"></script>
+<script src="http://localhost/lasminitas/public/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+
+<!-- Select2 for searchable dropdowns -->
+<script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
+
+<script src="http://localhost/lasminitas/public/dist/js/theme.min.js"></script>
+
+<!-- <link rel="stylesheet" href="http://localhost/lasminitas/public/plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.min.css"> -->
+<!-- <script src="http://localhost/lasminitas/public/plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-touchspin/4.2.0/jquery.bootstrap-touchspin.min.js" integrity="sha512-VzUh7hLMvCqgvfBmkd2OINf5/pHDbWGqxS+RFaL/fsgA+rT94LxTFnjlFkm0oKM5BXWbc9EjBQAuARqzGKLbcA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-touchspin/4.2.0/jquery.bootstrap-touchspin.css" integrity="sha512-M+RT/z+GO2INvbXyfkn7l5qN+g09mr0+JQ++nxLUfqAufrp/v5GIQ1k4IMn0BIHgxZK2Ss+YA+kHK4wJUKJK0A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+<script>
+	$("#logotipo").change(function () {
+		readImage(this);
+	});
+	function readImage (input) {
+		if (input.files && input.files[0]) {
+			var reader = new FileReader();
+			reader.onload = function (e) {
+				$('#imgPreview').attr('src', e.target.result);
+			}
+			reader.readAsDataURL(input.files[0]);
+		}
+	}
+</script>
+
+</body>
+
+</html>

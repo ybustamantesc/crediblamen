@@ -1,0 +1,22 @@
+User-agent: *
+Allow: /
+Sitemap:https://crediblamen.group/sitemap.xml
+Sitemap:https://crediblamen.group/sitemap-1.xml
+Sitemap:https://crediblamen.group/sitemap-2.xml
+Sitemap:https://crediblamen.group/sitemap-3.xml
+Sitemap:https://crediblamen.group/sitemap-4.xml
+Sitemap:https://crediblamen.group/sitemap-5.xml
+Sitemap:https://crediblamen.group/sitemap-6.xml
+Sitemap:https://crediblamen.group/sitemap-7.xml
+Sitemap:https://crediblamen.group/sitemap-8.xml
+Sitemap:https://crediblamen.group/sitemap-9.xml
+Sitemap:https://crediblamen.group/sitemap-10.xml
+Sitemap:https://crediblamen.group/sitemap-11.xml
+Sitemap:https://crediblamen.group/sitemap-12.xml
+Sitemap:https://crediblamen.group/sitemap-13.xml
+Sitemap:https://crediblamen.group/sitemap-14.xml
+Sitemap:https://crediblamen.group/sitemap-15.xml
+Sitemap:https://crediblamen.group/sitemap-16.xml
+Sitemap:https://crediblamen.group/sitemap-17.xml
+
+Sitemap:https://crediblamen.group/sitemap-18.xml
