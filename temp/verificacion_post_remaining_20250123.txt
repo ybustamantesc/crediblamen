@@ -1,6 +1,0 @@
-14010101301	Cartera sobre saldos cr?ditos vigentes (Prestamos Microcreditos) U$	deudora	7196982.71	7196982.71
-54030901201	Depreciacion de Vehiculos	deudora	56257.48	56257.48
-54050801201	Gastos Legales	deudora	88713.46	88713.46
-54059901201	Otros Gastos Generales (Beneficios a Clientes por Pronto pago)	deudora	130929.89	130929.89
-54059901301	Otros Gastos Generales	deudora	56855.58	56855.58
-63010201201	Resultado Neto del Ejercicio	deudora	1054380.75	1054380.75

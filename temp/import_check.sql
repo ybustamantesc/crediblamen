@@ -1,1 +1,0 @@
-SELECT (SELECT COUNT(DISTINCT CAST(num_prestamo_raw AS UNSIGNED)) FROM stg_carga_credito WHERE NULLIF(TRIM(num_prestamo_raw),'') IS NOT NULL) AS prestamos_csv, (SELECT COUNT(*) FROM tb_prestamos WHERE idprestamo IN (SELECT DISTINCT CAST(num_prestamo_raw AS UNSIGNED) FROM stg_carga_credito WHERE NULLIF(TRIM(num_prestamo_raw),'') IS NOT NULL)) AS prestamos_importados;

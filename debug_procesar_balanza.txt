@@ -1,3 +1,0 @@
-2026-01-09 12:14:18 - Método procesar_balanza EJECUTADO
-2026-01-09 12:21:47 - Método procesar_balanza EJECUTADO
-2026-01-09 12:28:49 - Método procesar_balanza EJECUTADO

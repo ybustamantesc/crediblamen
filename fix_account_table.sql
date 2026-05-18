@@ -1,4 +1,0 @@
-USE u987557742_testsystem;
-SHOW CREATE TABLE tb_account;
-SELECT MAX(id) FROM tb_account;
-ALTER TABLE tb_account MODIFY id INT AUTO_INCREMENT PRIMARY KEY;

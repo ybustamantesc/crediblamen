@@ -1,1 +1,0 @@
-﻿{"success":true,"solicitud_id":3,"pdf_url":"http:\/\/localhost\/servicredit\/garantias\/pdf_by_solicitud\/3","redirect":"http:\/\/localhost\/servicredit\/garantias\/index?solicitud=3"}
