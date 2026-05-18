@@ -1,0 +1,1993 @@
+<?php
+defined('BASEPATH') or exit('Acción no permitida');
+class Solicitudes extends CI_Controller
+{
+    public function __construct()
+    {
+        parent::__construct();
+        // Cargar librerías y modelos necesarios
+            // Cargar librerías y modelos correctamente
+            $this->load->model('Core_model', 'core_model');
+            $this->load->library('form_validation');
+            $this->load->library('session');
+            $this->load->library('pdf');
+        // input y output son parte de CI_Controller, no requieren carga explícita
+        if (!$this->ion_auth->logged_in()) {
+            redirect('login');
+        }
+    }
+
+
+    public function index()
+    {
+        $data = array(
+            'titulo' => 'Solicitud Inicial de Crédito',
+            'subtitulo' => 'Registrar solicitudes iniciales de crédito',
+            'icono' => 'fas fa-file-signature',
+            'styles' => array(
+                'plugins/datatables.net-bs4/css/dataTables.bootstrap4.min.css',
+                'plugins/select2/dist/css/select2.min.css'
+            ),
+            'scripts' => array(
+                'plugins/datatables.net/js/jquery.dataTables.min.js',
+                'plugins/select2/dist/js/select2.min.js',
+                'plugins/datatables.net-bs4/js/dataTables.bootstrap4.min.js',
+                'plugins/datatables.net/js/activaDatatable.js'
+            ),
+            'solicitudes' => $this->core_model->get_all('tb_solicitudes')
+        );
+
+        // Determine approval status for each solicitud: pending|approved|rejected
+        foreach ($data['solicitudes'] as $s) {
+            $aprs = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $s->idsolicitud));
+            if (empty($aprs)) {
+                $s->aprob_status = 'pending';
+            } else {
+                // sort by created_at desc and take latest
+                usort($aprs, function($a, $b){ $ta = isset($a->created_at)?strtotime($a->created_at):0; $tb = isset($b->created_at)?strtotime($b->created_at):0; return $tb - $ta; });
+                $latest = $aprs[0];
+                $txt = isset($latest->comment) ? strtolower($latest->comment) : '';
+                if (strpos($txt, 'rechaz') !== false) {
+                    $s->aprob_status = 'rejected';
+                } elseif (strpos($txt, 'aprob') !== false) {
+                    $s->aprob_status = 'approved';
+                } else {
+                    $s->aprob_status = 'pending';
+                }
+            }
+        }
+
+        $this->load->view('layout/header', $data);
+        $this->load->view('solicitudes/index', $data);
+        $this->load->view('layout/footer');
+    }
+
+
+    public function core($cliente_id = NULL)
+    {
+        // Word-mode: when active, only accept and validate a whitelist of fields
+        $use_word_template = true;
+        $word_allowed_fields = array(
+            'apellidos','nombres','numero_doc','tipo_documento','fecha_nacimiento','edad','estado_civil','telefono','direccion',
+            'giro_negocio','monto_solicitado','plazo_meses','frecuencia','tasa_interes','cuota_estim_estimada','garantia','comision_desembolso',
+            'ventas_promedio_diarios','ventas_promedio_mensual','ventas_dias_buenos','ventas_dias_malos','ventas_dias_buenos_mask','ventas_dias_malos_mask','margen_comercial',
+            'detalle_inventario','nombre_negocio','actividad_economica','ubicacion_negocio','numero_empleados','cuentas_por_cobrar_amount','caja_amount','banco_amount',
+            'pago_alquiler','pago_trabajadores','energia','agua','internet','gastos_fijos','gastos_operativos','otros_gastos','otros_ingresos_detalle',
+            'promotor','fecha_recepcion','observaciones','datos_personales','datos_conyuge','propuesta_tipos','edit_comment'
+        );
+        // Expose to views via data when rendering the form
+        $view_word_mode = $use_word_template;
+
+        if (!$cliente_id) {
+            // If UI provides a single `nombre_completo` field, split it into apellidos/nombres
+            if ($this->input->post('nombre_completo')) {
+                $nc = trim($this->input->post('nombre_completo'));
+                if ($nc !== '') {
+                    // simple heuristic: last word -> apellidos, rest -> nombres
+                    $parts = preg_split('/\s+/', $nc);
+                    if (count($parts) == 1) {
+                        $_POST['nombres'] = $parts[0];
+                        $_POST['apellidos'] = '';
+                    } else {
+                        $last = array_pop($parts);
+                        $_POST['apellidos'] = $last;
+                        $_POST['nombres'] = implode(' ', $parts);
+                    }
+                }
+            }
+            // Registrar
+            // Apply validation rules depending on Word-mode. In Word-mode we apply
+            // a minimal set of required fields so hidden inputs do not cause errors.
+            if ($use_word_template) {
+                // Minimal rules required by Word template
+                $this->form_validation->set_rules('apellidos', 'Apellidos', 'trim|required|min_length[3]|max_length[50]');
+                $this->form_validation->set_rules('nombres', 'Nombres', 'trim|required|min_length[3]|max_length[40]');
+                $this->form_validation->set_rules('monto_solicitado', 'Monto Solicitado', 'trim|required');
+                $this->form_validation->set_rules('plazo_meses', 'Plazo', 'trim|required');
+                $this->form_validation->set_rules('frecuencia', 'Frecuencia', 'trim|required');
+                $this->form_validation->set_rules('edit_comment', 'Comentario', 'trim|required|min_length[3]');
+            } else {
+                // Legacy/full validation when not using Word template
+                $this->form_validation->set_rules('apellidos', 'Apellidos', 'trim|required|min_length[3]|max_length[50]');
+                $this->form_validation->set_rules('nombres', 'Nombres', 'trim|required|min_length[3]|max_length[40]');
+                $this->form_validation->set_rules('direccion', 'Dirección', 'trim|required|min_length[5]|max_length[100]');
+                $this->form_validation->set_rules('telefono', 'Teléfono', 'trim|required|min_length[4]|max_length[30]');
+                $this->form_validation->set_rules('tipo_documento', 'Tipo Documento', 'trim|required');
+                $this->form_validation->set_rules('numero_doc', 'Nro Documento', 'trim|required');
+                // Comentario obligatorio (histórico)
+                $this->form_validation->set_rules('edit_comment', 'Comentario', 'trim|required|min_length[3]');
+            }
+
+            if ($this->form_validation->run()) {
+                if ($use_word_template) {
+                    // Accept only whitelisted fields when Word-mode is active
+                    $data = elements($word_allowed_fields, $this->input->post());
+                } else {
+                    // Legacy: accept entire POST
+                    $data = $this->input->post();
+                }
+            }
+
+                // Normalize inputs: convert empty strings to NULL for numeric/date fields,
+                // normalize booleans/radios and format numeric values to avoid MySQL strict errors.
+                $numeric_fields = array(
+                    'monto_solicitado', 'plazo_meses', 'tasa_interes', 'cuota_estim_estimada',
+                    'ingreso_promedio_alto', 'ingreso_promedio_bajo', 'ventas_promedio_diarios', 'ventas_promedio_mensual', 'margen_comercial',
+                    'cuentas_por_cobrar_amount', 'caja_amount', 'banco_amount', 'pago_alquiler', 'pago_trabajadores', 'energia', 'agua', 'internet', 'gastos_fijos',
+                    'negocio_antiguedad', 'edad', 'salario_conyuge', 'numero_dependientes', 'tiempo_residir_anios', 'tiempo_residir_meses',
+                    'tiempo_empleo_anios', 'tiempo_empleo_meses', 'ingreso_mensual_neto', 'deducciones',
+                    'tiempo_operacion_anios', 'tiempo_operacion_meses', 'ventas_dias_buenos', 'ventas_dias_malos', 'numero_empleados', 'comision_desembolso'
+                    , 'ventas_dias_buenos_mask', 'ventas_dias_malos_mask'
+                );
+                // 'estado' puede venir como '' desde el formulario; tratarlo como numérico (NULL cuando vacío)
+                $numeric_fields[] = 'estado';
+
+                $boolean_fields = array(
+                    'es_nuevo', 'es_renovacion', 'negocio_propio', 'matricula_permiso', 'cedula_vigente', 'otros_ingresos', 'ahorros', 'recibo_servicios', 'investigacion_vecinos', 'propiedad_negocio'
+                );
+
+                $date_fields = array('fecha_nacimiento', 'fecha_solicitud', 'fecha_recepcion');
+
+                // Helper to normalize numeric-looking strings (remove thousands commas)
+                foreach ($numeric_fields as $f) {
+                    if (array_key_exists($f, $data)) {
+                        $val = $data[$f];
+                        if (is_string($val)) {
+                            $clean = str_replace(',', '', $val);
+                        } else {
+                            $clean = $val;
+                        }
+                        if ($clean === '' || $clean === null) {
+                            $data[$f] = null;
+                        } else {
+                            // Keep decimals as string if they contain non-numeric chars; try numeric cast
+                            if (is_numeric($clean)) {
+                                // preserve integer vs decimal
+                                if (strpos((string) $clean, '.') !== false) {
+                                    $data[$f] = (float) $clean;
+                                } else {
+                                    $data[$f] = (int) $clean;
+                                }
+                            } else {
+                                // Not numeric: set to NULL to avoid DB type errors (simpler than changing schema)
+                                $data[$f] = null;
+                            }
+                        }
+                    }
+                }
+
+                // Normalize boolean / checkbox values
+                foreach ($boolean_fields as $bf) {
+                    if (array_key_exists($bf, $data)) {
+                        $v = $data[$bf];
+                        if ($v === '' || $v === null) {
+                            $data[$bf] = null;
+                        } elseif (is_numeric($v)) {
+                            $data[$bf] = (int) $v ? 1 : 0;
+                        } else {
+                            // common checkbox value is 'on' or a non-empty string
+                            $data[$bf] = (!empty($v)) ? 1 : null;
+                        }
+                    }
+                }
+
+                // Normalize dates: empty -> NULL; attempt to parse and format
+                foreach ($date_fields as $dt) {
+                    if (array_key_exists($dt, $data)) {
+                        $v = trim((string) $data[$dt]);
+                        if ($v === '' || $v === '0000-00-00' || $v === null) {
+                            $data[$dt] = null;
+                        } else {
+                            $ts = strtotime($v);
+                            if ($ts === false) {
+                                $data[$dt] = null;
+                            } else {
+                                // fecha_nacimiento -> DATE, others keep DATETIME if time present
+                                if ($dt === 'fecha_nacimiento') {
+                                    $data[$dt] = date('Y-m-d', $ts);
+                                } else {
+                                    // Prefer Y-m-d H:i:s, but if no time component, set as date
+                                    if (preg_match('/T|:/', $v)) {
+                                        $data[$dt] = date('Y-m-d H:i:s', $ts);
+                                    } else {
+                                        $data[$dt] = date('Y-m-d', $ts);
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+                // Convert posted weekday checkbox arrays into bitmask fields
+                // ventas_buenos_days[] -> ventas_dias_buenos_mask
+                $vb = $this->input->post('ventas_buenos_days');
+                $mask_b = 0;
+                if (is_array($vb)) {
+                    foreach ($vb as $ix) {
+                        $i = (int) $ix;
+                        if ($i >= 0 && $i <= 6) $mask_b |= (1 << $i);
+                    }
+                }
+                $data['ventas_dias_buenos_mask'] = ($mask_b > 0 ? $mask_b : null);
+
+                $vm = $this->input->post('ventas_malos_days');
+                $mask_m = 0;
+                if (is_array($vm)) {
+                    foreach ($vm as $ix) {
+                        $i = (int) $ix;
+                        if ($i >= 0 && $i <= 6) $mask_m |= (1 << $i);
+                    }
+                }
+                $data['ventas_dias_malos_mask'] = ($mask_m > 0 ? $mask_m : null);
+
+                // Backwards compatibility: the DB still has a NOT NULL `tipo_doc` column
+                // Map the new `tipo_documento` string to the legacy numeric `tipo_doc` values
+                if (array_key_exists('tipo_documento', $data)) {
+                    $td = $data['tipo_documento'];
+                    // legacy mapping: 0=Cedula,1=RUC,2=Pasaporte,3=Otro
+                    if ($td === 'Cedula') {
+                        $data['tipo_doc'] = 0;
+                    } elseif ($td === 'Pasaporte') {
+                        $data['tipo_doc'] = 2;
+                    } else {
+                        // unknown -> fallback to 3 (Otro)
+                        $data['tipo_doc'] = 3;
+                    }
+                } elseif (!array_key_exists('tipo_doc', $data) || $data['tipo_doc'] === null) {
+                    // ensure key exists to avoid strict-mode errors
+                    $data['tipo_doc'] = null;
+                }
+
+                // insert and store last id in session via core_model
+                // handle propuesta_tipos (array from form) -> store as JSON string in column 'propuesta_tipos'
+                $propuesta = $this->input->post('propuesta_tipos');
+                if (is_array($propuesta)) {
+                    $data['propuesta_tipos'] = json_encode(array_values($propuesta));
+                } else {
+                    $data['propuesta_tipos'] = null;
+                }
+
+                $this->core_model->insert('tb_solicitudes', $data, TRUE);
+                $last_id = $this->session->userdata('last_id');
+                if ($last_id) {
+                    // Guardar comentario histórico enviado en el formulario (no va al PDF)
+                    $comment_text = trim($this->input->post('edit_comment'));
+                    if ($comment_text !== '') {
+                        $u = $this->ion_auth->user()->row();
+                        $comment_data = array(
+                            'idsolicitud' => $last_id,
+                            'user_id' => ($u ? $u->id : 0),
+                            'username' => ($u ? (trim($u->first_name . ' ' . $u->last_name) ?: $u->username) : 'Sistema'),
+                            'action' => 'create',
+                            'comment' => $comment_text
+                        );
+                        $this->core_model->insert('tb_solicitudes_comments', $comment_data, TRUE);
+                    }
+                    // Auto-create cliente record if not exists (when creating a nueva solicitud)
+                    // Use numero_doc as unique key to avoid duplicates
+                    try {
+                        $numero_doc = isset($data['numero_doc']) ? trim($data['numero_doc']) : '';
+                        if (!empty($numero_doc)) {
+                            $existing_client = $this->core_model->get_by_id('tb_clientes', array('numero_doc' => $numero_doc));
+                            if (!$existing_client) {
+                                $client_row = array(
+                                    'apellidos' => isset($data['apellidos']) ? $data['apellidos'] : '',
+                                    'nombres' => isset($data['nombres']) ? $data['nombres'] : '',
+                                    'direccion' => isset($data['direccion']) ? $data['direccion'] : '',
+                                    'telefono' => isset($data['telefono']) ? $data['telefono'] : '',
+                                    // prefer legacy tipo_doc if set, otherwise map from tipo_documento
+                                    'tipo_doc' => (isset($data['tipo_doc']) ? $data['tipo_doc'] : (isset($data['tipo_documento']) && $data['tipo_documento'] === 'Cedula' ? 0 : (isset($data['tipo_documento']) && $data['tipo_documento'] === 'Pasaporte' ? 2 : 3))),
+                                    'numero_doc' => $numero_doc,
+                                    'estado' => 1
+                                );
+                                $this->core_model->insert('tb_clientes', $client_row, TRUE);
+                                $client_last = $this->session->userdata('last_id');
+                                if ($client_last) {
+                                    // Add a historic comment linking the created client
+                                    $u = $this->ion_auth->user()->row();
+                                    $comment_data = array(
+                                        'idsolicitud' => $last_id,
+                                        'user_id' => ($u ? $u->id : 0),
+                                        'username' => ($u ? (trim($u->first_name . ' ' . $u->last_name) ?: $u->username) : 'Sistema'),
+                                        'action' => 'auto_create_cliente',
+                                        'comment' => 'Cliente creado automáticamente (idcliente: ' . $client_last . ') al registrar la solicitud.'
+                                    );
+                                    $this->core_model->insert('tb_solicitudes_comments', $comment_data, TRUE);
+                                }
+                            }
+                        }
+                    } catch (Exception $e) {
+                        // swallow to avoid breaking solicitud creation; log for debugging
+                        log_message('error', 'Error auto-creating cliente for solicitud ' . $last_id . ': ' . $e->getMessage());
+                    }
+
+                    // Auto-create two referencia rows (placeholder) so UI can load two forms
+                    try {
+                        $existing_refs = $this->core_model->get_by_id_all('tb_solicitud_referencias', array('idsolicitud' => $last_id));
+                        if (!is_array($existing_refs) || count($existing_refs) < 2) {
+                            for ($ri = 1; $ri <= 2; $ri++) {
+                                $ref_row = array(
+                                    'idsolicitud' => $last_id,
+                                    'referencia_num' => $ri
+                                );
+                                $this->core_model->insert('tb_solicitud_referencias', $ref_row, TRUE);
+                            }
+                        }
+                    } catch (Exception $e) {
+                        log_message('error', 'Error auto-creating referencias for solicitud ' . $last_id . ': ' . $e->getMessage());
+                    }
+                    // Generate PDF HTML (reuse same view as pdf()) and save to uploads
+                    $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $last_id));
+                    $user = $this->ion_auth->user()->row();
+                    $generated_by = '';
+                    if ($user) {
+                        if (!empty($user->first_name) || !empty($user->last_name)) {
+                            $generated_by = trim($user->first_name . ' ' . $user->last_name);
+                        } else {
+                            $generated_by = isset($user->username) ? $user->username : '';
+                        }
+                    }
+                    $generated_at = date('d/m/Y H:i');
+
+                    $pdf_data = array(
+                        'solicitud' => $solicitud,
+                        'generated_by' => $generated_by,
+                        'generated_at' => $generated_at,
+                        'document_title' => 'Solicitud Inicial de Crédito',
+                        'aprobaciones' => $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $last_id))
+                    );
+
+                    $html = $this->load->view('solicitudes/pdf', $pdf_data, TRUE);
+
+                    // ensure uploads directory
+                    $dir = FCPATH . 'uploads/solicitudes/';
+                    if (!is_dir($dir)) {
+                        @mkdir($dir, 0755, true);
+                    }
+                    $filename = 'Solicitud_Inicial_de_Credito_' . $last_id . '.pdf';
+                    $fullpath = $dir . $filename;
+
+                    // Use Pdf library to save file
+                    $saved = $this->pdf->savePDF($html, $fullpath);
+                    if ($saved) {
+                        $this->session->set_flashdata('pdf_download', base_url('uploads/solicitudes/' . $filename));
+                    } else {
+                        $this->session->set_flashdata('error', 'No se pudo generar el PDF, pero el registro fue guardado.');
+                    }
+
+                    // After creating solicitud, redirect to completar Formato de Garantía
+                    redirect('garantias/create/' . $last_id);
+                } else {
+                    redirect($this->router->fetch_class());
+                }
+            } else {
+                $data = array(
+                    'titulo' => 'Registrar Solicitud Inicial',
+                    'subtitulo' => 'Ingrese los datos de la solicitud y cliente.',
+                    'icono_view' => 'ik ik-user ',
+                    'scripts' => array(
+                        'js/utils/utils.js'
+                    )
+                    , 'aprobaciones' => array()
+                );
+                // expose word-mode to the view so it can hide non-whitelisted fields
+                $data['word_allowed_fields'] = $word_allowed_fields;
+                $data['view_word_mode'] = $view_word_mode;
+                $this->load->view('layout/header', $data);
+                $this->load->view('solicitudes/core', $data);
+                $this->load->view('layout/footer');
+            }
+        } else {
+            // Editar (reuse Clientes logic)
+            if (!$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $cliente_id))) {
+                $this->session->set_flashdata('error', 'Registro no encontrado');
+                redirect($this->router->fetch_class());
+            } else {
+
+                // Minimal validation in Word-mode: keep name + monto/plazo/frecuencia + comment
+                $this->form_validation->set_rules('apellidos', 'Apellidos', 'trim|required|min_length[3]|max_length[50]');
+                $this->form_validation->set_rules('nombres', 'Nombres', 'trim|required|min_length[3]|max_length[40]');
+                $this->form_validation->set_rules('monto_solicitado', 'Monto Solicitado', 'trim|required');
+                $this->form_validation->set_rules('plazo_meses', 'Plazo', 'trim|required');
+                $this->form_validation->set_rules('frecuencia', 'Frecuencia', 'trim|required');
+                $this->form_validation->set_rules('edit_comment', 'Comentario', 'trim|required|min_length[3]');
+                if ($this->form_validation->run()) {
+
+                    $cliente_estado = $this->input->post('estado');
+                    // For solicitudes we don't enforce the same deactivation rules as clients
+                    // Only accept the fields in the Word-mode whitelist for update
+                    $data = elements($word_allowed_fields, $this->input->post());
+
+                    $data = html_escape($data);
+                    // Global sanitizer: convert all empty strings to NULL and trim strings.
+                    foreach ($data as $k => $v) {
+                        if ($v === '') {
+                            $data[$k] = null;
+                        } elseif (is_string($v)) {
+                            $data[$k] = trim($v);
+                        }
+                    }
+
+                    // Normalize inputs before update (same logic as insert)
+                    $numeric_fields = array(
+                        'monto_solicitado', 'plazo_meses', 'tasa_interes', 'cuota_estim_estimada',
+                        'ingreso_promedio_alto', 'ingreso_promedio_bajo', 'ventas_promedio_diarios', 'ventas_promedio_mensual', 'margen_comercial',
+                        'cuentas_por_cobrar_amount', 'caja_amount', 'banco_amount', 'pago_alquiler', 'pago_trabajadores', 'energia', 'agua', 'internet', 'gastos_fijos',
+                        'negocio_antiguedad', 'edad', 'salario_conyuge', 'numero_dependientes', 'tiempo_residir_anios', 'tiempo_residir_meses',
+                        'tiempo_empleo_anios', 'tiempo_empleo_meses', 'ingreso_mensual_neto', 'deducciones',
+                        'tiempo_operacion_anios', 'tiempo_operacion_meses', 'ventas_dias_buenos', 'ventas_dias_malos', 'numero_empleados', 'comision_desembolso'
+                        , 'ventas_dias_buenos_mask', 'ventas_dias_malos_mask'
+                    );
+                    // 'estado' puede venir como '' desde el formulario; tratarlo como numérico (NULL cuando vacío)
+                    $numeric_fields[] = 'estado';
+
+                    $boolean_fields = array(
+                        'es_nuevo', 'es_renovacion', 'negocio_propio', 'matricula_permiso', 'cedula_vigente', 'otros_ingresos', 'ahorros', 'recibo_servicios', 'investigacion_vecinos', 'propiedad_negocio'
+                    );
+
+                    $date_fields = array('fecha_nacimiento', 'fecha_solicitud', 'fecha_recepcion');
+
+                    foreach ($numeric_fields as $f) {
+                        if (array_key_exists($f, $data)) {
+                            $val = $data[$f];
+                            if (is_string($val)) {
+                                $clean = str_replace(',', '', $val);
+                            } else {
+                                $clean = $val;
+                            }
+                            if ($clean === '' || $clean === null) {
+                                $data[$f] = null;
+                            } else {
+                                if (is_numeric($clean)) {
+                                    if (strpos((string) $clean, '.') !== false) {
+                                        $data[$f] = (float) $clean;
+                                    } else {
+                                        $data[$f] = (int) $clean;
+                                    }
+                                } else {
+                                    $data[$f] = null;
+                                }
+                            }
+                        }
+                    }
+
+                    foreach ($boolean_fields as $bf) {
+                        if (array_key_exists($bf, $data)) {
+                            $v = $data[$bf];
+                            if ($v === '' || $v === null) {
+                                $data[$bf] = null;
+                            } elseif (is_numeric($v)) {
+                                $data[$bf] = (int) $v ? 1 : 0;
+                            } else {
+                                $data[$bf] = (!empty($v)) ? 1 : null;
+                            }
+                        }
+                    }
+
+                    foreach ($date_fields as $dt) {
+                        if (array_key_exists($dt, $data)) {
+                            $v = trim((string) $data[$dt]);
+                            if ($v === '' || $v === '0000-00-00' || $v === null) {
+                                $data[$dt] = null;
+                            } else {
+                                $ts = strtotime($v);
+                                if ($ts === false) {
+                                    $data[$dt] = null;
+                                } else {
+                                    if ($dt === 'fecha_nacimiento') {
+                                        $data[$dt] = date('Y-m-d', $ts);
+                                    } else {
+                                        if (preg_match('/T|:/', $v)) {
+                                            $data[$dt] = date('Y-m-d H:i:s', $ts);
+                                        } else {
+                                            $data[$dt] = date('Y-m-d', $ts);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+
+                    // Backwards compatibility: ensure `tipo_doc` is present for legacy schema
+                    if (array_key_exists('tipo_documento', $data)) {
+                        $td = $data['tipo_documento'];
+                        if ($td === 'Cedula') {
+                            $data['tipo_doc'] = 0;
+                        } elseif ($td === 'Pasaporte') {
+                            $data['tipo_doc'] = 2;
+                        } else {
+                            $data['tipo_doc'] = 3;
+                        }
+                    } elseif (!array_key_exists('tipo_doc', $data) || $data['tipo_doc'] === null) {
+                        $data['tipo_doc'] = null;
+                    }
+
+                    // Convert posted weekday checkbox arrays into bitmask fields (update branch)
+                    $vb = $this->input->post('ventas_buenos_days');
+                    $mask_b = 0;
+                    if (is_array($vb)) {
+                        foreach ($vb as $ix) {
+                            $i = (int) $ix;
+                            if ($i >= 0 && $i <= 6) $mask_b |= (1 << $i);
+                        }
+                    }
+                    $data['ventas_dias_buenos_mask'] = ($mask_b > 0 ? $mask_b : null);
+
+                    $vm = $this->input->post('ventas_malos_days');
+                    $mask_m = 0;
+                    if (is_array($vm)) {
+                        foreach ($vm as $ix) {
+                            $i = (int) $ix;
+                            if ($i >= 0 && $i <= 6) $mask_m |= (1 << $i);
+                        }
+                    }
+                    $data['ventas_dias_malos_mask'] = ($mask_m > 0 ? $mask_m : null);
+
+                    // handle propuesta_tipos on update as well
+                    $propuesta = $this->input->post('propuesta_tipos');
+                    if (is_array($propuesta)) {
+                        $data['propuesta_tipos'] = json_encode(array_values($propuesta));
+                    } else {
+                        // if checkbox array absent, set NULL (no proposals selected)
+                        $data['propuesta_tipos'] = null;
+                    }
+
+                    $this->core_model->update('tb_solicitudes', $data, array('idsolicitud' => $cliente_id));
+
+                    // Guardar comentario histórico enviado en el formulario (no va al PDF)
+                    $comment_text = trim($this->input->post('edit_comment'));
+                    if ($comment_text !== '') {
+                        $u = $this->ion_auth->user()->row();
+                        $comment_data = array(
+                            'idsolicitud' => $cliente_id,
+                            'user_id' => ($u ? $u->id : 0),
+                            'username' => ($u ? (trim($u->first_name . ' ' . $u->last_name) ?: $u->username) : 'Sistema'),
+                            'action' => 'update',
+                            'comment' => $comment_text
+                        );
+                        $this->core_model->insert('tb_solicitudes_comments', $comment_data, TRUE);
+                    }
+                    redirect($this->router->fetch_class());
+                } else {
+                    $data = array(
+                        'titulo' => 'Editar Solicitud / Cliente',
+                        'subtitulo' => 'Realice los cambios que desee.',
+                        'icono_view' => 'ik ik-user ',
+                        'scripts' => array(
+                            'js/utils/utils.js'
+                        ),
+                        'solicitud' => $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $cliente_id)),
+                        'aprobaciones' => $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $cliente_id))
+                    );
+                    // expose word-mode to the edit view
+                    $data['word_allowed_fields'] = $word_allowed_fields;
+                    $data['view_word_mode'] = $view_word_mode;
+                    $this->load->view('layout/header', $data);
+                    $this->load->view('solicitudes/core', $data);
+                    $this->load->view('layout/footer');
+                }
+            }
+        }
+    }
+
+        /**
+         * AJAX endpoint para agregar un comentario independiente (ej. desde cancelar)
+         * POST: idsolicitud, comment, action
+         */
+        public function add_comment_ajax()
+        {
+            if (!$this->input->is_ajax_request()) {
+                show_404();
+            }
+
+            $idsolicitud = $this->input->post('idsolicitud');
+            $comment = trim($this->input->post('comment'));
+            $action = $this->input->post('action') ? $this->input->post('action') : 'note';
+
+            if (!$idsolicitud || $comment === '') {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Parámetros incompletos')));
+                return;
+            }
+
+            if (!$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+                return;
+            }
+
+            $u = $this->ion_auth->user()->row();
+            $comment_data = array(
+                'idsolicitud' => $idsolicitud,
+                'user_id' => ($u ? $u->id : 0),
+                'username' => ($u ? (trim($u->first_name . ' ' . $u->last_name) ?: $u->username) : 'Sistema'),
+                'action' => $action,
+                'comment' => $comment
+            );
+
+            $this->core_model->insert('tb_solicitudes_comments', $comment_data, TRUE);
+            $last_id = $this->session->userdata('last_id');
+            $saved = false;
+            if ($last_id) {
+                $saved = true;
+            }
+
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => $saved, 'message' => ($saved ? 'Comentario guardado' : 'Error al guardar'))));
+        }
+
+        /**
+         * AJAX endpoint para agregar una nota colaborativa (desde listado)
+         * POST: idsolicitud, note
+         */
+        public function add_note_ajax()
+        {
+                // Allow both AJAX and non-AJAX POSTs (some clients remove X-Requested-With)
+                $idsolicitud = $this->input->post('idsolicitud');
+                $note = trim($this->input->post('comment') ? $this->input->post('comment') : $this->input->post('note'));
+
+                if (!$idsolicitud || $note === '') {
+                    $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Parámetros incompletos')));
+                    return;
+                }
+
+                if (!$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+                    $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+                    return;
+                }
+
+                $u = $this->ion_auth->user()->row();
+                $note_data = array(
+                    'idsolicitud' => $idsolicitud,
+                    'user_id' => ($u ? $u->id : 0),
+                    'username' => ($u ? (trim($u->first_name . ' ' . $u->last_name) ?: $u->username) : 'Sistema'),
+                    'note' => $note
+                );
+
+                // Insert and return the inserted note for immediate UI rendering
+                $this->core_model->insert('tb_solicitudes_notes', $note_data, TRUE);
+                $last_id = $this->session->userdata('last_id');
+                if ($last_id) {
+                    // fetch the inserted note
+                    $inserted = $this->db->get_where('tb_solicitudes_notes', array('idnote' => $last_id))->row();
+                    $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'message' => 'Nota guardada', 'note' => $inserted)));
+                    return;
+                }
+
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Error al guardar')));
+        }
+
+            /**
+             * AJAX endpoint: devuelve comentarios de una solicitud en JSON
+             * GET: /solicitudes/get_comments_ajax/{id}
+             */
+            public function get_comments_ajax($id = NULL)
+            {
+                if (!$this->input->is_ajax_request()) {
+                    show_404();
+                }
+
+                if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                    $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+                    return;
+                }
+
+                $comments = $this->core_model->get_by_id_all('tb_solicitudes_comments', array('idsolicitud' => $id));
+                // Ensure consistent ordering (newest first)
+                if (is_array($comments)) {
+                    usort($comments, function($a, $b){
+                        $ta = isset($a->created_at) ? strtotime($a->created_at) : 0;
+                        $tb = isset($b->created_at) ? strtotime($b->created_at) : 0;
+                        return $tb - $ta;
+                    });
+                }
+
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'comments' => $comments)));
+            }
+
+        /**
+         * Endpoint: devuelve notas colaborativas de una solicitud en JSON
+         * GET: /solicitudes/get_notes_ajax/{id}
+         * NOTE: Accepts both AJAX and normal GET requests (some environments strip X-Requested-With)
+         */
+        public function get_notes_ajax($id = NULL)
+        {
+            // allow GET requests even if X-Requested-With header is missing
+
+            if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada', 'notes' => array())));
+                return;
+            }
+
+            $notes = $this->core_model->get_by_id_all('tb_solicitudes_notes', array('idsolicitud' => $id));
+            if (!is_array($notes)) {
+                $notes = array();
+            } else {
+                usort($notes, function($a, $b){
+                    $ta = isset($a->created_at) ? strtotime($a->created_at) : 0;
+                    $tb = isset($b->created_at) ? strtotime($b->created_at) : 0;
+                    return $tb - $ta;
+                });
+            }
+
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'notes' => $notes)));
+        }
+
+        /**
+         * Mostrar comentarios históricos de una solicitud
+         */
+        public function comments($id = NULL)
+        {
+            if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                $this->session->set_flashdata('error', 'Registro no encontrado');
+                redirect($this->router->fetch_class());
+            }
+
+            $data = array(
+                'titulo' => 'Comentarios Solicitud #' . $id,
+                'subtitulo' => 'Histórico de comentarios y acciones',
+                'solicitud' => $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id)),
+                'comments' => $this->core_model->get_by_id_all('tb_solicitudes_comments', array('idsolicitud' => $id))
+            );
+
+            $this->load->view('layout/header', $data);
+            $this->load->view('solicitudes/comments', $data);
+            $this->load->view('layout/footer');
+        }
+
+        /**
+         * Vista: Formato de Uso de Crédito
+         */
+        public function uso_credito()
+        {
+            $data = array(
+                'titulo' => 'Formato de Uso de Crédito',
+                'subtitulo' => 'Registro del uso del crédito por solicitud',
+                'icono' => 'fas fa-file-alt',
+                'solicitudes' => $this->core_model->get_all('tb_solicitudes')
+            );
+
+            // Annotate each solicitud with approval status (pending|approved|rejected)
+            if (!empty($data['solicitudes']) && is_array($data['solicitudes'])) {
+                foreach ($data['solicitudes'] as $s) {
+                    $aprs = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $s->idsolicitud));
+                    if (empty($aprs)) {
+                        $s->aprob_status = 'pending';
+                    } else {
+                        // order by created_at desc and take latest
+                        usort($aprs, function($a, $b){ $ta = isset($a->created_at)?strtotime($a->created_at):0; $tb = isset($b->created_at)?strtotime($b->created_at):0; return $tb - $ta; });
+                        $latest = $aprs[0];
+                        $txt = isset($latest->comment) ? strtolower($latest->comment) : '';
+                        if (strpos($txt, 'rechaz') !== false) {
+                            $s->aprob_status = 'rejected';
+                        } elseif (strpos($txt, 'aprob') !== false) {
+                            $s->aprob_status = 'approved';
+                        } else {
+                            $s->aprob_status = 'pending';
+                        }
+                    }
+                }
+            }
+
+            $this->load->view('layout/header', $data);
+            $this->load->view('solicitudes/uso_credito', $data);
+            $this->load->view('layout/footer');
+        }
+
+        /**
+         * FAF - Asalariado view
+         */
+        public function faf_asalariado()
+        {
+            $data = array(
+                'titulo' => 'FAF - Asalariado',
+                'subtitulo' => 'Formato de Análisis Financiero (Asalariado)',
+                'icono' => 'fas fa-briefcase',
+                'solicitudes' => $this->core_model->get_all('tb_solicitudes')
+            );
+
+            $this->load->view('layout/header', $data);
+            $this->load->view('solicitudes/faf_asalariado', $data);
+            $this->load->view('layout/footer');
+        }
+
+        /**
+         * FAF - Comerciante view
+         */
+        public function faf_comerciante()
+        {
+            $data = array(
+                'titulo' => 'FAF - Comerciante',
+                'subtitulo' => 'Formato de Análisis Financiero (Comerciante)',
+                'icono' => 'fas fa-store',
+                'solicitudes' => $this->core_model->get_all('tb_solicitudes')
+            );
+
+            $this->load->view('layout/header', $data);
+            $this->load->view('solicitudes/faf_comerciante', $data);
+            $this->load->view('layout/footer');
+        }
+
+        /**
+         * AJAX: obtener FAF para una solicitud y tipo
+         * GET: /solicitudes/get_faf_ajax/{id}/{tipo}
+         */
+        public function get_faf_ajax($id = NULL, $tipo = NULL)
+        {
+            if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada', 'faf' => null)));
+                return;
+            }
+            $tipo = strtolower($tipo ?: $this->input->get_post('tipo'));
+            if (!in_array($tipo, array('asalariado', 'comerciante'))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Tipo inválido', 'faf' => null)));
+                return;
+            }
+
+            $faf = $this->core_model->get_by_id('tb_solicitud_faf', array('idsolicitud' => $id, 'tipo' => $tipo));
+            $other_tipo = ($tipo === 'asalariado') ? 'comerciante' : 'asalariado';
+            $other = $this->core_model->get_by_id('tb_solicitud_faf', array('idsolicitud' => $id, 'tipo' => $other_tipo));
+
+            // Also include the solicitud data so the modal can prefill fields
+            $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id));
+
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'faf' => $faf, 'other' => $other, 'solicitud' => $solicitud)));
+        }
+
+        /**
+         * AJAX: guardar FAF (insert o update)
+         * POST: idsolicitud, tipo, ... campos del formato
+         */
+        public function save_faf_ajax()
+        {
+            $idsolicitud = $this->input->post('idsolicitud');
+            $tipo = strtolower($this->input->post('tipo'));
+
+            if (!$idsolicitud || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+                return;
+            }
+            if (!in_array($tipo, array('asalariado', 'comerciante'))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Tipo inválido')));
+                return;
+            }
+
+            // If the other tipo already has data, block saving here
+            $other_tipo = ($tipo === 'asalariado') ? 'comerciante' : 'asalariado';
+            $other = $this->core_model->get_by_id('tb_solicitud_faf', array('idsolicitud' => $idsolicitud, 'tipo' => $other_tipo));
+            if ($other && !empty(trim((string)$other->data))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'El FAF ya fue completado en la vista ' . ucfirst($other_tipo) . '.')));
+                return;
+            }
+
+                // Build flexible data payload: support two modes:
+                // 1) front-end sends a single 'data' JSON string (preferred)
+                // 2) front-end posts individual fields directly
+                $payload = array();
+                $posted = $this->input->post();
+                if (isset($posted['data'])) {
+                    $raw = $posted['data'];
+                    // If it's an array (rare), use it direct; if string, try decode
+                    if (is_array($raw)) {
+                        $payload = $raw;
+                    } else {
+                        $decoded = json_decode($raw, true);
+                        if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                            $payload = $decoded;
+                        } else {
+                            // fallback: store raw string under key 'raw'
+                            $payload = array('raw' => $raw);
+                        }
+                    }
+                } else {
+                    $payload = $posted;
+                    unset($payload['idsolicitud']);
+                    unset($payload['tipo']);
+                }
+
+                // Normalize numeric fields in payload (remove commas, convert to float)
+                $numeric_keys = array('monto_solicitado', 'plazo', 'plazo_meses', 'ingreso_mensual', 'ingreso_mensual_neto', 'otros_ingresos', 'gastos_personales', 'ingresos_netos', 'capacidad_pago');
+                foreach ($numeric_keys as $nk) {
+                    if (array_key_exists($nk, $payload)) {
+                        $v = $payload[$nk];
+                        if ($v === '' || $v === null) {
+                            $payload[$nk] = null;
+                        } else {
+                            // remove thousands separators and spaces
+                            if (is_string($v)) $v = str_replace(',', '', trim($v));
+                            if (is_numeric($v)) {
+                                // keep as numeric (float)
+                                $payload[$nk] = (strpos((string)$v, '.') !== false) ? (float)$v : (int)$v;
+                            } else {
+                                // try to parse float
+                                $clean = floatval(preg_replace('/[^0-9.\-]/', '', (string)$v));
+                                $payload[$nk] = ($clean == 0 && (string)$v !== '0' && (string)$v !== '0.0') ? null : $clean;
+                            }
+                        }
+                    }
+                }
+
+                // Prepare DB row
+                $row = array(
+                    'idsolicitud' => $idsolicitud,
+                    'tipo' => $tipo,
+                    'data' => json_encode($payload, JSON_UNESCAPED_UNICODE),
+                    'updated_at' => date('Y-m-d H:i:s')
+                );
+
+                $existing = $this->core_model->get_by_id('tb_solicitud_faf', array('idsolicitud' => $idsolicitud, 'tipo' => $tipo));
+                if ($existing) {
+                    $this->core_model->update('tb_solicitud_faf', $row, array('idfaf' => $existing->idfaf));
+                } else {
+                    $row['created_at'] = date('Y-m-d H:i:s');
+                    $this->core_model->insert('tb_solicitud_faf', $row, TRUE);
+                }
+
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'message' => 'Guardado')));
+        }
+
+            /**
+             * Descargar PDF del FAF para una solicitud y tipo
+             * GET: /solicitudes/download_faf/{id}/{tipo}
+             */
+            public function download_faf($idsolicitud = NULL, $tipo = NULL)
+            {
+                if (!$idsolicitud || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+                    $this->session->set_flashdata('error', 'Solicitud no encontrada');
+                    redirect('solicitudes');
+                }
+                $tipo = strtolower($tipo ?: 'asalariado');
+                if (!in_array($tipo, array('asalariado', 'comerciante'))) {
+                    $this->session->set_flashdata('error', 'Tipo inválido');
+                    redirect('solicitudes');
+                }
+
+                $faf = $this->core_model->get_by_id('tb_solicitud_faf', array('idsolicitud' => $idsolicitud, 'tipo' => $tipo));
+                if (!$faf) {
+                    $this->session->set_flashdata('error', 'FAF no encontrado para esta solicitud');
+                    redirect('solicitudes');
+                }
+
+                $data = json_decode($faf->data, true);
+                if (!is_array($data)) $data = array('raw' => $faf->data);
+
+                $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud));
+
+                $pdf_data = array(
+                    'solicitud' => $solicitud,
+                    'faf' => $data,
+                    'tipo' => $tipo,
+                    'generated_at' => date('d/m/Y H:i')
+                );
+
+                $html = $this->load->view('solicitudes/faf_pdf', $pdf_data, TRUE);
+                $filename = 'FAF_' . strtoupper($tipo) . '_SOL' . $idsolicitud . '.pdf';
+                // Stream PDF to browser
+                $this->pdf->createPDF($html, $filename, TRUE);
+            }
+
+        /**
+         * Vista: Formato de Verificación de Referencias
+         */
+        public function referencias()
+        {
+            $data = array(
+                'titulo' => 'Formato de Verificación de Referencias - Solicitud de Crédito',
+                'subtitulo' => 'Registro de referencias personales (2 por solicitud)',
+                'icono' => 'fas fa-user-friends',
+                'solicitudes' => $this->core_model->get_all('tb_solicitudes')
+            );
+
+            // Annotate each solicitud with approval status (pending|approved|rejected)
+            if (!empty($data['solicitudes']) && is_array($data['solicitudes'])) {
+                foreach ($data['solicitudes'] as $s) {
+                    $aprs = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $s->idsolicitud));
+                    if (empty($aprs)) {
+                        $s->aprob_status = 'pending';
+                    } else {
+                        usort($aprs, function($a, $b){ $ta = isset($a->created_at)?strtotime($a->created_at):0; $tb = isset($b->created_at)?strtotime($b->created_at):0; return $tb - $ta; });
+                        $latest = $aprs[0];
+                        $txt = isset($latest->comment) ? strtolower($latest->comment) : '';
+                        if (strpos($txt, 'rechaz') !== false) {
+                            $s->aprob_status = 'rejected';
+                        } elseif (strpos($txt, 'aprob') !== false) {
+                            $s->aprob_status = 'approved';
+                        } else {
+                            $s->aprob_status = 'pending';
+                        }
+                    }
+                }
+            }
+
+            $this->load->view('layout/header', $data);
+            $this->load->view('solicitudes/referencias', $data);
+            $this->load->view('layout/footer');
+        }
+
+        /**
+         * AJAX: obtener datos del formato de uso para una solicitud
+         */
+        public function get_uso_ajax($id = NULL)
+        {
+            if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada', 'uso' => null)));
+                return;
+            }
+
+            $uso = $this->core_model->get_by_id('tb_solicitud_uso_credito', array('idsolicitud' => $id));
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'uso' => $uso)));
+        }
+
+        /**
+         * AJAX: Obtener referencias (máx 2) para una solicitud
+         */
+        // [Removed older duplicate: get_referencias_ajax]
+
+        /**
+         * AJAX: guardar formato de uso (insert o update)
+         */
+        public function save_uso_ajax()
+        {
+            // allow both AJAX and normal POST
+            $idsolicitud = $this->input->post('idsolicitud');
+            if (!$idsolicitud || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+                return;
+            }
+
+            $row = array(
+                'descripcion' => $this->input->post('descripcion'),
+                'fuente_ingreso' => $this->input->post('fuente_ingreso'),
+                'monto_estimado_mes' => $this->input->post('monto_estimado_mes'),
+                'declaracion_nombre' => $this->input->post('declaracion_nombre'),
+                'declaracion_firma' => $this->input->post('declaracion_firma'),
+                'declaracion_fecha' => $this->input->post('declaracion_fecha') ?: NULL,
+                'evaluador_credito' => $this->input->post('evaluador_credito'),
+                'fecha_evaluacion' => $this->input->post('fecha_evaluacion') ?: NULL
+            );
+
+            $existing = $this->core_model->get_by_id('tb_solicitud_uso_credito', array('idsolicitud' => $idsolicitud));
+            if ($existing) {
+                // update
+                $this->core_model->update('tb_solicitud_uso_credito', $row, array('iduso' => $existing->iduso));
+            } else {
+                $row['idsolicitud'] = $idsolicitud;
+                $this->core_model->insert('tb_solicitud_uso_credito', $row, TRUE);
+            }
+
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'message' => 'Guardado')));
+        }
+
+        /**
+         * AJAX: Guardar referencias (dos) para una solicitud
+         * POST: idsolicitud, campos prefijados por referencia _1 y _2
+         */
+        // [Removed older duplicate: save_referencias_ajax]
+
+        /**
+         * AJAX: Eliminar foto de referencia
+         * POST: idfoto
+         */
+        // [Removed older duplicate: delete_referencia_foto_ajax]
+
+        /**
+         * Descargar PDF con las dos referencias y sus fotos (si existen)
+         */
+        public function download_referencias($id = NULL)
+        {
+            if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                $this->session->set_flashdata('error', 'Registro no encontrado');
+                redirect($this->router->fetch_class());
+            }
+
+            $refs = $this->core_model->get_by_id_all('tb_solicitud_referencias', array('idsolicitud' => $id));
+            if (!is_array($refs)) $refs = array();
+
+            // attach image data URIs if files exist
+            foreach ($refs as &$r) {
+                $r->photo_front = null; $r->photo_back = null;
+                $q = $this->db->get_where('tb_solicitud_referencias_fotos', array('idsolicitud' => $id, 'referencia_num' => $r->referencia_num));
+                if ($q && $q->num_rows() > 0) {
+                    foreach ($q->result() as $row) {
+                        $abs = FCPATH . $row->filename;
+                        if (file_exists($abs)) {
+                            $m = mime_content_type($abs);
+                            $data = base64_encode(file_get_contents($abs));
+                            $datauri = 'data:' . $m . ';base64,' . $data;
+                            if ($row->tipo === 'front') $r->photo_front = $datauri;
+                            if ($row->tipo === 'back') $r->photo_back = $datauri;
+                        }
+                    }
+                }
+            }
+
+            $this->load->library('pdf');
+            $data = array('referencias' => $refs, 'solicitud' => $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id)), 'generated_at' => date('d/m/Y H:i'));
+            $html = $this->load->view('solicitudes/referencias_pdf', $data, TRUE);
+            $filename = 'Referencias_solicitud_' . $id;
+            $this->pdf->createPDF($html, $filename, TRUE);
+        }
+
+        /**
+         * Descargar formato de Uso de Crédito en PDF para una solicitud
+         * URL: /solicitudes/download_uso/{id}
+         */
+        public function download_uso($id = NULL)
+        {
+            if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                $this->session->set_flashdata('error', 'Registro no encontrado');
+                redirect($this->router->fetch_class());
+            }
+
+            $this->load->library('pdf');
+
+            $uso = $this->core_model->get_by_id('tb_solicitud_uso_credito', array('idsolicitud' => $id));
+            // Validación en servidor: rechazar descarga si no existe registro o todos los campos están vacíos
+            $hasData = false;
+            if ($uso) {
+                $fieldsToCheck = array(
+                    'descripcion', 'fuente_ingreso', 'monto_estimado_mes', 'declaracion_nombre',
+                    'declaracion_firma', 'declaracion_fecha', 'evaluador_credito', 'fecha_evaluacion'
+                );
+                foreach ($fieldsToCheck as $f) {
+                    if (isset($uso->$f) && $uso->$f !== null && trim((string) $uso->$f) !== '') {
+                        // treat '0000-00-00' as empty date
+                        if ($uso->$f === '0000-00-00') {
+                            continue;
+                        }
+                        $hasData = true;
+                        break;
+                    }
+                }
+            }
+
+            if (!$uso || !$hasData) {
+                $this->session->set_flashdata('info', 'Formato vacío: complete al menos un campo antes de descargar.');
+                redirect($this->router->fetch_class() . '/uso_credito');
+            }
+
+            $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id));
+
+            $data = array(
+                'uso' => $uso,
+                'solicitud' => $solicitud,
+                'generated_at' => date('d/m/Y H:i')
+            );
+
+            $html = $this->load->view('solicitudes/uso_credito_pdf', $data, TRUE);
+            $filename = 'UsoCredito_solicitud_' . $id;
+            $this->pdf->createPDF($html, $filename, TRUE);
+        }
+
+        /**
+         * Validación de Aprobacion: vista que muestra solicitudes para validar aprobaciones
+         */
+        public function validacion_aprobacion()
+        {
+            // load all solicitudes (reuse index behavior)
+            $data = array(
+                'titulo' => 'Validación de Aprobación',
+                'subtitulo' => 'Revisión y registro de aprobaciones',
+                'icono' => 'fas fa-check-square',
+                'solicitudes' => $this->core_model->get_all('tb_solicitudes')
+            );
+
+            // annotate each solicitud with approval status for filtering (pending|approved|rejected)
+            foreach ($data['solicitudes'] as $s) {
+                $aprs = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $s->idsolicitud));
+                if (empty($aprs)) {
+                    $s->aprob_status = 'pending';
+                } else {
+                    usort($aprs, function($a, $b){ $ta = isset($a->created_at)?strtotime($a->created_at):0; $tb = isset($b->created_at)?strtotime($b->created_at):0; return $tb - $ta; });
+                    $latest = $aprs[0];
+                    $txt = isset($latest->comment) ? strtolower($latest->comment) : '';
+                    if (strpos($txt, 'rechaz') !== false) {
+                        $s->aprob_status = 'rejected';
+                    } elseif (strpos($txt, 'aprob') !== false) {
+                        $s->aprob_status = 'approved';
+                    } else {
+                        $s->aprob_status = 'pending';
+                    }
+                }
+            }
+
+            $this->load->view('layout/header', $data);
+            $this->load->view('solicitudes/validacion_aprobacion', $data);
+            $this->load->view('layout/footer');
+        }
+
+        /**
+         * AJAX: obtener referencias para una solicitud
+         */
+        public function get_referencias_ajax($idsolicitud = null)
+        {
+            header('Content-Type: application/json; charset=utf-8');
+            $idsolicitud = intval($idsolicitud ?: $this->input->get('idsolicitud'));
+            if (! $idsolicitud) { echo json_encode(['status' => false, 'message' => 'Falta id de solicitud']); return; }
+            $refs = $this->core_model->get_by_id_all('tb_solicitud_referencias', ['idsolicitud' => $idsolicitud]);
+            if (!is_array($refs)) $refs = [];
+            $out = [];
+            foreach ($refs as $r) {
+                $row = [
+                    'idreferencia' => isset($r->idreferencia) ? $r->idreferencia : null,
+                    'referencia_num' => isset($r->referencia_num) ? $r->referencia_num : null,
+                    'nombre' => isset($r->nombre) ? $r->nombre : null,
+                    'cedula' => isset($r->cedula) ? $r->cedula : null,
+                    'direccion' => isset($r->direccion) ? $r->direccion : null,
+                    'telefono' => isset($r->telefono) ? $r->telefono : null,
+                    'tipo_referencia' => isset($r->tipo_referencia) ? $r->tipo_referencia : null,
+                    'tipo_personal_relacion' => isset($r->tipo_personal_relacion) ? $r->tipo_personal_relacion : null,
+                    'desde_conoce_cliente' => isset($r->desde_conoce_cliente) ? $r->desde_conoce_cliente : null,
+                    'relacion_economica' => isset($r->relacion_economica) ? $r->relacion_economica : null,
+                    'opinion' => isset($r->opinion) ? $r->opinion : null,
+                    'comentarios' => isset($r->comentarios) ? $r->comentarios : null,
+                    'photos' => new stdClass()
+                ];
+                // collect photos if table exists
+                if ($this->db->table_exists('tb_solicitud_referencias_fotos')) {
+                    $photos = $this->db->get_where('tb_solicitud_referencias_fotos', ['idsolicitud' => $idsolicitud, 'referencia_num' => $r->referencia_num])->result();
+                    $pobj = new stdClass();
+                    foreach ($photos as $p) {
+                        $t = isset($p->tipo) ? $p->tipo : 'front';
+                        $entry = ['id' => isset($p->idfoto)?$p->idfoto:null, 'url' => base_url(trim($p->filename, '/'))];
+                        if ($t === 'front') $pobj->front = (object)$entry; else $pobj->back = (object)$entry;
+                    }
+                    $row['photos'] = $pobj;
+                }
+                $out[] = $row;
+            }
+            echo json_encode(['status' => true, 'referencias' => $out]);
+        }
+
+        /**
+         * AJAX: guardar referencias (upsert) y fotos
+         */
+        public function save_referencias_ajax()
+        {
+            if (!$this->input->is_ajax_request() && empty($_POST) && empty($_FILES)) {
+                // allow non-AJAX too
+            }
+            $idsolicitud = intval($this->input->post('idsolicitud'));
+            if (! $idsolicitud) { echo json_encode(['status' => false, 'message' => 'Falta idsolicitud']); return; }
+
+            $saved_any = false;
+            for ($i = 1; $i <= 2; $i++) {
+                $nombre = $this->input->post('nombre_'.$i);
+                $cedula = $this->input->post('cedula_'.$i);
+                $direccion = $this->input->post('direccion_'.$i);
+                $telefono = $this->input->post('telefono_'.$i);
+                $tipo = $this->input->post('tipo_'.$i);
+                $tipo_personal_rel = $this->input->post('tipo_personal_relacion_'.$i);
+                $desde = $this->input->post('desde_'.$i);
+                $rel_econ = $this->input->post('relacion_'.$i);
+                $opinion = $this->input->post('opinion_'.$i);
+                $comentarios = $this->input->post('comentarios_'.$i);
+
+                // normalize relacion_economica to nullable tinyint
+                if ($rel_econ === '' || $rel_econ === null) $rel_econ = null; else $rel_econ = intval($rel_econ) ? 1 : 0;
+
+                $row = [
+                    'idsolicitud' => $idsolicitud,
+                    'referencia_num' => $i,
+                    'nombre' => $nombre,
+                    'cedula' => $cedula,
+                    'direccion' => $direccion,
+                    'telefono' => $telefono,
+                    'tipo_referencia' => $tipo,
+                    'tipo_personal_relacion' => $tipo_personal_rel,
+                    'desde_conoce_cliente' => $desde,
+                    'relacion_economica' => $rel_econ,
+                    'opinion' => $opinion,
+                    'comentarios' => $comentarios
+                ];
+
+                // check existing
+                $existing = $this->core_model->get_by_id('tb_solicitud_referencias', ['idsolicitud' => $idsolicitud, 'referencia_num' => $i]);
+                if ($existing) {
+                    // update
+                    $this->core_model->update('tb_solicitud_referencias', $row, ['idreferencia' => $existing->idreferencia]);
+                    $saved_any = true;
+                    $ref_id = $existing->idreferencia;
+                } else {
+                    $this->core_model->insert('tb_solicitud_referencias', $row, TRUE);
+                    $ref_id = $this->session->userdata('last_id');
+                    if ($ref_id) $saved_any = true;
+                }
+
+                // handle photos for this referencia
+                if (! empty($_FILES)) {
+                    $upload_base = FCPATH . 'uploads/solicitudes/solicitud_' . $idsolicitud . '/referencias/referencia_' . $i . '/';
+                    if (! is_dir($upload_base)) @mkdir($upload_base, 0755, true);
+                    // front
+                    $field_front = 'cedula_front_' . $i;
+                    if (isset($_FILES[$field_front]) && $_FILES[$field_front]['error'] === UPLOAD_ERR_OK) {
+                        $tmp = $_FILES[$field_front];
+                        $ext = pathinfo($tmp['name'], PATHINFO_EXTENSION);
+                        $basename = time() . '_' . bin2hex(random_bytes(4));
+                        $fname = $basename . '_front.' . $ext;
+                        $dest = $upload_base . $fname;
+                        if (move_uploaded_file($tmp['tmp_name'], $dest)) {
+                            if ($this->db->table_exists('tb_solicitud_referencias_fotos')) {
+                                $insert = ['idsolicitud' => $idsolicitud, 'idreferencia' => $ref_id, 'referencia_num' => $i, 'tipo' => 'front', 'filename' => 'uploads/solicitudes/solicitud_' . $idsolicitud . '/referencias/referencia_' . $i . '/' . $fname];
+                                try { $this->db->insert('tb_solicitud_referencias_fotos', $insert); } catch (Exception $e) {}
+                            }
+                        }
+                    }
+                    // back
+                    $field_back = 'cedula_back_' . $i;
+                    if (isset($_FILES[$field_back]) && $_FILES[$field_back]['error'] === UPLOAD_ERR_OK) {
+                        $tmp = $_FILES[$field_back];
+                        $ext = pathinfo($tmp['name'], PATHINFO_EXTENSION);
+                        $basename = time() . '_' . bin2hex(random_bytes(4));
+                        $fname = $basename . '_back.' . $ext;
+                        $dest = $upload_base . $fname;
+                        if (move_uploaded_file($tmp['tmp_name'], $dest)) {
+                            if ($this->db->table_exists('tb_solicitud_referencias_fotos')) {
+                                $insert = ['idsolicitud' => $idsolicitud, 'idreferencia' => $ref_id, 'referencia_num' => $i, 'tipo' => 'back', 'filename' => 'uploads/solicitudes/solicitud_' . $idsolicitud . '/referencias/referencia_' . $i . '/' . $fname];
+                                try { $this->db->insert('tb_solicitud_referencias_fotos', $insert); } catch (Exception $e) {}
+                            }
+                        }
+                    }
+                }
+            }
+
+            echo json_encode(['status' => (bool)$saved_any]);
+        }
+
+        /**
+         * AJAX: eliminar foto de referencia por idfoto
+         */
+        public function delete_referencia_foto_ajax()
+        {
+            header('Content-Type: application/json; charset=utf-8');
+            $idfoto = intval($this->input->post('idfoto'));
+            if (! $idfoto) { echo json_encode(['status' => false, 'message' => 'Falta idfoto']); return; }
+            $row = $this->db->get_where('tb_solicitud_referencias_fotos', ['idfoto' => $idfoto])->row();
+            if (! $row) { echo json_encode(['status' => false, 'message' => 'Foto no encontrada']); return; }
+            $filepath = FCPATH . ltrim($row->filename, '/');
+            try { $this->db->where('idfoto', $idfoto)->delete('tb_solicitud_referencias_fotos'); } catch (Exception $e) { echo json_encode(['status' => false, 'message' => 'Error al eliminar']); return; }
+            if (file_exists($filepath)) @unlink($filepath);
+            echo json_encode(['status' => true]);
+        }
+
+        /**
+         * Endpoint: devuelve las aprobaciones registradas para una solicitud
+         * GET: /solicitudes/get_aprobaciones_ajax/{id}
+         */
+        public function get_aprobaciones_ajax($id = NULL)
+        {
+            // allow non-AJAX GETs
+            if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada', 'aprobaciones' => array(), 'propuestas' => array())));
+                return;
+            }
+
+            $aprobaciones = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $id));
+            if (!is_array($aprobaciones)) {
+                $aprobaciones = array();
+            } else {
+                usort($aprobaciones, function($a, $b){
+                    $ta = isset($a->created_at) ? strtotime($a->created_at) : 0;
+                    $tb = isset($b->created_at) ? strtotime($b->created_at) : 0;
+                    return $tb - $ta;
+                });
+            }
+
+            // Also fetch propuesta_tipos saved on the solicitud (JSON array stored as TEXT)
+            $propuestas = array();
+            try {
+                $sol = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id));
+                if ($sol && !empty($sol->propuesta_tipos)) {
+                    $ids = json_decode($sol->propuesta_tipos, true);
+                    if (is_array($ids) && count($ids) > 0) {
+                        // Fetch matching tipo_productos rows - table uses `id` as PK
+                        $this->db->where_in('id', $ids);
+                        $rows = $this->db->get('tb_tipo_productos')->result();
+                        if (is_array($rows)) {
+                            // preserve the order of ids as stored
+                            $map = array();
+                            foreach ($rows as $r) { $map[$r->id] = $r; }
+                            $ordered = array();
+                            foreach ($ids as $iid) { if (isset($map[$iid])) $ordered[] = $map[$iid]; }
+                            $propuestas = $ordered;
+                            // annotate each propuesta with the original plazo (plazo_meses) provided in the solicitud
+                            // so the approval modal can display the requested plazo instead of the product's default
+                            try {
+                                $plazo_from_solicitud = null;
+                                if (isset($sol) && isset($sol->plazo_meses)) {
+                                    $plazo_from_solicitud = $sol->plazo_meses;
+                                }
+                                if ($plazo_from_solicitud !== null) {
+                                    foreach ($propuestas as &$pp) {
+                                        // add a field expected by the frontend JS: 'plazo_solicitado'
+                                        $pp->plazo_solicitado = $plazo_from_solicitud;
+                                    }
+                                    unset($pp);
+                                }
+                            } catch (Exception $e) {
+                                // ignore
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                // ignore and return empty propuestas on error
+                $propuestas = array();
+            }
+
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'aprobaciones' => $aprobaciones, 'propuestas' => $propuestas)));
+        }
+
+        /**
+         * Endpoint: guarda aprobaciones (puede recibir un rol+comentario o los 3 campos en bulk)
+         * POST: idsolicitud, role, comment
+         * OR: idsolicitud, comite_interno, comite_externo, gerencia_administrativa
+         */
+        public function add_aprobacion_ajax()
+        {
+            if (!$this->input->is_ajax_request()) {
+                // allow POST from regular forms too, but prefer AJAX
+            }
+
+            $idsolicitud = $this->input->post('idsolicitud');
+            if (!$idsolicitud || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+                return;
+            }
+
+            $u = $this->ion_auth->user()->row();
+            $user_id = ($u ? $u->id : 0);
+            $username = ($u ? (trim($u->first_name . ' ' . $u->last_name) ?: $u->username) : 'Sistema');
+
+            $saved_any = false;
+
+            // single role mode
+            $role = $this->input->post('role');
+            $comment = trim($this->input->post('comment'));
+            if ($role && $comment !== '') {
+                $row = array(
+                    'idsolicitud' => $idsolicitud,
+                    'role' => $role,
+                    'user_id' => $user_id,
+                    'username' => $username,
+                    'comment' => $comment,
+                    'aprobado_por' => $this->input->post('aprobado_por') ?: null
+                );
+                $this->core_model->insert('tb_solicitud_aprobaciones', $row, TRUE);
+                $last = $this->session->userdata('last_id');
+                if ($last) { $saved_any = true; }
+            } else {
+                // bulk mode: three fields
+                $fields = array(
+                    'Comite Interno' => trim($this->input->post('comite_interno')),
+                    'Comite Externo' => trim($this->input->post('comite_externo')),
+                    'Gerencia Administrativa' => trim($this->input->post('gerencia_administrativa'))
+                );
+                foreach ($fields as $r => $c) {
+                    if ($c !== '') {
+                        $row = array(
+                            'idsolicitud' => $idsolicitud,
+                            'role' => $r,
+                            'user_id' => $user_id,
+                            'username' => $username,
+                            'comment' => $c
+                        );
+                        $this->core_model->insert('tb_solicitud_aprobaciones', $row, TRUE);
+                        $last = $this->session->userdata('last_id');
+                        if ($last) { $saved_any = true; }
+                    }
+                }
+            }
+
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => $saved_any, 'message' => ($saved_any ? 'Aprobaciones guardadas' : 'No se guardó ninguna aprobación'))));
+        }
+
+        /**
+         * AJAX: submit a single validation decision (approve/reject) with optional photo
+         * Expects POST: idsolicitud, decision (approve|reject), comment, optional file field 'photo'
+         */
+        public function submit_validacion_ajax()
+        {
+            // allow non-AJAX POSTs too
+            $idsolicitud = $this->input->post('idsolicitud');
+            $decision = $this->input->post('decision');
+            $comment = trim($this->input->post('comment'));
+
+            if (!$idsolicitud || !$decision || ($comment === '')) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Parámetros incompletos')));
+                return;
+            }
+
+            if (!$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+                return;
+            }
+
+            // prevent multiple validation decisions by same role: allow multiple historic entries but UI considers first non-empty
+            $u = $this->ion_auth->user()->row();
+            $user_id = ($u ? $u->id : 0);
+            $username = ($u ? (trim($u->first_name . ' ' . $u->last_name) ?: $u->username) : 'Sistema');
+
+            // optional photo handling: if provided, save to uploads/solicitudes/{id}/ and record in fotos table
+            $photo_path = null;
+            if (!empty($_FILES) && isset($_FILES['photo']) && $_FILES['photo']['error'] === UPLOAD_ERR_OK) {
+                $file = $_FILES['photo'];
+                $allowed = array('image/jpeg', 'image/jpg', 'image/png');
+                $maxBytes = 5 * 1024 * 1024;
+                if ($file['size'] <= $maxBytes && in_array($file['type'], $allowed)) {
+                    $upload_dir = FCPATH . 'uploads/solicitudes/' . intval($idsolicitud) . '/';
+                    if (!is_dir($upload_dir)) @mkdir($upload_dir, 0755, true);
+                    $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+                    $basename = time() . '_' . bin2hex(random_bytes(6));
+                    $filename = $basename . '.' . $ext;
+                    $dest = $upload_dir . $filename;
+                    if (move_uploaded_file($file['tmp_name'], $dest)) {
+                        // save to fotos table
+                        $row = array(
+                            'idsolicitud' => $idsolicitud,
+                            'filename' => 'solicitudes/' . intval($idsolicitud) . '/' . $filename,
+                            'mime' => $file['type'],
+                            'size' => (int)$file['size']
+                        );
+                        $this->core_model->insert('tb_solicitud_photos', $row, TRUE);
+                        $photo_path = $row['filename'];
+                    }
+                }
+            }
+
+            // prevent multiple validation decisions (role 'Validación')
+            $existing_validacion = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $idsolicitud, 'role' => 'Validación'));
+            if (!empty($existing_validacion)) {
+                $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Ya existe una validación para esta solicitud.')));
+                return;
+            }
+
+            // build approval record
+            $role = 'Validación';
+            $full_comment = '[' . ($decision === 'approve' ? 'Aprobado' : 'Rechazado') . '] ' . $comment;
+            if ($photo_path) {
+                $full_comment .= ' [foto:' . $photo_path . ']';
+            }
+
+            $ins = array(
+                'idsolicitud' => $idsolicitud,
+                'role' => $role,
+                'user_id' => $user_id,
+                'username' => $username,
+                'comment' => $full_comment,
+                'aprobado_por' => $this->input->post('aprobado_por') ?: null,
+                // store any propuesta overrides provided by the approver (JSON string)
+                'propuesta_overrides' => $this->input->post('propuesta_overrides') ? $this->input->post('propuesta_overrides') : null
+            );
+
+            $this->core_model->insert('tb_solicitud_aprobaciones', $ins, TRUE);
+            $last = $this->session->userdata('last_id');
+
+            // Update solicitud estado_aprobacion field so other lists can reflect status
+            if ($last) {
+                if ($decision === 'approve') {
+                    $this->db->where('idsolicitud', $idsolicitud)->update('tb_solicitudes', array('estado_aprobacion' => 'aprobado'));
+                } else {
+                    $this->db->where('idsolicitud', $idsolicitud)->update('tb_solicitudes', array('estado_aprobacion' => 'rechazado'));
+                }
+
+                // Persist propuestas for the solicitud so next step (Plan de Pago) can use them.
+                // Only persist when the decision was APPROVE.
+                if ($decision === 'approve') {
+                    try {
+                        // remove existing propuestas for this solicitud
+                        $this->core_model->delete('tb_solicitud_propuestas', array('idsolicitud' => $idsolicitud));
+
+                        // get selected product ids from solicitud.propuesta_tipos
+                        $sol = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud));
+                        $selected_ids = array();
+                        if ($sol && !empty($sol->propuesta_tipos)) {
+                            $selected_ids = json_decode($sol->propuesta_tipos, true);
+                            if (!is_array($selected_ids)) $selected_ids = array();
+                        }
+
+                        // overrides sent with approval (optional)
+                        $overrides = array();
+                        $raw_over = $this->input->post('propuesta_overrides');
+                        if ($raw_over) {
+                            $decoded = json_decode($raw_over, true);
+                            if (is_array($decoded)) {
+                                foreach ($decoded as $o) {
+                                    if (isset($o['id'])) {
+                                        // normalize keys: allow 'comision' or 'comision_desembolso'
+                                        $overrides[$o['id']] = $o;
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!empty($selected_ids)) {
+                            // fetch product rows for selected ids
+                            $this->db->where_in('id', $selected_ids);
+                            $prod_rows = $this->db->get('tb_tipo_productos')->result();
+                            $map = array();
+                            foreach ($prod_rows as $pr) { $map[$pr->id] = $pr; }
+
+                            foreach ($selected_ids as $pid) {
+                                if (!isset($map[$pid])) continue;
+                                $prod = $map[$pid];
+                                // if override exists use it; otherwise use product defaults
+                                $monto = null;
+                                $tasa = null;
+                                if (isset($overrides[$pid])) {
+                                    $o = $overrides[$pid];
+                                    $monto = (array_key_exists('monto', $o) && ($o['monto'] !== null && $o['monto'] !== '')) ? $o['monto'] : $monto;
+                                    $tasa = (array_key_exists('tasa', $o) && ($o['tasa'] !== null && $o['tasa'] !== '')) ? $o['tasa'] : $tasa;
+                                    $plazo_override = (array_key_exists('plazo', $o) && ($o['plazo'] !== null && $o['plazo'] !== '')) ? $o['plazo'] : null;
+                                    $com_override = (array_key_exists('comision', $o) && ($o['comision'] !== null && $o['comision'] !== '')) ? $o['comision'] : (array_key_exists('comision_desembolso', $o) ? $o['comision_desembolso'] : null);
+                                } else {
+                                    $plazo_override = null;
+                                    $com_override = null;
+                                }
+                                if ($monto === null) {
+                                    // prefer monto_min if present, else monto_max, else null
+                                    if (isset($prod->monto_min) && $prod->monto_min !== null && $prod->monto_min !== '') $monto = $prod->monto_min;
+                                    elseif (isset($prod->monto_max) && $prod->monto_max !== null && $prod->monto_max !== '') $monto = $prod->monto_max;
+                                }
+                                if ($tasa === null) {
+                                    if (isset($prod->tasa_mensual) && $prod->tasa_mensual !== null && $prod->tasa_mensual !== '') $tasa = $prod->tasa_mensual;
+                                }
+                                // if overrides for plazo/comision exist, use them; otherwise product defaults
+                                $row = array(
+                                    'idsolicitud' => $idsolicitud,
+                                    'idtipo_producto' => $pid,
+                                    'monto' => $monto,
+                                    'tasa' => $tasa,
+                                    'comision_desembolso' => ($com_override !== null ? $com_override : (isset($prod->comision_desembolso) ? $prod->comision_desembolso : null)),
+                                    'plazo_min' => (isset($prod->plazo_min) ? $prod->plazo_min : null),
+                                    'plazo_max' => ($plazo_override !== null ? $plazo_override : (isset($prod->plazo_max) ? $prod->plazo_max : null))
+                                );
+                                $this->core_model->insert('tb_solicitud_propuestas', $row);
+
+                                // If overrides had comments for this producto, persist history rows
+                                if (isset($overrides[$pid]) && is_array($overrides[$pid]) && isset($overrides[$pid]['comments']) && is_array($overrides[$pid]['comments'])) {
+                                    $oc = $overrides[$pid]['comments'];
+                                    // fields map: key in comments => human field name
+                                    $fields_map = array('monto' => 'monto', 'tasa' => 'tasa', 'plazo' => 'plazo_max', 'comision' => 'comision_desembolso');
+                                    foreach ($fields_map as $ck => $dbfield) {
+                                        if (array_key_exists($ck, $oc) && trim($oc[$ck]) !== '') {
+                                            $oldv = null;
+                                            if ($ck === 'monto') {
+                                                $oldv = (isset($prod->monto_min) && $prod->monto_min !== null ? $prod->monto_min : (isset($prod->monto_max) ? $prod->monto_max : null));
+                                            } elseif ($ck === 'tasa') { $oldv = isset($prod->tasa_mensual) ? $prod->tasa_mensual : null; }
+                                            elseif ($ck === 'plazo') { $oldv = isset($prod->plazo_max) ? $prod->plazo_max : null; }
+                                            elseif ($ck === 'comision') { $oldv = isset($prod->comision_desembolso) ? $prod->comision_desembolso : null; }
+
+                                            $historyRow = array(
+                                                'idsolicitud' => $idsolicitud,
+                                                'idtipo_producto' => $pid,
+                                                'field_name' => $ck,
+                                                'old_value' => ($oldv !== null ? (string)$oldv : null),
+                                                'new_value' => (isset($overrides[$pid][$ck]) ? (string)$overrides[$pid][$ck] : null),
+                                                'comment' => $oc[$ck],
+                                                'user_id' => $user_id,
+                                                'username' => $username
+                                            );
+                                            $this->core_model->insert('tb_solicitud_propuestas_history', $historyRow);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    } catch (Exception $e) {
+                        log_message('error', 'Error persisting solicitud propuestas for id ' . $idsolicitud . ': ' . $e->getMessage());
+                    }
+                }
+            }
+
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => (bool)$last, 'message' => ($last ? 'Decisión registrada' : 'Error al registrar'))));
+        }
+
+        /**
+         * Descargar aprobaciones en PDF para una solicitud
+         * URL: /solicitudes/download_aprobaciones/{id}
+         */
+        public function download_aprobaciones($id = NULL)
+        {
+            if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+                $this->session->set_flashdata('error', 'Registro no encontrado');
+                redirect($this->router->fetch_class());
+            }
+
+            $aprobaciones = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $id));
+            if (empty($aprobaciones)) {
+                $this->session->set_flashdata('info', 'Pendiente de aprobación: no hay aprobaciones para descargar.');
+                redirect($this->router->fetch_class() . '/validacion_aprobacion');
+            }
+
+            $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id));
+
+            $data = array(
+                'solicitud' => $solicitud,
+                'aprobaciones' => $aprobaciones,
+                'generated_at' => date('d/m/Y H:i')
+            );
+
+            // include persisted propuestas (if any) so PDF contains conditions: monto, plazo, tasa, comision
+            try {
+                $propuestas = $this->core_model->get_by_id_all('tb_solicitud_propuestas', array('idsolicitud' => $id));
+                if (!is_array($propuestas)) $propuestas = array();
+            } catch (Exception $e) {
+                $propuestas = array();
+            }
+            $data['propuestas'] = $propuestas;
+
+            $html = $this->load->view('solicitudes/aprobaciones_pdf', $data, TRUE);
+            $filename = 'Aprobaciones_Solicitud_' . $id;
+            $this->pdf->createPDF($html, $filename, TRUE);
+        }
+    /**
+     * Generate and stream PDF for a solicitud
+     * URL: /solicitudes/pdf/{id}
+     */
+    public function pdf($id = NULL)
+    {
+    if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+            $this->session->set_flashdata('error', 'Registro no encontrado para generar PDF');
+            redirect($this->router->fetch_class());
+        }
+
+    $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id));
+
+        // prepare generated metadata (user and timestamp)
+        $user = $this->ion_auth->user()->row();
+        $generated_by = '';
+        if ($user) {
+            if (!empty($user->first_name) || !empty($user->last_name)) {
+                $generated_by = trim($user->first_name . ' ' . $user->last_name);
+            } else {
+                $generated_by = isset($user->username) ? $user->username : '';
+            }
+        }
+        $generated_at = date('d/m/Y H:i');
+
+        $data = array(
+            'solicitud' => $solicitud,
+            'generated_by' => $generated_by,
+            'generated_at' => $generated_at,
+            'document_title' => 'Solicitud Inicial de Crédito'
+        );
+
+    // include approvals for the PDF
+    $data['aprobaciones'] = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $id));
+
+    // render view to HTML
+    $html = $this->load->view('solicitudes/pdf', $data, TRUE);
+
+    // load pdf library and stream
+    $this->load->library('pdf');
+    $filename = 'Solicitud_Inicial_de_Credito_' . $id;
+    $this->pdf->createPDF($html, $filename, TRUE);
+    }
+
+    /**
+     * Emitir plan de pago: redirect to plan page or show message
+     */
+    public function emitir_plan($id = NULL)
+    {
+        if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+            $this->session->set_flashdata('error', 'Registro no encontrado');
+            redirect($this->router->fetch_class() . '/validacion_aprobacion');
+            return;
+        }
+
+        // check if there are propuestas persisted
+        $props = $this->core_model->get_by_id_all('tb_solicitud_propuestas', array('idsolicitud' => $id));
+        if (empty($props)) {
+            $this->session->set_flashdata('info', 'No hay propuestas persistidas para esta solicitud. Genere las propuestas desde Validación primero.');
+            redirect($this->router->fetch_class() . '/validacion_aprobacion');
+            return;
+        }
+
+        // Redirect to plan generation page (stub) - implement plan UI separately
+        redirect($this->router->fetch_class() . '/plan_pago/' . $id);
+    }
+
+    /**
+     * AJAX endpoint to save an approval for a solicitud
+     * Expects POST: idsolicitud, role, comment
+     */
+    public function approve_ajax()
+    {
+        if (!$this->input->is_ajax_request()) {
+            show_404();
+        }
+
+    $idsolicitud = $this->input->post('idsolicitud');
+    $role = $this->input->post('role');
+    $comment = $this->input->post('comment');
+
+        if (!$idsolicitud || !$role) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Parámetros incompletos')));
+            return;
+        }
+
+        // verify solicitud exists
+    if (!$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+            return;
+        }
+
+        // No autenticación, usar valores por defecto
+        $user_id = 0;
+        $username = 'Invitado';
+
+        // prevent duplicate approvals for the same role on the same solicitud
+    $existing = $this->core_model->get_by_id_all('tb_solicitud_aprobaciones', array('idsolicitud' => $idsolicitud, 'role' => $role));
+        if (!empty($existing)) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Este rol ya ha aprobado la solicitud')));
+            return;
+        }
+
+        $data = array(
+            'idsolicitud' => $idsolicitud,
+            'role' => $role,
+            'user_id' => $user_id,
+            'username' => $username,
+            'comment' => $comment
+        );
+
+        // insert approval
+    $this->core_model->insert('tb_solicitud_aprobaciones', $data, TRUE);
+        $last_id = $this->session->userdata('last_id');
+        $approval = NULL;
+        if ($last_id) {
+            $approval = $this->core_model->get_by_id('tb_solicitud_aprobaciones', array('idaprobacion' => $last_id));
+        }
+
+        $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'message' => 'Aprobación registrada', 'approval' => $approval)));
+    }
+
+    /**
+     * AJAX: upload photo for a solicitud (supports multi-part POST)
+     * POST: idsolicitud, file upload field `photo` (single file per request)
+     */
+    public function upload_photo_ajax()
+    {
+        // Allow both AJAX and normal POST (clients may not set X-Requested-With)
+        $idsolicitud = $this->input->post('idsolicitud');
+        if (!$idsolicitud || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $idsolicitud))) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada')));
+            return;
+        }
+
+        if (empty($_FILES) || !isset($_FILES['photo'])) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Archivo no recibido')));
+            return;
+        }
+
+        // enforce max 5 photos per solicitud
+        $existing = $this->core_model->get_by_id_all('tb_solicitud_photos', array('idsolicitud' => $idsolicitud));
+        $count = is_array($existing) ? count($existing) : 0;
+        if ($count >= 5) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Ya existen 5 fotos. Elimine alguna antes de subir.')));
+            return;
+        }
+
+        $file = $_FILES['photo'];
+        // basic validation
+        $allowed = array('image/jpeg', 'image/jpg', 'image/png');
+        $maxBytes = 5 * 1024 * 1024; // 5MB
+        if ($file['error'] !== UPLOAD_ERR_OK) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Error en la subida: ' . $file['error'])));
+            return;
+        }
+        if ($file['size'] > $maxBytes) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'El archivo excede el tamaño máximo permitido (5MB).')));
+            return;
+        }
+        if (!in_array($file['type'], $allowed)) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Tipo de archivo no permitido. Solo JPG/PNG.')));
+            return;
+        }
+
+        // prepare upload dir
+        $upload_dir = FCPATH . 'uploads/solicitudes/' . intval($idsolicitud) . '/';
+        if (!is_dir($upload_dir)) {
+            @mkdir($upload_dir, 0755, true);
+        }
+
+        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+        $basename = time() . '_' . bin2hex(random_bytes(6));
+        $filename = $basename . '.' . $ext;
+        $dest = $upload_dir . $filename;
+
+        if (!move_uploaded_file($file['tmp_name'], $dest)) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'No se pudo guardar el archivo.')));
+            return;
+        }
+
+        // save metadata
+        $row = array(
+            'idsolicitud' => $idsolicitud,
+            'filename' => 'solicitudes/' . intval($idsolicitud) . '/' . $filename,
+            'mime' => $file['type'],
+            'size' => (int)$file['size']
+        );
+        $this->core_model->insert('tb_solicitud_photos', $row, TRUE);
+        $last = $this->session->userdata('last_id');
+
+        $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => (bool)$last, 'message' => ($last ? 'Subida correcta' : 'Error al registrar archivo'), 'file' => ($last ? $row : null))));
+    }
+
+    /**
+     * AJAX: list photos for a solicitud
+     * GET: /solicitudes/list_photos_ajax/{id}
+     */
+    public function list_photos_ajax($id = NULL)
+    {
+        if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Solicitud no encontrada', 'photos' => array())));
+            return;
+        }
+        $photos = $this->core_model->get_by_id_all('tb_solicitud_photos', array('idsolicitud' => $id));
+        if (!is_array($photos)) $photos = array();
+        $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'photos' => $photos)));
+    }
+
+    /**
+     * AJAX: delete photo
+     * POST: idphoto
+     */
+    public function delete_photo_ajax()
+    {
+        $idphoto = $this->input->post('idphoto');
+        if (!$idphoto) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'idphoto requerido')));
+            return;
+        }
+        $photo = $this->core_model->get_by_id('tb_solicitud_photos', array('idphoto' => $idphoto));
+        if (!$photo) {
+            $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Archivo no encontrado')));
+            return;
+        }
+        $filepath = FCPATH . 'uploads/' . $photo->filename;
+        // delete file if exists
+        if (is_file($filepath)) {
+            @unlink($filepath);
+        }
+        // delete DB record
+        $this->core_model->delete('tb_solicitud_photos', array('idphoto' => $idphoto));
+        $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'message' => 'Eliminado')));
+    }
+
+    public function del($cliente_id = NULL)
+    {
+        if (!$this->ion_auth->is_admin()) {
+            $this->session->set_flashdata('info', 'No tienes permiso para eliminar solicitudes.');
+            redirect('/');
+        }
+    if (!$cliente_id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $cliente_id))) {
+            $this->session->set_flashdata('error', 'Registro no encontrado');
+            redirect($this->router->fetch_class());
+        }
+    if ($this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $cliente_id, 'estado' => 1))) {
+            $this->session->set_flashdata('error', 'Solicitud con Estado Activo no puede ser eliminado.');
+            redirect($this->router->fetch_class());
+        }
+        // If you want to enforce relations with other tables, add checks here
+    $this->core_model->delete('tb_solicitudes', array('idsolicitud' => $cliente_id));
+        redirect($this->router->fetch_class());
+    }
+}

@@ -1,0 +1,2 @@
+ERROR 1064 (42000) at line 218 in file: 'C:\xampp\htdocs\Crediblamen\sql\import_carga_credito.sql': You have an error in your SQL syntax; check the manual that corresponds to your MariaDB server version for the right syntax to use near '(vendedor), '')) AS promotor,
+  MAX(NULLIF(TRIM(frecuencia_pago), '')) AS tipo_c' at line 38
