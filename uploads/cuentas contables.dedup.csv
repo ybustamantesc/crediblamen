@@ -1,0 +1,298 @@
+Cuentas;Description;Estructura;"NIVEL ";Naturaleza
+11010000000;CAJA;Activo;"Nivel 3";Deudora
+11010100000;"CAJA PRINCIPAL";Activo;"Nivel 4";Deudora
+11010101000;"CAJA PRINCIPAL";Activo;"Nivel 5";Deudora
+11010101100;"CAJA PRINCIPAL";Activo;"Nivel 6";Deudora
+11010101200;"CAJA PRINCIPAL";Activo;"Nivel 6";Deudora
+11010101201;"CAJA PRINCIPAL C$";Activo;"Nivel 7";Deudora
+11010101300;"CAJA PRINCIPAL";Activo;"Nivel 6";Deudora
+11010101301;"CAJA PRINCIPAL U$";Activo;"Nivel 7";Deudora
+11010200000;"CAJA OFICINAS";Activo;"Nivel 4";Deudora
+11010201000;"CAJA OFICINAS";Activo;"Nivel 5";Deudora
+11010201100;"CAJA OFICINAS";Activo;"Nivel 6";Deudora
+11010201200;"CAJA OFICINAS";Activo;"Nivel 6";Deudora
+11010201201;"Cajas Oficinas";Activo;"Nivel 7";Deudora
+11010201300;"CAJA OFICINAS";Activo;"Nivel 6";Deudora
+11010300000;"REMESAS EN TRANSITO";Activo;"Nivel 4";Deudora
+11010301000;"REMESAS EN TRANSITO";Activo;"Nivel 5";Deudora
+11010301100;"REMESAS EN TRANSITO";Activo;"Nivel 6";Deudora
+11010301200;"REMESAS EN TRANSITO";Activo;"Nivel 6";Deudora
+11010301201;"Remesas en tránsito MNL";Activo;"Nivel 7";Deudora
+11010301300;"REMESAS EN TRANSITO";Activo;"Nivel 6";Deudora
+11020000000;BANCOS;Activo;"Nivel 3";Deudora
+11020100000;"DEPOSITOS EN INSTITUCIONES FINANCIERAS DEL PAIS";Activo;"Nivel 4";Deudora
+11020101000;"Depósitos en Cuenta Corriente con intereses";Activo;"Nivel 5";Deudora
+11020101100;"Depósitos en Cuenta Corriente con intereses";Activo;"Nivel 6";Deudora
+11020101200;"Depósitos en Cuenta Corriente con intereses";Activo;"Nivel 6";Deudora
+11020101300;"Depósitos en Cuenta Corriente con intereses";Activo;"Nivel 6";Deudora
+11020101301;"Depósitos en Cuenta Corriente con intereses ME (LA FISE)";Activo;"Nivel 7";Deudora
+11020102000;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 5";Deudora
+11020102100;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020102200;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020102201;"Depósito en Cuenta Corriente Sin Interes MNL (LA FISE)";Activo;"Nivel 7";Deudora
+11020102202;"Depósito en Cuenta Corriente Sin Interes MNL (BANPRO)";Activo;"Nivel 7";Deudora
+11020102203;"Depósito en Cuenta Corriente Sin Interes MNL (BAC)";Activo;"Nivel 7";Deudora
+11020102300;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020102301;"Depósito en Cuenta Corriente Sin Interes ME (LA FISE)";Activo;"Nivel 7";Deudora
+11020102302;"Depósito en Cuenta Corriente Sin Interes ME (BANPRO)";Activo;"Nivel 7";Deudora
+11020102303;"Depósito en Cuenta Corriente Sin Interes ME (BAC)";Activo;"Nivel 7";Deudora
+11020103000;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 5";Deudora
+11020103100;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020103200;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020103300;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020104000;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 5";Deudora
+11020104100;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020104200;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020104300;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020105000;"Depósitos a Plazo";Activo;"Nivel 5";Deudora
+11020105100;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020105200;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020105300;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020109000;"Depósitos en Tránsito";Activo;"Nivel 5";Deudora
+11020109100;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11020109200;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11020109201;"Depósitos en Tránsito";Activo;"Nivel 7";Deudora
+11020109300;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11020200000;"DEPOSITOS EN OFICINA MATRIZ Y SUCURSALES EN EL EXTERIOR";Activo;"Nivel 4";Deudora
+11020201000;"Depósitos en Cuentas Corrientes con intereses";Activo;"Nivel 5";Deudora
+11020201100;"Depósitos en Cuentas Corrientes con intereses";Activo;"Nivel 6";Deudora
+11020201200;"Depósitos en Cuentas Corrientes con intereses";Activo;"Nivel 6";Deudora
+11020201300;"Depósitos en Cuentas Corrientes con intereses";Activo;"Nivel 6";Deudora
+11020202000;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 5";Deudora
+11020202100;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020202200;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020202300;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020203000;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 5";Deudora
+11020203100;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020203200;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020203300;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020204000;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 5";Deudora
+11020204100;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020204200;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020204300;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020205000;"Depósitos a Plazo";Activo;"Nivel 5";Deudora
+11020205100;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020205200;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020205300;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020209000;"Depósitos en Tránsito";Activo;"Nivel 5";Deudora
+11020209100;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11020209200;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11020209300;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11020300000;"DEPOSITOS EN OTRAS INSTITUCIONES FINANCIERAS DEL EXTERIOR";Activo;"Nivel 4";Deudora
+11020301000;"Depósitos en Cuenta Corriente con intereses";Activo;"Nivel 5";Deudora
+11020301100;"Depósitos en Cuenta Corriente con intereses";Activo;"Nivel 6";Deudora
+11020301200;"Depósitos en Cuenta Corriente con intereses";Activo;"Nivel 6";Deudora
+11020301300;"Depósitos en Cuenta Corriente con intereses";Activo;"Nivel 6";Deudora
+11020302000;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 5";Deudora
+11020302100;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020302200;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020302300;"Depósitos en Cuenta Corriente sin intereses";Activo;"Nivel 6";Deudora
+11020303000;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 5";Deudora
+11020303100;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020303200;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020303300;"Otros Depósitos a la Vista con intereses";Activo;"Nivel 6";Deudora
+11020304000;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 5";Deudora
+11020304100;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020304200;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020304300;"Otros Depósitos a la Vista sin intereses";Activo;"Nivel 6";Deudora
+11020305000;"Depósitos a Plazo";Activo;"Nivel 5";Deudora
+11020305100;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020305200;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020305300;"Depósitos a Plazo";Activo;"Nivel 6";Deudora
+11020309000;"Depósitos en Tránsito";Activo;"Nivel 5";Deudora
+11020309100;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11020309200;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11020309300;"Depósitos en Tránsito";Activo;"Nivel 6";Deudora
+11030000000;"EFECTOS DE COBRO INMEDIATO";Activo;"Nivel 3";Deudora
+11030100000;"CHEQUES U OTROS DOCUMENTOS SIMILARES RECIBIDOS";Activo;"Nivel 4";Deudora
+11030101000;"Instituciones Financieras del País";Activo;"Nivel 5";Deudora
+11030101100;"Instituciones Financieras del País";Activo;"Nivel 6";Deudora
+11030101200;"Instituciones Financieras del País";Activo;"Nivel 6";Deudora
+11030101300;"Instituciones Financieras del País";Activo;"Nivel 6";Deudora
+11030102000;"Oficina matriz y sucursales en el exterior";Activo;"Nivel 5";Deudora
+11030102100;"Oficina matriz y sucursales en el exterior";Activo;"Nivel 6";Deudora
+11030102200;"Oficina matriz y sucursales en el exterior";Activo;"Nivel 6";Deudora
+11030102300;"Oficina matriz y sucursales en el exterior";Activo;"Nivel 6";Deudora
+11030103000;"Instituciones Financieras del Exterior";Activo;"Nivel 5";Deudora
+11030103100;"Instituciones Financieras del Exterior";Activo;"Nivel 6";Deudora
+11030103200;"Instituciones Financieras del Exterior";Activo;"Nivel 6";Deudora
+11030103300;"Instituciones Financieras del Exterior";Activo;"Nivel 6";Deudora
+11040000000;"DISPONIBILIDADES RESTRINGIDAS";Activo;"Nivel 3";Deudora
+11040100000;"CAJA CHICA";Activo;"Nivel 4";Deudora
+11040101000;"CAJA CHICA";Activo;"Nivel 5";Deudora
+11040101100;"CAJA CHICA";Activo;"Nivel 6";Deudora
+11040101200;"CAJA CHICA";Activo;"Nivel 6";Deudora
+11040101201;"Caja Chica";Activo;"Nivel 7";Deudora
+11040101300;"CAJA CHICA";Activo;"Nivel 6";Deudora
+11040101301;"Caja Chica";Activo;"Nivel 7";Deudora
+11040200000;"OTORGADAS EN GARANTÍA EN INSTITUCIONES FINANCIERAS DEL PAÍS";Activo;"Nivel 4";Deudora
+11040201000;"OTORGADAS EN GARANTÍA EN INSTITUCIONES FINANCIERAS DEL PAÍS";Activo;"Nivel 5";Deudora
+11040201100;"Con intereses";Activo;"Nivel 6";Deudora
+11040201200;"Con intereses";Activo;"Nivel 6";Deudora
+11040201300;"Con intereses";Activo;"Nivel 6";Deudora
+11040202000;"Sin intereses";Activo;"Nivel 5";Deudora
+11040202100;"Sin intereses";Activo;"Nivel 6";Deudora
+11040202200;"Sin intereses";Activo;"Nivel 6";Deudora
+11040202300;"Sin intereses";Activo;"Nivel 6";Deudora
+11040300000;"OTORGADAS EN GARANTÍA EN INSTITUCIONES FINANCIERAS DEL EXTERIOR";Activo;"Nivel 4";Deudora
+11040301000;"Con intereses";Activo;"Nivel 5";Deudora
+11040301100;"Con intereses";Activo;"Nivel 6";Deudora
+11040301200;"Con intereses";Activo;"Nivel 6";Deudora
+11040301300;"Con intereses";Activo;"Nivel 6";Deudora
+11040302000;"Sin intereses";Activo;"Nivel 5";Deudora
+11040302100;"Sin intereses";Activo;"Nivel 6";Deudora
+11040302200;"Sin intereses";Activo;"Nivel 6";Deudora
+11040302300;"Sin intereses";Activo;"Nivel 6";Deudora
+11040400000;"Por Orden Administrativa u Otros";Activo;"Nivel 4";Deudora
+11040401000;"Con intereses";Activo;"Nivel 5";Deudora
+11040401100;"Con intereses";Activo;"Nivel 6";Deudora
+11040401200;"Con intereses";Activo;"Nivel 6";Deudora
+11040401300;"Con intereses";Activo;"Nivel 6";Deudora
+11040402000;"Sin intereses";Activo;"Nivel 5";Deudora
+11040402100;"Sin intereses";Activo;"Nivel 6";Deudora
+11040402200;"Sin intereses";Activo;"Nivel 6";Deudora
+11040402300;"Sin intereses";Activo;"Nivel 6";Deudora
+11050000000;"INTERESES POR COBRAR SOBRE DISPONIBILIDADES";Activo;"Nivel 3";Deudora
+11050100000;"INTERESES POR COBRAR SOBRE DEPOSITOS EN INSTITUCIONES FINANCIERAS DEL PAÍS";Activo;"Nivel 4";Deudora
+11050101000;"INTERESES POR COBRAR SOBRE DEPOSITOS EN INSTITUCIONES FINANCIERAS DEL PAÍS";Activo;"Nivel 5";Deudora
+11050101100;"INTERESES POR COBRAR SOBRE DEPOSITOS EN INSTITUCIONES FINANCIERAS DEL PAÍS";Activo;"Nivel 6";Deudora
+11050101200;"INTERESES POR COBRAR SOBRE DEPOSITOS EN INSTITUCIONES FINANCIERAS DEL PAÍS";Activo;"Nivel 6";Deudora
+11050101300;"INTERESES POR COBRAR SOBRE DEPOSITOS EN INSTITUCIONES FINANCIERAS DEL PAÍS";Activo;"Nivel 6";Deudora
+11050200000;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OFICINA MATRIZ Y SUCURSALES DEL EXTERIOR";Activo;"Nivel 4";Deudora
+11050201000;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OFICINA MATRIZ Y SUCURSALES DEL EXTERIOR";Activo;"Nivel 5";Deudora
+11050201100;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OFICINA MATRIZ Y SUCURSALES DEL EXTERIOR";Activo;"Nivel 6";Deudora
+11050201200;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OFICINA MATRIZ Y SUCURSALES DEL EXTERIOR";Activo;"Nivel 6";Deudora
+11050201300;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OFICINA MATRIZ Y SUCURSALES DEL EXTERIOR";Activo;"Nivel 6";Deudora
+11050300000;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OTRAS INSTITUCIONES FINANCIERAS DEL EXTERIOR";Activo;"Nivel 4";Deudora
+11050301000;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OTRAS INSTITUCIONES FINANCIERAS DEL EXTERIOR";Activo;"Nivel 5";Deudora
+11050301100;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OTRAS INSTITUCIONES FINANCIERAS DEL EXTERIOR";Activo;"Nivel 6";Deudora
+11050301200;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OTRAS INSTITUCIONES FINANCIERAS DEL EXTERIOR";Activo;"Nivel 6";Deudora
+11050301300;"INTERESES POR COBRAR SOBRE DEPOSITOS EN OTRAS INSTITUCIONES FINANCIERAS DEL EXTERIOR";Activo;"Nivel 6";Deudora
+11050400000;"INTERESES POR COBRAR SOBRE DISPONIBILIDADES RESTRINGIDAS";Activo;"Nivel 4";Deudora
+11050401000;"INTERESES POR COBRAR SOBRE DISPONIBILIDADES RESTRINGIDAS";Activo;"Nivel 5";Deudora
+11050401100;"INTERESES POR COBRAR SOBRE DISPONIBILIDADES RESTRINGIDAS";Activo;"Nivel 6";Deudora
+11050401200;"INTERESES POR COBRAR SOBRE DISPONIBILIDADES RESTRINGIDAS";Activo;"Nivel 6";Deudora
+11050401300;"INTERESES POR COBRAR SOBRE DISPONIBILIDADES RESTRINGIDAS";Activo;"Nivel 6";Deudora
+12000000000;"INVERSIONES EN VALORES NEGOCIABLES Y A VENCIMIENTO";Activo;"Nivel 2";Deudora
+12010000000;"INVERSIONES AL VALOR RAZONABLE CON CAMBIOS EN RESULTADOS";Activo;"Nivel 3";Deudora
+12010100000;"TITULOS DE DEUDA";Activo;"Nivel 4";Deudora
+12010101000;"Valores del Banco Central de Nicaragua";Activo;"Nivel 5";Deudora
+12010101100;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010101200;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010101300;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010102000;"Valores del Gobierno Central";Activo;"Nivel 5";Deudora
+12010102100;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010102200;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010102300;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010103000;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 5";Deudora
+12010103100;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010103200;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010103300;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010104000;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 5";Deudora
+12010104100;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010104200;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010104300;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010105000;"Valores emitidos por instituciones financieras del país";Activo;"Nivel 5";Deudora
+12010105100;"Valores emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010105200;"Valores emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010105300;"Valores emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010106000;"Valores emitidos por instituciones financieras del exterior";Activo;"Nivel 5";Deudora
+12010106100;"Valores emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010106200;"Valores emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010106300;"Valores emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010200000;"INCREMENTO POR VALUACION TITULOS DE DEUDA";Activo;"Nivel 4";Deudora
+12010201000;"Valores del Banco Central de Nicaragua";Activo;"Nivel 5";Deudora
+12010201100;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010201200;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010201300;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010202000;"Valores del Gobierno Central";Activo;"Nivel 5";Deudora
+12010202100;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010202200;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010202300;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010203000;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 5";Deudora
+12010203100;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010203200;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010203300;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010204000;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 5";Deudora
+12010204100;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010204200;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010204300;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010205000;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 5";Deudora
+12010205100;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010205200;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010205300;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010206000;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 5";Deudora
+12010206100;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010206200;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010206300;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010300000;"DEUDORES POR OPERACIONES DE REPORTO";Activo;"Nivel 4";Deudora
+12010301000;"Valores del Banco Central de Nicaragua";Activo;"Nivel 5";Deudora
+12010301100;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010301200;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010301300;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010302000;"Valores del Gobierno Central";Activo;"Nivel 5";Deudora
+12010302100;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010302200;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010302300;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010303000;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 5";Deudora
+12010303100;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010303200;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010303300;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010304000;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 5";Deudora
+12010304100;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010304200;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010304300;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010305000;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 5";Deudora
+12010305100;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010305200;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010305300;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010306000;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 5";Deudora
+12010306100;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010306200;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010306300;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010400000;"TITULOS ENTREGADOS EN OPERACIONES DE REPORTO";Activo;"Nivel 4";Deudora
+12010401000;"Valores del Banco Central de Nicaragua";Activo;"Nivel 5";Deudora
+12010401100;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010401200;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010401300;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12010402000;"Valores del Gobierno Central";Activo;"Nivel 5";Deudora
+12010402100;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010402200;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010402300;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12010403000;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 5";Deudora
+12010403100;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010403200;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010403300;"Valores de Otras Instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12010404000;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 5";Deudora
+12010404100;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010404200;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010404300;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12010405000;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 5";Deudora
+12010405100;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010405200;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010405300;"Valores Emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12010406000;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 5";Deudora
+12010406100;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010406200;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12010406300;"Valores Emitidos por instituciones financieras del exterior";Activo;"Nivel 6";Deudora
+12020000000;"INVERSIONES DISPONIBLES PARA LA VENTA";Activo;"Nivel 3";Deudora
+12020100000;"TITULOS DE DEUDA";Activo;"Nivel 4";Deudora
+12020101000;"Valores del Banco Central de Nicaragua";Activo;"Nivel 5";Deudora
+12020101100;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12020101200;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12020101300;"Valores del Banco Central de Nicaragua";Activo;"Nivel 6";Deudora
+12020102000;"Valores del Gobierno Central";Activo;"Nivel 5";Deudora
+12020102100;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12020102200;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12020102300;"Valores del Gobierno Central";Activo;"Nivel 6";Deudora
+12020103000;"Valores de Otras instituciones Estatales No Financieras";Activo;"Nivel 5";Deudora
+12020103100;"Valores de Otras instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12020103200;"Valores de Otras instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12020103300;"Valores de Otras instituciones Estatales No Financieras";Activo;"Nivel 6";Deudora
+12020104000;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 5";Deudora
+12020104100;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12020104200;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12020104300;"Valores Emitidos por Gobiernos Extranjeros";Activo;"Nivel 6";Deudora
+12020105000;"Valores emitidos por instituciones financieras del país";Activo;"Nivel 5";Deudora
+12020105100;"Valores emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora
+12020105200;"Valores emitidos por instituciones financieras del país";Activo;"Nivel 6";Deudora

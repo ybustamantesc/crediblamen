@@ -1,0 +1,308 @@
+﻿<!doctype html>
+<html class="no-js" lang="en">
+
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="x-ua-compatible" content="ie=edge">
+	<title>Sistema | Catálogo de Cuentas </title>
+	<meta name="description" content="Sistema Administrac��n de Prestamos o Cr��ditos">
+	<meta name="keywords" content="Prestamos, Creditos, Cuotas diarias, semanales, quincenales y mensuales, sistema cooperativas">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+
+	<link rel="icon" type="image/png" href="http://localhost/servicredit/public/src/img/favicon.png">
+
+	<link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,600,700,800" rel="stylesheet">
+
+	<link rel="stylesheet" href="http://localhost/servicredit/public/plugins/bootstrap/dist/css/bootstrap.min.css">
+	<link rel="stylesheet" href="http://localhost/servicredit/public/plugins/fontawesome-free/css/all.min.css">
+	<link rel="stylesheet" href="http://localhost/servicredit/public/plugins/icon-kit/dist/css/iconkit.min.css">
+	<link rel="stylesheet" href="http://localhost/servicredit/public/plugins/ionicons/dist/css/ionicons.min.css">
+	<link rel="stylesheet" href="http://localhost/servicredit/public/plugins/perfect-scrollbar/css/perfect-scrollbar.css">
+
+	<link rel="stylesheet" href="http://localhost/servicredit/public/plugins/tempusdominus-bootstrap-4/css/tempusdominus-bootstrap-4.min.css">
+	<link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.20/dist/sweetalert2.min.css">
+	<script src="https://cdn.jsdelivr.net/npm/sweetalert2@11.4.20/dist/sweetalert2.all.min.js"></script>
+	<!-- <link href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.min.css" rel="stylesheet">
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-datepicker/1.9.0/css/bootstrap-datepicker.standalone.min.css"> -->
+		<link id="bsdp-css" href="https://unpkg.com/bootstrap-datepicker@1.9.0/dist/css/bootstrap-datepicker3.min.css" rel="stylesheet">
+		
+		<link rel="stylesheet" href="http://localhost/servicredit/public/dist/css/theme.min.css">
+		<link rel="stylesheet" href="http://localhost/servicredit/public/css/branding.css">
+
+		<!-- Chart.js (global) -->
+		<!-- Load jQuery early so page scripts can use it (local fallback used in footer too) -->
+		<script src="http://localhost/servicredit/public/src/js/vendor/jquery-3.3.1.min.js"></script>
+		<script>
+		if (typeof jQuery === 'undefined') {
+			// If for some reason local file didn't load, try CDN as fallback
+			document.write('\x3Cscript src="https://code.jquery.com/jquery-3.6.0.min.js">\x3C/script>');
+		}
+		</script>
+		<!-- Chart.js (global) -->
+		<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+
+	</head>
+
+	<body>
+		<div class="wrapper">
+<header class="header-top" header-theme="dark">
+	<div class="container-fluid">
+		<div class="d-flex justify-content-between">
+			<div class="top-menu d-flex align-items-center">
+				<button type="button" class="btn-icon mobile-nav-toggle d-lg-none"><span></span></button>
+
+				<button type="button" id="navbar-fullscreen" class="nav-link"><i class="ik ik-maximize"></i></button>
+			</div>
+
+			<div class="top-menu d-flex align-items-center">
+												<div class="dropdown">
+					<a class="dropdown-toggle" href="#" id="userDropdown" role="button" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"><i class="ik ik-user ik-2x text-white"></i></a>
+					<div class="dropdown-menu dropdown-menu-right" aria-labelledby="userDropdown">
+						<a data-toggle="tooltip" data-placement="left" title="Actualizar Perfil" class="dropdown-item" href="http://localhost/servicredit/usuarios/core/"><i class="ik ik-user dropdown-icon"></i> Perfil</a>
+						<a data-toggle="tooltip" data-placement="left" title="Salir del Sistema" class="dropdown-item" href="http://localhost/servicredit/login/logout"><i class="ik ik-power dropdown-icon"></i> Cerrar Sesión</a>
+					</div>
+				</div>
+
+			</div>
+
+		</div>
+	</div>
+</header>
+<div class="page-wrap">
+    <div class="app-sidebar colored">
+	<style>
+		/* Improve sidebar readability: darker text and slightly smaller items */
+		.app-sidebar .navigation-main .nav-item a span {
+			color: #222 !important;
+			font-size: 13px !important;
+		}
+		.app-sidebar .navigation-main .nav-item a i {
+			color: #333 !important;
+		}
+		.app-sidebar .sidebar-profile .profile-name {
+			font-size: 14px;
+		}
+		.app-sidebar .nav-lavel {
+			font-size: 12px;
+			color: #444;
+		}
+	</style>
+	<div class="sidebar-header">
+		<a class="header-brand" href="http://localhost/servicredit/">
+			<div class="logo-img logo-wrap">
+				<img src="http://localhost/servicredit/public/img/logo.jpg" class="header-brand-img rounded-circle" alt="logo" width="36" height="36">
+			</div>
+			<!-- brand text removed to keep a cleaner, logo-only header -->
+		</a>
+		<button type="button" class="nav-toggle"><i data-toggle="expanded" class="ik ik-toggle-right toggle-icon"></i></button>
+		<button id="sidebarClose" class="nav-close"><i class="ik ik-x"></i></button>
+	</div>
+
+	
+
+
+	<div class="sidebar-profile px-3 py-2 d-flex align-items-center">
+		<div class="profile-img mr-2">
+			<img src="http://localhost/servicredit/public/img/logo.jpg" alt="avatar" class="rounded-circle" width="44" height="44">
+		</div>
+		<div class="profile-info">
+			<div class="profile-name font-weight-bold">Usuario</div>
+						<div class="profile-role small text-muted">Usuario</div>
+		</div>
+	</div>
+
+
+	<div class="sidebar-content">
+		<div class="nav-container">
+			<nav id="main-menu-navigation" class="navigation-main">
+				<div class="nav-lavel">MENÚ PRINCIPAL</div>
+								
+												
+
+			</nav>
+		</div>
+	</div>
+</div>
+
+    <div class="main-content">
+        <div class="container-fluid">
+            <div class="page-header">
+                <div class="row align-items-end">
+                    <div class="col-lg-8">
+                        <div class="page-header-title">
+                            <i class="fas fa-calculator bg-blue"></i>
+                            <div class="d-inline">
+                                <h5> Catálogo de Cuentas </h5>
+                                <span>Gestión del Plan de Cuentas</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="mb-3 d-flex justify-content-end">
+    <button id="contabBackBtn" class="btn btn-outline-secondary btn-sm"><i class="fas fa-arrow-left"></i> Regresar</button>
+</div>
+<script>
+document.addEventListener('DOMContentLoaded', function(){
+    var btn = document.getElementById('contabBackBtn');
+    if (!btn) return;
+    btn.addEventListener('click', function(e){
+        e.preventDefault();
+        var fallback = 'http://localhost/servicredit/contabilidad';
+        // Attempt history.back(); if it doesn't navigate within 300ms, redirect to fallback
+        var current = location.href;
+        try { history.back(); } catch(err) { location.href = fallback; return; }
+        setTimeout(function(){
+            if (location.href === current) {
+                location.href = fallback;
+            }
+        }, 300);
+    });
+});
+</script>
+            <div class="row">
+                <div class="col-md-12">
+                    <div class="card">
+                        <div class="card-body">
+            <h3>Catálogo de Cuentas</h3>
+            <div class="d-flex justify-content-between align-items-center mb-3">
+                <div>
+                    <button id="btnNewAccount" class="btn btn-primary"><i class="fas fa-plus mr-1"></i> Nueva Cuenta</button>
+                    <button id="btnRefreshAccounts" class="btn btn-outline-secondary"><i class="fas fa-sync-alt"></i></button>
+                </div>
+                <div class="input-group" style="max-width:320px;">
+                    <input id="filterAccount" class="form-control" placeholder="Filtrar por código o nombre..." />
+                    <div class="input-group-append"><button id="clearFilter" class="btn btn-light">Clear</button></div>
+                </div>
+            </div>
+
+            <div class="table-responsive">
+                <table id="accountsTable" class="table table-sm table-hover table-striped" style="font-size:14px;">
+                    <thead class="thead-light">
+                        <tr>
+                            <th style="width:140px">Código</th>
+                            <th>Nombre</th>
+                            <th style="width:120px">Tipo</th>
+                            <th style="width:140px;text-align:right">Saldo</th>
+                            <th style="width:160px;text-align:center">Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody id="accountsBody">
+                        <tr><td colspan="5" class="text-center text-muted py-4">Cargando...</td></tr>
+                    </tbody>
+                </table>
+            </div>
+
+            <div id="modalContainer"></div>
+                        </div>
+                    </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        <div class="w-100 clearfix">
+            <span class="text-center text-sm-left d-md-inline-block">Copyright © 2026 ServiPrest v1 All Rights Reserved.</span>
+            <span class="float-none float-sm-right mt-1 mt-sm-0 text-center">Personalizado <i class="fa fa-heart text-danger"></i> by Serviconta</span>
+        </div>
+    </footer>
+</div>
+<script src="http://localhost/servicredit/public/js/contabilidad_catalogo.js"></script>
+</div>
+<div class="modal fade apps-modal" id="appsModal" tabindex="-1" role="dialog" aria-labelledby="appsModalLabel" aria-hidden="true" data-backdrop="false">
+	<button type="button" class="close" data-dismiss="modal" aria-label="Close"><i class="ik ik-x-circle"></i></button>
+	<div class="modal-dialog modal-dialog-centered" role="document">
+		<div class="modal-content">
+			<div class="quick-search">
+				<div class="container">
+					<div class="row">
+						<div class="col-md-4 ml-auto mr-auto">
+							<div class="input-wrap">
+								<input type="text" id="quick-search" class="form-control" placeholder="Buscar..." />
+								<i class="ik ik-search"></i>
+							</div>
+						</div>
+					</div>
+				</div>
+			</div>
+			<div class="modal-body d-flex align-items-center">
+				<div class="container">
+					<div class="apps-wrap">
+						<div class="app-item">
+							<a href="http://localhost/servicredit/"><i class="ik ik-home"></i><span>Inicio</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/servicredit/estacionar"><i class="fas fa-parking"></i><span>Estacionar</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/servicredit/clientes"><i class="ik ik-users"></i><span>Clientes</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/servicredit/matriculas"><i class="ik ik-shopping-cart"></i><span>Matrículas</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/servicredit/usuarios"><i class="ik ik-briefcase"></i><span>Usuarios</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/servicredit/sistema"><i class="ik ik-server"></i><span>Sistema</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/servicredit/formas"><i class="ik ik-clipboard"></i><span>Formas de Pago</span></a>
+						</div>
+						<div class="app-item">
+							<a href="http://localhost/servicredit/precios"><i class="ik ik-message-square"></i><span>Precios</span></a>
+						</div>
+					</div>
+				</div>
+			</div>
+		</div>
+	</div>
+</div>
+
+<script type="text/javascript">
+	base_url = 'http://localhost/servicredit/'
+</script>
+<style>
+	/* Ensure page layout keeps footer at bottom and allows dropdowns to overflow */
+	html, body { height: 100%; }
+	.page-wrap { display: flex; flex-direction: column; min-height: 100vh; }
+	.main-content { flex: 1 0 auto; }
+	footer.footer { flex-shrink: 0; margin-top: 12px; z-index: 1000; position: relative; }
+	/* Ensure dropdowns show above footer and other elements */
+	.dropdown-menu { z-index: 10550 !important; }
+</style>
+<script src="http://localhost/servicredit/public/src/js/vendor/modernizr-2.8.3.min.js"></script>
+<script src="http://localhost/servicredit/public/plugins/popper.js/dist/umd/popper.min.js"></script>
+<script src="http://localhost/servicredit/public/plugins/bootstrap/dist/js/bootstrap.min.js"></script>
+<script src="http://localhost/servicredit/public/plugins/perfect-scrollbar/dist/perfect-scrollbar.min.js"></script>
+<script src="http://localhost/servicredit/public/plugins/screenfull/dist/screenfull.js"></script>
+<script src="http://localhost/servicredit/public/plugins/moment/moment.min.js"></script>
+<script src="http://localhost/servicredit/public/plugins/tempusdominus-bootstrap-4/js/tempusdominus-bootstrap-4.min.js"></script>
+
+<script src="http://localhost/servicredit/public/dist/js/theme.min.js"></script>
+
+<!-- <link rel="stylesheet" href="http://localhost/servicredit/public/plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.min.css"> -->
+<!-- <script src="http://localhost/servicredit/public/plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.min.js"></script> -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-touchspin/4.2.0/jquery.bootstrap-touchspin.min.js" integrity="sha512-VzUh7hLMvCqgvfBmkd2OINf5/pHDbWGqxS+RFaL/fsgA+rT94LxTFnjlFkm0oKM5BXWbc9EjBQAuARqzGKLbcA==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/bootstrap-touchspin/4.2.0/jquery.bootstrap-touchspin.css" integrity="sha512-M+RT/z+GO2INvbXyfkn7l5qN+g09mr0+JQ++nxLUfqAufrp/v5GIQ1k4IMn0BIHgxZK2Ss+YA+kHK4wJUKJK0A==" crossorigin="anonymous" referrerpolicy="no-referrer" />
+			<script src="http://localhost/servicredit/public/js/contabilidad_catalogo.js"></script>
+	<script>
+	$("#logotipo").change(function () {
+		readImage(this);
+	});
+	function readImage (input) {
+		if (input.files && input.files[0]) {
+			var reader = new FileReader();
+			reader.onload = function (e) {
+				$('#imgPreview').attr('src', e.target.result);
+			}
+			reader.readAsDataURL(input.files[0]);
+		}
+	}
+</script>
+
+</body>
+
+</html>
+

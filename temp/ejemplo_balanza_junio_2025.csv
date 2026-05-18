@@ -1,0 +1,121 @@
+Codigo,Denominacion,Cargos,Abonos,Saldo Actual
+11010101201,CAJA PRINCIPAL C$,0.00,0.00,0.00
+11010101301,CAJA PRINCIPAL U$,2'427'951.20,2'453'696.59,77'323.80
+11020101301,Depósitos en Cuenta Corriente con intereses ME (LA FISE),0.00,0.00,0.00
+11020102301,Depósito en Cuenta Corriente Sin Interes ME (LA FISE),2'376'372.81,2'123'932.19,2'735'725.21
+11040101201,Caja Chica,25'541.90,25'541.90,7'630.06
+14010101101,Cartera de Créditos vigentes (Préstamos Microcreditos) MN con MV,0.00,0.00,0.00
+14010101301,Cartera sobre saldos créditos vigentes (Prestamos Microcreditos) U$,1'620'459.00,1'785'775.87,11'327'440.95
+14060101101,Intereses y Comisiones por Cobrar de Créditos Vigentes (Microcreditos) MN con MV,0.00,0.00,0.00
+14060101301,Intereses y Comisiones por Cobrar Créditos Vigentes ( Microcrédito) U$,557'196.20,576'049.84,24'237.32
+14080101101,Provisión para Incobrabilidad Cartera Vigente (Microcreditos) MN con MV,0.00,0.00,0.00
+14080101301,Provisión para Incobrabilidad Cartera Vigente (Microcreditos) U$,0.00,4'117.32,-860'735.82
+15010101101,Bienes recibidos en Pago y adjudicados (Bienes Muebles e Inmuebles),0.00,0.00,0.00
+15010901201,Otros Bienes Recibido en Recuperación de Créditos,0.00,0.00,0.00
+15010101301,Bienes recibidos en Pago y adjudicados (Bienes Muebles e Inmuebles),11'619.06,0.00,33'495.37
+16020101101,Anticipos proveedores MNL,0.00,0.00,0.00
+16020101201,Anticipos proveedores (Aporte CONAMI),0.00,3'502.93,0.00
+16020101202,Anticipos proveedores (EFRAIN BLANDON),0.00,0.00,10'987.29
+16020101203,Anticipos proveedores (Varios),0.00,0.00,219'782.42
+16020601101,Cuentas por Cobrar al Personal,0.00,0.00,0.00
+16020601201,Cuentas por Cobrar al Personal,7'485.86,11'999.86,62'144.55
+18030101201,MOBILIARIOS,0.00,2'192.00,82'589.37
+18030201201,EQUIPOS ,0.00,2'030.82,41'207.41
+18040101201,Equipos de computación,0.00,1'962.61,43'619.90
+18050101201,Vehiculos,0.00,0.00,0.00
+19010301201,Impuesto Pagados por Anticipado,5'459.75,0.00,49'844.52
+19010601201,Mantenimientos Pagados Por Anticipado,0.00,0.00,0.00
+19110101201,Gastos de Organización e Instalación,0.00,0.00,25'824.48
+19110201201,Mejoras a Propiedades Tomadas en Alquiler,0.00,0.00,385.00
+22029901301,OTRAS OBLIGACIONES A PLAZO MAYORES A UN AÑO (MEYRA LINA BLANDON),24'505.66,163.13,-163.13
+26010401201,Aportaciones Laborales Retenidas por Pagar (INSS Laboral),17'477.63,19'767.92,-17'471.16
+26010501201,Remuneraciones por Pagar,228'387.81,228'387.81,0.29
+26019901201,Cuentas por Pagar Diversas ,26'578.38,21'154.38,-3'442.89
+26040101201,Impuesto sobre la renta por pagar,0.00,0.00,-5'488.75
+26040201101,IMPUESTOS MÍNIMO DEFINITIVO,0.00,0.00,0.00
+26040201201,IMPUESTOS MÍNIMO DEFINITIVO,5'185.79,5'459.75,-16'925.22
+26040301201,Impuestos municipales por pagar (Basura),750,750,-749.80
+26040301202,Impuestos municipales por pagar (Matricula),0.00,0.00,-0.07
+26040301203,Impuestos municipales por pagar (S/I),5'185.79,5'459.75,698.56
+26050101201,Impuesto S/Renta en la Fuente (2% Y 10%),5'145.59,5'239.44,-15'500.41
+26050101202,Impuesto S/Renta en la Fuente (No Domiciliado 15% ),5'109.53,5'109.52,-4'368.50
+26050301101,Impuesto S/Renta sobre Salarios,0.00,0.00,0.00
+26050301201,Impuesto S/Renta sobre Salarios,19'939.00,25'364.09,-26'563.70
+26050901201,OTROS IMPUESTOS,0.00,0.00,0.00
+27010201201,Provisiones para Prestaciones Laborales (Aguinaldos),0.00,19'099.39,-93'189.91
+27010201202,Provisiones para Prestaciones Laborales (Vacaciones),48'888.97,15'271.37,-166'114.08
+27010201203,Provisiones para Prestaciones Laborales (Indemnización),0.00,12'439.33,-298'508.01
+27010401101,Provisiones para Otros Gastos,0.00,0.00,0.00
+27010401202,Provisiones para Otros Gastos (Internet),936.10,936.1,0.00
+27010701101,Aportaciones Patronales Por Pagar,0.00,0.00,0.00
+27010701201,Aportaciones Patronales por Pagar (INSS Patronal),53'681.25,60'715.76,-48'246.89
+27010701202,Aportaciones Patronales por Pagar (INATEC),4'993.61,5'647.98,-6'727.19
+27010901201,Otras Provisiones (Canasta Navideña),0.00,2'136.30,-11'854.00
+27030101201,Reserva para Retiro,0.00,0.00,0.00
+27030201101,RESERVAS POR PRIMAS DE ANTIGÜEDAD,0.00,0.00,0.00
+31010101201,Capital Sucrito Ordinario,0.00,0.00,-4'500'000.00
+32010301201,Capital Adicional,0.00,0.00,-3'479'308.50
+38010101201,Utilidadades Acumuladas con Acuerdo de Distribución,0.00,0.00,-4'026'425.24
+39010101201,Utilidades del ejercicio,0.00,54'946.96,-1'161'153.23
+41060101201,Intereses y comisiones Créditos Vigentes (Préstamos Microcréditos),7'691.98,545'975.29,-3'219'713.95
+41060101202,Interés y Comisiones Préstamos Microcréditos (Recargos cobrados por mora de clientes),0.00,2'297.16,-11'808.96
+41060101203,Ingresos por Comisiones  de Desembolsos  (Préstamos Microcréditos),0.00,0.00,0.00
+43020501201,OTROS INGRESOS GENERADOS POR OTROS ACTIVOS,0.00,43'748.76,-250'109.39
+45010101201,Ingresos por Ajustes Monetarios (Fondos Disponibles),0.00,0.00,-985'935.57
+51040501201,CARGOS POR PRESTAMOS DE OTRAS INSTITUCIONES DEL PAIS,0.00,0.00,0.00
+51040801301,Cargos por Préstamos con Otras Instituciones Financieras del Pais Mayor a un año,0.00,0.00,0.00
+51040901201,CARGOS POR OTRAS OBLIGACIONES POR FINANCIAMIENTOS,0.00,0.00,62'505.59
+52010101201,Constitución de Provisión por Cartera de Créditos,4'117.32,0.00,4'117.32
+53010102201,Comisiones por Giros y Transferencias,659.24,0.00,4'614.66
+53020401201,Amortización de Software,0.00,0.00,1'403.81
+54010101201,Sueldos de Personal Permanente,223'629.57,0.00,1'374'166.25
+54010102301,Sueldos de Personal Contratado,0.00,0.00,0.00
+54010103301,Sobresueldos,0.00,0.00,0.00
+54010104201,Comisiones,16'009.01,0.00,114'990.56
+54010106201,Tiempo Extraordinario,0.00,0.00,0.00
+54010107201,Viaticos ,2'460.00,0.00,16'256.94
+54010108201,Aguinaldos,15'352.85,0.00,91'923.57
+54010109201,Vacaciones,15'352.85,5'377.14,86'146.95
+54010110201,Indemnización ,15'352.85,0.00,91'524.09
+54010111201,Jubilaciones y/o Retiros,0.00,0.00,0.00
+54010113201,Bonificaciones e Incentivos (Celebraciones),3'666.10,0.00,20'430.57
+54010113202,Bonificaciones e Incentivos (Convenio),9'795.92,0.00,53'877.56
+54010115201,Seguro Social Aporte Patronal,60'715.81,0.00,308'418.33
+54010116201,Aporte al Instituto Nacional Tecnológico (INATEC),5'647.98,0.00,30'451.48
+54010117201,Gastos de cafeteria,1'249.50,0.00,3'856.50
+54010119201,Uniformes,0.00,0.00,18'734.50
+54010121201,Capacitación ,0.00,0.00,14'832.84
+54010199201,Otros Gastos de Personal ,0.00,0.00,12'396.90
+54020301201,Servicios de Información,3'662.43,0.00,21'974.58
+54029901201,Honorarios profesionales,43'911.24,0.00,210'519.12
+54029901202,Otros Servicios Contratados (Servicio de GPS ),936.1,0.00,6'235.83
+54030101201,Pasajes y Traslados,0.00,0.00,0.00
+54030201201,FLETES,0.00,0.00,421.18
+54030401201,"Combustible, Lubricantes y Otros",10'373.38,0.00,70'150.17
+54030401301,"Combustible, Lubricantes y Otros",0.00,0.00,0.00
+54030901201,Depreciacion de Vehiculos,3'845.55,0.00,22'035.74
+54031001201,"Telefonos, Telefax, fax (Celulares)",5'596.90,0.00,34'269.43
+54031001202,"Telefonos, Telefax, fax",1'020.94,0.00,3'781.78
+54039901201,Otros Gastos de Transporte y Comunicación (Internet),2'527.08,0.00,17'689.56
+54040301203,Mantenimiento y reparación de equipo de oficina y computo,6'226.13,0.00,23'012.15
+54040401201,Agua,885.82,0.00,7'347.61
+54040401202,Energía eléctrica,1'638.53,0.00,7'872.11
+54040501201,Alquileres de Inmuebles,34'063.52,0.00,204'381.16
+54040801201,Depreciación  de Equipos y Mobiliario,2'013.08,0.00,15'441.51
+54040801301,Depreciación  de Equipos y Mobiliario,0.00,0.00,0.00
+54040901201,Depreciación de Equipos de cómputo,2'325.79,0.00,13'954.76
+54050101201,"Impuestos, Multas y Tasas Municipales",6'209.75,0.00,40'495.06
+54050701201,"Papeleria, utiles y otros materiales de Limpieza",14'954.03,0.00,89'232.52
+54050701202,"Papeleria, utiles y otros materiales (Materiales de oficina)",1'846.54,0.00,17'545.50
+54050701301,"Papeleria, utiles y otros materiales de Limpieza",7'910.57,0.00,68'585.24
+54050801201,Gastos Legales,0.00,0.00,0.00
+54050901201,Suscripciones y afiliaciones,6'317.69,0.00,6'317.69
+54051001201,"Propaganda, Publicidad y Promociones",0.00,0.00,11'413.65
+54059901201,Otros Gastos Generales (Beneficios a Clientes por Pronto pago),0.00,0.00,0.00
+54059901202,Otros Gastos Generales (Gastos no deducibles),0.00,0.00,49'007.52
+54059901203,Otros Gastos Generales,200,0.00,2'983.92
+54059901301,Otros Gastos Generales,0.00,0.00,0.00
+55010101201,Gastos por Ajustes Monetarios (Fondos Disponibles),782.42,0.00,30'080.89
+56010101201,Aportes al Presupuesto de la CONAMI,3'502.93,0.00,21'017.54
+63010101201,Resultado Neto del Ejercicio,54'946.96,0.00,1'161'153.23
+63010201201,Resultado Neto del Ejercicio,0.00,0.00,0.00

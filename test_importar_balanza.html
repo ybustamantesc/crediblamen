@@ -1,0 +1,208 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <title>Test - Importar Balanza</title>
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+</head>
+<body>
+    <h1>Test de Importación de Balanza</h1>
+    
+    <h2>Test 1: PHP Básico (Sin Buffer)</h2>
+    <button onclick="testNoBuffer()">Test Sin Buffering</button>
+    <pre id="noBufferResult"></pre>
+    
+    <hr>
+    
+    <h2>Test 2: Debug de PHP Upload</h2>
+    <button onclick="testPhpConfig()">Ver Configuración PHP</button>
+    <pre id="phpConfig"></pre>
+    
+    <hr>
+    
+    <h2>Test 2.5: POST Simple</h2>
+    <form id="postSimpleForm" enctype="multipart/form-data">
+        <label>Archivo CSV:</label>
+        <input type="file" name="balanzaFile" id="postSimpleFile" accept=".csv" required><br><br>
+        <button type="submit">Test POST Simple</button>
+    </form>
+    <pre id="postSimpleResult"></pre>
+    
+    <hr>
+    
+    <h2>Test 3: Upload Directo (Sin CodeIgniter)</h2>
+    <form id="directForm" enctype="multipart/form-data">
+        <label>Archivo CSV:</label>
+        <input type="file" name="balanzaFile" id="directFile" accept=".csv,.xlsx,.xls" required><br><br>
+        
+        <label>Mes:</label>
+        <select name="periodoMes">
+            <option value="01">Enero</option>
+        </select>
+        
+        <label>Año:</label>
+        <input type="number" name="periodoAnio" value="2026"><br><br>
+        
+        <button type="submit">Test Directo</button>
+    </form>
+    <pre id="directResult"></pre>
+    
+    <hr>
+    
+    <h2>Test 3: Upload con CodeIgniter</h2>
+    <form id="testForm" enctype="multipart/form-data">
+        <label>Archivo:</label>
+        <input type="file" name="balanzaFile" id="balanzaFile" accept=".csv,.xlsx" required>
+        <br><br>
+        
+        <label>Mes:</label>
+        <select name="periodoMes" id="periodoMes">
+            <option value="01">Enero</option>
+            <option value="02">Febrero</option>
+        </select>
+        <br><br>
+        
+        <label>Año:</label>
+        <input type="number" name="periodoAnio" id="periodoAnio" value="2026">
+        <br><br>
+        
+        <label>Tipo:</label>
+        <select name="tipoImportacion" id="tipoImportacion">
+            <option value="apertura">Apertura</option>
+            <option value="cierre">Cierre</option>
+        </select>
+        <br><br>
+        
+        <button type="submit">Enviar Test</button>
+    </form>
+    
+    <h2>Resultado:</h2>
+    <pre id="resultado"></pre>
+    
+    <script>
+        console.log('Test page loaded');
+        
+        function testNoBuffer() {
+            console.log('=== TEST SIN BUFFER ===');
+            $.ajax({
+                url: 'test_nobuffer.php',
+                type: 'GET',
+                dataType: 'json',
+                success: function(data) {
+                    console.log('Test sin buffer exitoso:', data);
+                    $('#noBufferResult').text(JSON.stringify(data, null, 2));
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error test sin buffer:', xhr.responseText);
+                    $('#noBufferResult').text('ERROR: ' + error + '\nRespuesta: ' + xhr.responseText);
+                }
+            });
+        }
+        
+        function testPhpConfig() {
+            fetch('test_upload_debug.php')
+                .then(response => response.json())
+                .then(data => {
+                    document.getElementById('phpConfig').textContent = JSON.stringify(data, null, 2);
+                })
+                .catch(error => {
+                    console.error('Error:', error);
+                    document.getElementById('phpConfig').textContent = 'Error: ' + error.message;
+                });
+        }
+        
+        // Test POST simple
+        $('#postSimpleForm').on('submit', function(e) {
+            e.preventDefault();
+            console.log('=== TEST POST SIMPLE ===');
+            
+            const formData = new FormData(this);
+            $('#postSimpleResult').text('Enviando...');
+            
+            $.ajax({
+                url: 'test_post_simple.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(data) {
+                    console.log('POST simple exitoso:', data);
+                    $('#postSimpleResult').text(JSON.stringify(data, null, 2));
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error POST simple:', status, error);
+                    console.log('Response:', xhr.responseText);
+                    $('#postSimpleResult').text('ERROR: ' + error + '\nStatus: ' + status + '\nRespuesta: ' + xhr.responseText);
+                }
+            });
+        });
+        
+        // Test directo sin CodeIgniter
+        $('#directForm').on('submit', function(e) {
+            e.preventDefault();
+            console.log('=== TEST DIRECTO ===');
+            
+            const formData = new FormData(this);
+            $('#directResult').text('Enviando...');
+            
+            $.ajax({
+                url: 'test_direct_upload.php',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(data) {
+                    console.log('Test directo exitoso:', data);
+                    $('#directResult').text(JSON.stringify(data, null, 2));
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error test directo:', status, error);
+                    console.log('Response Text:', xhr.responseText);
+                    $('#directResult').text('ERROR: ' + error + '\nStatus: ' + status + '\nRespuesta: ' + xhr.responseText);
+                }
+            });
+        });
+        
+        // Test con CodeIgniter
+        $('#testForm').on('submit', function(e) {
+            e.preventDefault();
+            console.log('Formulario enviado');
+            
+            const fileInput = document.getElementById('balanzaFile');
+            if (!fileInput.files.length) {
+                alert('Seleccione un archivo');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            
+            console.log('Datos del formulario:');
+            for (let pair of formData.entries()) {
+                console.log(pair[0] + ': ' + pair[1]);
+            }
+            
+            $('#resultado').text('Enviando...');
+            
+            $.ajax({
+                url: 'http://localhost/Servicredit/contabilidad/procesar_balanza',
+                type: 'POST',
+                data: formData,
+                processData: false,
+                contentType: false,
+                dataType: 'json',
+                success: function(data) {
+                    console.log('Éxito CodeIgniter:', data);
+                    $('#resultado').text('RESPUESTA DEL SERVIDOR:\n\n' + JSON.stringify(data, null, 2));
+                },
+                error: function(xhr, status, error) {
+                    console.error('Error CodeIgniter:', status, error);
+                    console.log('Response Text:', xhr.responseText);
+                    $('#resultado').text('Error HTTP: ' + xhr.status + ' ' + error + '\n\nRESPUESTA DEL SERVIDOR:\n' + xhr.responseText);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
