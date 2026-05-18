@@ -1,0 +1,2 @@
+USE u987557742_testsystem;
+ALTER TABLE tb_account MODIFY id INT AUTO_INCREMENT;

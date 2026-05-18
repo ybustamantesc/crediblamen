@@ -1,0 +1,14 @@
+Código,Denominación,Saldo Anterior,Cargos,Abonos,Saldo Actual
+101,Caja,0.00,50000.00,0.00,50000.00
+1011,Caja Soles,0.00,30000.00,0.00,30000.00
+1012,Caja Dólares,0.00,20000.00,0.00,20000.00
+104,Bancos,0.00,100000.00,0.00,100000.00
+1041,Banco BCP,0.00,60000.00,0.00,60000.00
+1042,Banco Interbank,0.00,40000.00,0.00,40000.00
+12,Cuentas por Cobrar,0.00,75000.00,0.00,75000.00
+16,Inventarios,0.00,80000.00,0.00,80000.00
+33,Inmuebles Maq y Equipo,0.00,200000.00,0.00,200000.00
+40,Tributos por Pagar,0.00,0.00,15000.00,15000.00
+42,Cuentas por Pagar,0.00,0.00,25000.00,25000.00
+46,Cuentas por Pagar Diversas,0.00,0.00,10000.00,10000.00
+50,Capital,0.00,0.00,455000.00,455000.00

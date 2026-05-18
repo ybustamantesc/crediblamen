@@ -1,0 +1,1 @@
+"C:\xampp\mysql\bin\mysql.exe" -u root --batch --skip-column-names crediblamen -e "SELECT (SELECT COUNT(*) FROM stg_carga_credito WHERE CAST(NULLIF(TRIM(num_prestamo_raw),'') AS UNSIGNED)=877) AS en_csv, (SELECT COUNT(*) FROM tb_prestamos WHERE idprestamo=877) AS en_bd;" > "C:\xampp\htdocs\Crediblamen\temp\credito_877.txt"
