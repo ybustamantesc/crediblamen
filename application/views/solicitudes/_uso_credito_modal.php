@@ -175,7 +175,7 @@
                     if(s.es_renovacion == 1 || s.es_renovacion === true || s.es_renovacion === '1') { document.getElementById('uso_flag_renovacion').style.display = 'inline-block'; } else { document.getElementById('uso_flag_renovacion').style.display = 'none'; }
                 }
                 var fullName = ((s.apellidos || '') + ' ' + (s.nombres || '')).trim();
-                var idnum = s.cedula || s.identificacion || '';
+                var idnum = s.numero_identificacion || s.cedula || s.identificacion || '';
                 // Build a prefix and wrap the remaining paragraph so line lengths (by character count)
                 // approximate the prefix length (to match the PDF visual layout requested).
                 var prefix = 'Yo, ' + (fullName || '________________________') + ' con Número de Identificación ' + (idnum || '________________') + ', declaro bajo juramento que la información';

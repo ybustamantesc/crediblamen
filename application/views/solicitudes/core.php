@@ -358,6 +358,23 @@ if (!empty($current_user_name)) {
                                             <label><input type="checkbox" name="garantia_sin" value="100" <?php echo s_checked('garantia_sin'); ?>> Sin garantía (100)</label>
                                         </div>
                                     </div>
+                                    <script>
+                                        (function(){
+                                            var guaranteeInputs = ['garantia_hipotecaria','garantia_mobiliaria','garantia_sin'];
+                                            guaranteeInputs.forEach(function(name){
+                                                var el = document.querySelector('input[name="' + name + '"]');
+                                                if (!el) return;
+                                                el.addEventListener('change', function(){
+                                                    if (!this.checked) return;
+                                                    guaranteeInputs.forEach(function(other){
+                                                        if (other === name) return;
+                                                        var otherEl = document.querySelector('input[name="' + other + '"]');
+                                                        if (otherEl) otherEl.checked = false;
+                                                    });
+                                                });
+                                            });
+                                        })();
+                                    </script>
 
                                     <div class="col-md-4 mt-2">
                                         <div class="form-group">
@@ -449,7 +466,7 @@ if (!empty($current_user_name)) {
                                                 </script>
                                                 <div class="col-md-3"><div class="form-group"><label>Cédula de identidad</label>
                                                     <input id="numero_doc_input" type="text" data-ci-format="0000000000000X" class="form-control" name="numero_doc" value="<?php echo s_val('numero_doc', set_value('numero_doc')); ?>" placeholder="Sin guiones, ejemplo: 0000000000000X">
-                                                    <div id="numero_doc_hint" style="display:block;margin-top:6px;color:#a00;font-size:12px;">No uses giones</div>
+                                                    <div id="numero_doc_hint" style="display:block;margin-top:6px;color:#a00;font-size:12px;">No uses guiones</div>
                                                     <div id="numero_doc_actions" style="display:none;margin-top:6px;">
                                                         <button type="button" id="btn_import_solicitud" class="btn btn-sm btn-outline-secondary">Importar desde última Solicitud</button>
                                                     </div>
@@ -476,13 +493,13 @@ if (!empty($current_user_name)) {
                                                 </div></div>
 
                                                 <div class="col-md-6"><div class="form-group"><label>Nombre del cónyuge o pareja</label><input type="text" class="form-control" name="nombre_conyuge" id="nombre_conyuge_input" style="text-transform:uppercase;" value="<?php echo s_val('nombre_conyuge', set_value('nombre_conyuge')); ?>"></div></div>
-                                                <div class="col-md-6"><div class="form-group"><label>Cédula del cónyuge o pareja</label><input type="text" class="form-control" name="dni_conyuge" value="<?php echo s_val('dni_conyuge', set_value('dni_conyuge')); ?>"></div></div>
+                                                <div class="col-md-6"><div class="form-group"><label>Cédula del cónyuge o pareja</label><input id="numero_doc_conyuge_input" type="text" data-ci-format="0000000000000X" class="form-control" name="dni_conyuge" value="<?php echo s_val('dni_conyuge', set_value('dni_conyuge')); ?>" placeholder="Sin guiones, ejemplo: 0000000000000X"><div id="numero_doc_conyuge_hint" style="display:block;margin-top:6px;color:#a00;font-size:12px;">No uses guiones</div></div></div>
                                                 <div class="col-md-6"><div class="form-group"><label>Ocupación del cónyuge o pareja</label><input type="text" class="form-control" name="ocupacion_conyuge" value="<?php echo s_val('ocupacion_conyuge', set_value('ocupacion_conyuge')); ?>"></div></div>
                                                 <div class="col-md-6"><div class="form-group"><label>Ingresos del cónyuge</label><input type="number" min="0" step="any" class="form-control" name="ingresos_conyuge" value="<?php echo s_val('ingresos_conyuge', set_value('ingresos_conyuge')); ?>"></div></div>
-                                                <div class="col-md-3"><div class="form-group"><label>Teléfono del cónyuge o pareja</label><input type="text" class="form-control" name="telefono_conyuge" value="<?php echo s_val('telefono_conyuge', set_value('telefono_conyuge')); ?>"></div></div>
-                                                <div class="col-md-3"><div class="form-group"><label>Número de dependientes</label><input type="number" class="form-control" name="numero_dependientes" value="<?php echo s_val('numero_dependientes', set_value('numero_dependientes')); ?>"></div></div>
+                                                <div class="col-md-3"><div class="form-group"><label>Teléfono del cónyuge o pareja</label><input type="tel" inputmode="tel" pattern="[0-9+ ]*" class="form-control" name="telefono_conyuge" value="<?php echo s_val('telefono_conyuge', set_value('telefono_conyuge')); ?>" oninput="this.value=this.value.replace(/[^0-9+ ]/g,'');"></div></div>
+                                                <div class="col-md-3"><div class="form-group"><label>Número de dependientes</label><input type="number" min="0" class="form-control" name="numero_dependientes" id="numero_dependientes" value="<?php echo s_val('numero_dependientes', set_value('numero_dependientes')); ?>" oninput="var val=this.value; if(val!=='' && parseInt(val,10) < 0){ this.value='0'; document.getElementById('numero_dependientes_msg').style.display='block'; } else { document.getElementById('numero_dependientes_msg').style.display='none'; }"><div id="numero_dependientes_msg" style="display:none;color:red;font-size:12px;margin-top:4px;">El número ingresado no puede ser menor a 0</div></div></div>
 
-                                                <div class="col-md-6"><div class="form-group"><label>Teléfono(s) del solicitante</label><input type="text" class="form-control" name="telefono" value="<?php echo s_val('telefono', set_value('telefono')); ?>"></div></div>
+                                                <div class="col-md-6"><div class="form-group"><label>Teléfono(s) del solicitante</label><input type="tel" inputmode="tel" pattern="[0-9+ ]*" class="form-control" name="telefono" value="<?php echo s_val('telefono', set_value('telefono')); ?>" oninput="this.value=this.value.replace(/[^0-9+ ]/g,'');"></div></div>
                                                 <div class="col-md-6"><div class="form-group"><label>Dirección exacta de domicilio</label><textarea id="direccion" rows="2" class="form-control" name="direccion"><?php echo s_val('direccion', set_value('direccion')); ?></textarea></div></div>
 
                                                 <div class="col-md-3"><div class="form-group"><label>Tiempo de residir (años)</label><input type="number" class="form-control" name="tiempo_residir_anios" value="<?php echo s_val('tiempo_residir_anios', set_value('tiempo_residir_anios')); ?>"></div></div>
@@ -584,8 +601,8 @@ if (!empty($current_user_name)) {
                                                 if(numEl){
                                                     var fmt = numEl.getAttribute('data-ci-format') || '0000000000000X';
                                                     var re = buildRegexFromFormat(fmt);
-                                                    // Show example in hint (preserve the 'No uses giones' message)
-                                                    hint.innerText = 'No uses giones. Formato esperado: ' + fmt + ' (ej: ' + fmt + ')';
+                                                    // Show example in hint (preserve the 'No uses guiones' message)
+                                                    hint.innerText = 'No uses guiones. Formato esperado: ' + fmt + ' (ej: ' + fmt + ')';
 
                                                     numEl.addEventListener('input', function(){
                                                         var cleaned = stripHyphens(this.value);
@@ -596,7 +613,27 @@ if (!empty($current_user_name)) {
                                                             hint.innerText = 'Formato válido';
                                                         } else {
                                                             hint.style.color = '#a00';
-                                                            hint.innerText = 'No uses giones. Formato esperado: ' + fmt + ' (ej: ' + fmt + ')';
+                                                            hint.innerText = 'No uses guiones. Formato esperado: ' + fmt + ' (ej: ' + fmt + ')';
+                                                        }
+                                                    });
+                                                }
+
+                                                var numConyugeEl = document.getElementById('numero_doc_conyuge_input');
+                                                var numConyugeHint = document.getElementById('numero_doc_conyuge_hint');
+                                                if(numConyugeEl && numConyugeHint){
+                                                    var fmtConyuge = numConyugeEl.getAttribute('data-ci-format') || '0000000000000X';
+                                                    var reConyuge = buildRegexFromFormat(fmtConyuge);
+                                                    numConyugeHint.innerText = 'No uses guiones. Formato esperado: ' + fmtConyuge + ' (ej: ' + fmtConyuge + ')';
+
+                                                    numConyugeEl.addEventListener('input', function(){
+                                                        var cleaned = stripHyphens(this.value);
+                                                        if(cleaned !== this.value) this.value = cleaned;
+                                                        if(reConyuge.test(this.value)){
+                                                            numConyugeHint.style.color = '#099';
+                                                            numConyugeHint.innerText = 'Formato válido';
+                                                        } else {
+                                                            numConyugeHint.style.color = '#a00';
+                                                            numConyugeHint.innerText = 'No uses guiones. Formato esperado: ' + fmtConyuge + ' (ej: ' + fmtConyuge + ')';
                                                         }
                                                     });
                                                 }
@@ -613,6 +650,18 @@ if (!empty($current_user_name)) {
                                                                 hint.style.color = '#a00';
                                                                 hint.innerText = 'Cédula inválida o incompleta. Use el formato: ' + fmt + ' (sin guiones)';
                                                                 numEl.focus();
+                                                                return false;
+                                                            }
+                                                        }
+                                                        if(numConyugeEl && numConyugeHint){
+                                                            var fmtConyuge = numConyugeEl.getAttribute('data-ci-format') || '0000000000000X';
+                                                            var reConyuge = buildRegexFromFormat(fmtConyuge);
+                                                            var vConyuge = stripHyphens(numConyugeEl.value || '');
+                                                            if(vConyuge !== '' && !reConyuge.test(vConyuge)){
+                                                                e.preventDefault();
+                                                                numConyugeHint.style.color = '#a00';
+                                                                numConyugeHint.innerText = 'Cédula inválida o incompleta. Use el formato: ' + fmtConyuge + ' (sin guiones)';
+                                                                numConyugeEl.focus();
                                                                 return false;
                                                             }
                                                         }
@@ -782,6 +831,7 @@ if (!empty($current_user_name)) {
 
                                     <!-- Ingresos y Ventas -->
                                     <div class="col-md-12 mt-3"><h6>Ingresos y Ventas</h6></div>
+                                    <div class="col-md-12"><small id="ventas_amount_ratio_msg" style="display:none;color:red;font-size:12px;margin-top:2px;"></small></div>
                                     <div class="col-md-4"><div class="form-group"><label>Ventas en días buenos: C$</label><input type="number" step="0.01" class="form-control" name="ventas_buenos_amount" value="<?php echo s_val('ventas_buenos_amount', set_value('ventas_buenos_amount')); ?>"></div></div>
                                     <div class="col-md-4"><div class="form-group"><label>Ventas en días malos: C$</label><input type="number" step="0.01" class="form-control" name="ventas_malos_amount" value="<?php echo s_val('ventas_malos_amount', set_value('ventas_malos_amount')); ?>"></div></div>
                                     <div class="col-md-4"><div class="form-group"><label>Ventas promedio mensual: C$</label>
@@ -808,6 +858,7 @@ if (!empty($current_user_name)) {
                                                 <label style="min-width:40px;"><input type="checkbox" name="ventas_malos_days[]" value="<?php echo $i; ?>" <?php echo $is2; ?>> <?php echo $labels[$i]; ?></label>
                                             <?php endfor; ?>
                                         </div>
+                                        <div id="ventas_days_conflict_msg" style="display:none;color:red;font-size:12px;margin-top:6px;">No se pueden seleccionar los mismos días en buenos y malos.</div>
                                     </div></div>
 
                                     <div class="col-md-4"><div class="form-group"><label>Margen comercial (%) Actividad Principal</label><input type="number" step="0.01" class="form-control" name="margen_comercial" value="<?php echo s_val('margen_comercial', set_value('margen_comercial')); ?>"></div></div>
@@ -1040,11 +1091,6 @@ if (!empty($current_user_name)) {
                                             if (!files || !files.length) return;
                                             if (maxCount && files.length > maxCount) {
                                                 alert('Se pueden subir como máximo ' + maxCount + ' archivos para ' + group);
-                                                return;
-                                            }
-                                            // If no solicitud id (creating new), ask user to save first
-                                            if (!solId || solId === '0') {
-                                                alert('Primero guarde la solicitud; luego podrá subir las fotos para el negocio.');
                                                 return;
                                             }
                                             for (var i=0;i<files.length;i++) {
@@ -1468,19 +1514,37 @@ if (!empty($current_user_name)) {
                                         var ra = (p.plazo !== undefined ? p.plazo : null);
                                         var minP = safeInt(rawMinP!==null?rawMinP: (ra!==null?ra:null));
                                         var maxP = safeInt(rawMaxP!==null?rawMaxP: (ra!==null?ra:null));
-                                        if(minP === null && maxP === null){ minEl.innerText = '-'; maxEl.innerText='-'; msgEl.style.display='none'; plazoInput.removeAttribute('min'); plazoInput.removeAttribute('max'); return; }
+                                        if(minP === null && maxP === null){ minEl.innerText = '-'; maxEl.innerText='-'; msgEl.style.display='none'; plazoInput.removeAttribute('min'); plazoInput.removeAttribute('max'); plazoInput.style.borderColor=''; return; }
                                         if(minP === null) minP = 1;
                                         if(maxP === null) maxP = minP;
                                         minEl.innerText = minP; maxEl.innerText = maxP;
                                         plazoInput.setAttribute('min', minP);
                                         plazoInput.setAttribute('max', maxP);
+                                        var plazoVal = safeInt(plazoInput.value);
+                                        var message = '';
+                                        var isRangeError = false;
+                                        if(plazoVal !== null && (plazoVal < minP || plazoVal > maxP)){
+                                            message = 'El plazo ingresado no respeta el rango permitido ('+minP+' a '+maxP+' meses).';
+                                            isRangeError = true;
+                                        }
                                         // validate monto against product's allowed monto bounds if present
                                         var rawMinMonto = (p.monto_min !== undefined ? p.monto_min : (p.min_monto!==undefined? p.min_monto : (p.min!==undefined? p.min : null)));
                                         var rawMaxMonto = (p.monto_max !== undefined ? p.monto_max : (p.max_monto!==undefined? p.max_monto : (p.max!==undefined? p.max : null)));
                                         var minMonto = safeNum(rawMinMonto); var maxMonto = safeNum(rawMaxMonto);
-                                        if(minMonto !== null && monto < minMonto){ msgEl.style.display='block'; msgEl.style.color='red'; msgEl.innerText = 'El monto ingresado es menor que el monto mínimo del producto ('+minMonto+').'; }
-                                        else if(maxMonto !== null && monto > maxMonto){ msgEl.style.display='block'; msgEl.style.color='red'; msgEl.innerText = 'El monto ingresado supera el máximo permitido por el producto ('+maxMonto+').'; }
-                                        else { msgEl.style.display='none'; msgEl.innerText=''; }
+                                        if(!isRangeError){
+                                            if(minMonto !== null && monto < minMonto){ message = 'El monto ingresado es menor que el monto mínimo del producto ('+minMonto+').'; }
+                                            else if(maxMonto !== null && monto > maxMonto){ message = 'El monto ingresado supera el máximo permitido por el producto ('+maxMonto+').'; }
+                                        }
+                                        if(message){
+                                            msgEl.style.display='block';
+                                            msgEl.style.color='red';
+                                            msgEl.innerText = message;
+                                            plazoInput.style.borderColor = isRangeError ? 'red' : '';
+                                        } else {
+                                            msgEl.style.display='none';
+                                            msgEl.innerText='';
+                                            plazoInput.style.borderColor = '';
+                                        }
                                     }
 
                                     function computeCuota(){
@@ -1586,9 +1650,92 @@ if (!empty($current_user_name)) {
                                     var form = document.getElementById('solicitud_form');
                                     var isEdit = <?php echo (isset($solicitud) && isset($solicitud->idsolicitud) && $solicitud->idsolicitud) ? 'true' : 'false'; ?>;
                                     if(!form) return;
+
+                                    function validatePlazoRangeBeforeSubmit(){
+                                        var plazoInput = document.getElementById('plazo_meses');
+                                        if(!plazoInput) return true;
+                                        var min = plazoInput.getAttribute('min');
+                                        var max = plazoInput.getAttribute('max');
+                                        if(min === null || max === null) return true;
+                                        var val = parseInt(plazoInput.value, 10);
+                                        if(isNaN(val)) return true;
+                                        var minVal = parseInt(min, 10);
+                                        var maxVal = parseInt(max, 10);
+                                        if(val < minVal || val > maxVal){
+                                            var msgEl = document.getElementById('plazo_msg');
+                                            if(msgEl){
+                                                msgEl.style.display = 'block';
+                                                msgEl.style.color = 'red';
+                                                msgEl.innerText = 'El plazo ingresado no respeta el rango permitido ('+minVal+' a '+maxVal+' meses).';
+                                            }
+                                            plazoInput.style.borderColor = 'red';
+                                            return false;
+                                        }
+                                        plazoInput.style.borderColor = '';
+                                        return true;
+                                    }
+
+                                    function validateVentasDaysConflict(){
+                                        var buenos = document.querySelectorAll('input[name="ventas_buenos_days[]"]:checked');
+                                        var malos = document.querySelectorAll('input[name="ventas_malos_days[]"]:checked');
+                                        if(!buenos.length || !malos.length) return true;
+                                        var buenosValues = Array.prototype.slice.call(buenos).map(function(ch){ return ch.value; });
+                                        var conflict = Array.prototype.slice.call(malos).some(function(ch){ return buenosValues.indexOf(ch.value) !== -1; });
+                                        if(conflict){
+                                            var msg = document.getElementById('ventas_days_conflict_msg');
+                                            if(msg){ msg.style.display = 'block'; }
+                                            if(msg){ setTimeout(function(){ msg.style.display = 'none'; }, 2800); }
+                                            return false;
+                                        }
+                                        return true;
+                                    }
+
+                                    function validateCuotaProcessed(){
+                                        var cuotaEl = document.getElementById('cuota_estimado');
+                                        if(!cuotaEl) return true;
+                                        var value = (cuotaEl.value || '').trim();
+                                        if(value === ''){
+                                            alert('Debe procesar la cuota antes de guardar la solicitud. Presione "Procesar cuota".');
+                                            cuotaEl.style.borderColor = 'red';
+                                            setTimeout(function(){ cuotaEl.style.borderColor = ''; }, 1800);
+                                            return false;
+                                        }
+                                        return true;
+                                    }
+
+                                    function validateVentasProcessed(){
+                                        var out = document.getElementById('ventas_promedio_mensual');
+                                        if(typeof window._ventas_promedio_calculated !== 'undefined' && window._ventas_promedio_calculated){
+                                            return true;
+                                        }
+                                        alert('Se deben calcular las ventas promedio mensual.');
+                                        if(out){ out.style.borderColor = 'red'; out.focus(); setTimeout(function(){ out.style.borderColor = ''; }, 2000); }
+                                        return false;
+                                    }
+
                                     // If editing, intercept submit to require an edit comment when empty
                                     form.addEventListener('submit', function(ev){
                                         try{
+                                            if(!validatePlazoRangeBeforeSubmit()){
+                                                ev.preventDefault(); ev.stopPropagation();
+                                                return;
+                                            }
+                                            if(!validateCuotaProcessed()){
+                                                ev.preventDefault(); ev.stopPropagation();
+                                                return;
+                                            }
+                                            if(!validateVentasProcessed()){
+                                                ev.preventDefault(); ev.stopPropagation();
+                                                return;
+                                            }
+                                            if(window.validateVentasMontoRelation && !window.validateVentasMontoRelation()){
+                                                ev.preventDefault(); ev.stopPropagation();
+                                                return;
+                                            }
+                                            if(!validateVentasDaysConflict()){
+                                                ev.preventDefault(); ev.stopPropagation();
+                                                return;
+                                            }
                                             if(!isEdit) return; // creation path doesn't require modal
                                             var hidden = document.getElementById('edit_comment_hidden');
                                             var cur = hidden ? hidden.value.trim() : '';
@@ -1714,6 +1861,8 @@ if (!empty($current_user_name)) {
                                         // garantias
                                         var gar = [];
                                         if(document.querySelector('input[name="garantia_hipotecaria"]') && document.querySelector('input[name="garantia_hipotecaria"]').checked) gar.push('Hipotecaria');
+                                        if(document.querySelector('input[name="garantia_mobiliaria"]') && document.querySelector('input[name="garantia_mobiliaria"]').checked) gar.push('Mobiliaria');
+                                        if(document.querySelector('input[name="garantia_sin"]') && document.querySelector('input[name="garantia_sin"]').checked) gar.push('Sin garantía');
                                         if(document.querySelector('input[name="garantia_prendaria"]') && document.querySelector('input[name="garantia_prendaria"]').checked) gar.push('Prendaria');
                                         if(document.querySelector('input[name="garantia_fiador"]') && document.querySelector('input[name="garantia_fiador"]').checked) gar.push('Fiador');
                                         if(document.querySelector('input[name="garantia_otra"]') && document.querySelector('input[name="garantia_otra"]').checked) gar.push('Otra');
@@ -1728,7 +1877,7 @@ if (!empty($current_user_name)) {
                                     }
                                     document.addEventListener('DOMContentLoaded', function(){ syncAll(); });
                                     ['monto_solicitado','plazo_meses','frecuencia','tasa_interes','cuota_estimado','giro_negocio'].forEach(function(k){ var el = document.getElementById(k); if(el) el.addEventListener('input', syncAll); });
-                                    ['garantia_hipotecaria','garantia_prendaria','garantia_fiador','garantia_otra'].forEach(function(n){ var el=document.querySelector('input[name="'+n+'"]'); if(el) el.addEventListener('change', syncAll); });
+                                    ['garantia_hipotecaria','garantia_mobiliaria','garantia_sin','garantia_prendaria','garantia_fiador','garantia_otra'].forEach(function(n){ var el=document.querySelector('input[name="'+n+'"]'); if(el) el.addEventListener('change', syncAll); });
                                     var ruralSel = document.getElementById('es_rural');
                                     if (ruralSel) ruralSel.addEventListener('change', syncAll);
                                 })();
@@ -1784,6 +1933,24 @@ if (!empty($current_user_name)) {
 
                                             function countChecked(selector){ var els = document.querySelectorAll(selector); return els ? els.length : 0; }
 
+                                            function validateVentasMontoRelation(){
+                                                var buenosInput = document.querySelector('input[name="ventas_buenos_amount"]');
+                                                var malosInput = document.querySelector('input[name="ventas_malos_amount"]');
+                                                var msg = document.getElementById('ventas_amount_ratio_msg');
+                                                if(!msg) return true;
+                                                var buenos = safeFloat(buenosInput ? buenosInput.value : 0);
+                                                var malos = safeFloat(malosInput ? malosInput.value : 0);
+                                                var hasAny = buenos !== 0 || malos !== 0;
+                                                if(hasAny && buenos <= malos){
+                                                    msg.style.display = 'block';
+                                                    msg.innerText = 'El monto de ventas en días buenos debe ser mayor que el de días malos.';
+                                                    return false;
+                                                }
+                                                msg.style.display = 'none';
+                                                msg.innerText = '';
+                                                return true;
+                                            }
+
                                             function computeVentasPromedio(){
                                                 var ventasBuenosAmt = safeFloat(document.querySelector('input[name="ventas_buenos_amount"]') ? document.querySelector('input[name="ventas_buenos_amount"]').value : 0);
                                                 var ventasMalosAmt = safeFloat(document.querySelector('input[name="ventas_malos_amount"]') ? document.querySelector('input[name="ventas_malos_amount"]').value : 0);
@@ -1808,18 +1975,65 @@ if (!empty($current_user_name)) {
 
                                             document.addEventListener('DOMContentLoaded', function(){
                                                 var btn = document.getElementById('btn_calcular_ventas_promedio');
-                                                if(btn) btn.addEventListener('click', function(e){ e.preventDefault(); computeVentasPromedio(); });
+                                                window._ventas_promedio_calculated = false;
+                                                if(btn) btn.addEventListener('click', function(e){ e.preventDefault(); if(validateVentasMontoRelation()){ computeVentasPromedio(); window._ventas_promedio_calculated = true; } });
+
+                                                function getCheckboxes(selector){ return Array.prototype.slice.call(document.querySelectorAll(selector)); }
+                                                function showVentasDaysConflict(){
+                                                    var msg = document.getElementById('ventas_days_conflict_msg');
+                                                    if(msg){ msg.style.display = 'block'; }
+                                                    setTimeout(function(){ if(msg) msg.style.display = 'none'; }, 2800);
+                                                }
+                                                function syncVentasDays(){
+                                                    var buenos = getCheckboxes('input[name="ventas_buenos_days[]"]');
+                                                    var malos = getCheckboxes('input[name="ventas_malos_days[]"]');
+                                                    var selectedBuenos = buenos.filter(function(ch){ return ch.checked; }).map(function(ch){ return ch.value; });
+                                                    var selectedMalos = malos.filter(function(ch){ return ch.checked; }).map(function(ch){ return ch.value; });
+                                                    var conflict = false;
+
+                                                    buenos.forEach(function(ch){
+                                                        if(ch.checked){
+                                                            malos.forEach(function(ch2){
+                                                                if(ch2.checked && ch2.value === ch.value){
+                                                                    ch2.checked = false;
+                                                                    conflict = true;
+                                                                }
+                                                            });
+                                                        }
+                                                    });
+                                                    malos.forEach(function(ch){
+                                                        if(ch.checked){
+                                                            buenos.forEach(function(ch2){
+                                                                if(ch2.checked && ch2.value === ch.value){
+                                                                    ch2.checked = false;
+                                                                    conflict = true;
+                                                                }
+                                                            });
+                                                        }
+                                                    });
+                                                    if(conflict){ showVentasDaysConflict(); }
+                                                }
 
                                                 // Optional: recalc when relevant inputs change (keeps UX smooth)
                                                 var fields = ['input[name="ventas_buenos_amount"]','input[name="ventas_malos_amount"]','input[name="ventas_buenos_days[]"]','input[name="ventas_malos_days[]"]'];
                                                 fields.forEach(function(sel){
                                                     document.querySelectorAll(sel).forEach(function(el){
-                                                        el.addEventListener('change', function(){ /* do not auto overwrite if user typed manual value? we will not auto-run here */ });
+                                                        el.addEventListener('change', function(){
+                                                            if(el.name === 'ventas_buenos_amount' || el.name === 'ventas_malos_amount'){
+                                                                validateVentasMontoRelation();
+                                                            }
+                                                            if(el.name === 'ventas_buenos_days[]' || el.name === 'ventas_malos_days[]'){
+                                                                syncVentasDays();
+                                                            }
+                                                        });
                                                     });
                                                 });
+
+                                                syncVentasDays();
                                             });
                                             // expose for console/testing
                                             window.computeVentasPromedio = computeVentasPromedio;
+                                            window.validateVentasMontoRelation = validateVentasMontoRelation;
                                         })();
                                     </script>
                                     <script>
