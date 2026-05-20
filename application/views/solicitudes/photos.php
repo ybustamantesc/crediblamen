@@ -36,6 +36,7 @@
                                 'inventario' => array(),
                                 'cedula_front' => array(),
                                 'cedula_back' => array(),
+                                'evidencia' => array(),
                                 'otros_ingresos_1' => array(),
                                 'otros_ingresos_2' => array(),
                                 'otros_ingresos_3' => array(),
@@ -51,11 +52,12 @@
                             }
 
                             $any = false;
-                            // Desired order: Cédula (frontal+trasera), Fachada, Inventario, Otros ingresos 1,2,3
+                            // Desired order: Cédula (frontal+trasera), Fachada, Inventario, Evidencia, Otros ingresos 1,2,3
                             $order = array(
                                 'cedula' => array('cedula_front','cedula_back'),
                                 'fachada' => array('fachada'),
                                 'inventario' => array('inventario'),
+                                'evidencia' => array('evidencia'),
                                 'otros_ingresos_1' => array('otros_ingresos_1'),
                                 'otros_ingresos_2' => array('otros_ingresos_2'),
                                 'otros_ingresos_3' => array('otros_ingresos_3')
@@ -64,6 +66,7 @@
                                 'cedula' => 'Cédula',
                                 'fachada' => 'Fachada',
                                 'inventario' => 'Inventario',
+                                'evidencia' => 'Evidencia de Estado Financiero',
                                 'otros_ingresos_1' => 'Otros Ingresos 1',
                                 'otros_ingresos_2' => 'Otros Ingresos 2',
                                 'otros_ingresos_3' => 'Otros Ingresos 3'
@@ -77,12 +80,13 @@
                                 if (!empty($groups['cedula_back'])) $cedula = array_merge($cedula, $groups['cedula_back']);
                                 $fachada = !empty($groups['fachada']) ? $groups['fachada'] : array();
                                 $inventario = !empty($groups['inventario']) ? $groups['inventario'] : array();
+                                $evidencia = !empty($groups['evidencia']) ? $groups['evidencia'] : array();
                                 $otros = array();
                                 if (!empty($groups['otros_ingresos_1'])) $otros = array_merge($otros, $groups['otros_ingresos_1']);
                                 if (!empty($groups['otros_ingresos_2'])) $otros = array_merge($otros, $groups['otros_ingresos_2']);
                                 if (!empty($groups['otros_ingresos_3'])) $otros = array_merge($otros, $groups['otros_ingresos_3']);
                                 if (!empty($groups['otros'])) $otros = array_merge($otros, $groups['otros']);
-                                $any = (count($cedula) + count($fachada) + count($inventario) + count($otros)) > 0;
+                                $any = (count($cedula) + count($fachada) + count($inventario) + count($evidencia) + count($otros)) > 0;
                             ?>
 
                             <div class="col-12">
@@ -127,6 +131,23 @@
                                                 <h6>Inventario <small class="text-muted">(<?php echo count($inventario); ?>)</small></h6>
                                                 <?php if (empty($inventario)): ?><div class="text-muted">Sin imágenes</div><?php endif; ?>
                                                 <?php foreach($inventario as $p): $url = base_url('uploads/' . (isset($p->filename) ? $p->filename : '')); ?>
+                                                    <div class="mb-2">
+                                                        <a href="<?php echo $url; ?>" target="_blank"><img src="<?php echo $url; ?>" style="width:100%; max-width:160px; max-height:120px; display:block; margin:0 0 6px;" /></a>
+                                                        <div class="d-flex" style="gap:6px;">
+                                                            <a class="btn btn-sm btn-outline-secondary" href="<?php echo $url; ?>" target="_blank">Descargar</a>
+                                                            <button class="btn btn-sm btn-danger btn-delete-photo" data-idphoto="<?php echo intval(isset($p->idphoto)?$p->idphoto:0); ?>" data-filename="<?php echo htmlspecialchars(isset($p->filename)?$p->filename:''); ?>">Eliminar</button>
+                                                        </div>
+                                                    </div>
+                                                <?php endforeach; ?>
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="card mb-3">
+                                            <div class="card-body">
+                                                <h6>Evidencia de Estado Financiero <small class="text-muted">(<?php echo count($evidencia); ?>)</small></h6>
+                                                <?php if (empty($evidencia)): ?><div class="text-muted">Sin imágenes</div><?php endif; ?>
+                                                <?php foreach($evidencia as $p): $url = base_url('uploads/' . (isset($p->filename) ? $p->filename : '')); ?>
                                                     <div class="mb-2">
                                                         <a href="<?php echo $url; ?>" target="_blank"><img src="<?php echo $url; ?>" style="width:100%; max-width:160px; max-height:120px; display:block; margin:0 0 6px;" /></a>
                                                         <div class="d-flex" style="gap:6px;">

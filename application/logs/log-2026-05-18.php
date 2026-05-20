@@ -27117,3 +27117,525 @@ INFO - 2026-05-18 21:08:30 --> Model "Tesoreria_model" initialized
 INFO - 2026-05-18 21:08:30 --> Controller Class Initialized
 INFO - 2026-05-18 21:08:30 --> Final output sent to browser
 DEBUG - 2026-05-18 21:08:30 --> Total execution time: 0.0788
+INFO - 2026-05-18 22:40:47 --> Config Class Initialized
+INFO - 2026-05-18 22:40:47 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:40:48 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:40:48 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:40:48 --> URI Class Initialized
+DEBUG - 2026-05-18 22:40:48 --> No URI present. Default controller set.
+INFO - 2026-05-18 22:40:48 --> Router Class Initialized
+INFO - 2026-05-18 22:40:48 --> Output Class Initialized
+INFO - 2026-05-18 22:40:48 --> Security Class Initialized
+DEBUG - 2026-05-18 22:40:48 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:40:48 --> Input Class Initialized
+INFO - 2026-05-18 22:40:48 --> Language Class Initialized
+INFO - 2026-05-18 22:40:48 --> Loader Class Initialized
+INFO - 2026-05-18 22:40:48 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:40:48 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:40:48 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:40:48 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:40:48 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:40:48 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:40:48 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:40:48 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:40:48 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:40:48 --> Email Class Initialized
+INFO - 2026-05-18 22:40:49 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:40:49 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:40:49 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:40:49 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:40:49 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:40:49 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:40:49 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:40:49 --> Upload Class Initialized
+INFO - 2026-05-18 22:40:49 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:40:49 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:40:49 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:40:49 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:40:49 --> Controller Class Initialized
+INFO - 2026-05-18 22:40:49 --> Config Class Initialized
+INFO - 2026-05-18 22:40:49 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:40:49 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:40:49 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:40:49 --> URI Class Initialized
+INFO - 2026-05-18 22:40:49 --> Router Class Initialized
+INFO - 2026-05-18 22:40:49 --> Output Class Initialized
+INFO - 2026-05-18 22:40:49 --> Security Class Initialized
+DEBUG - 2026-05-18 22:40:49 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:40:49 --> Input Class Initialized
+INFO - 2026-05-18 22:40:49 --> Language Class Initialized
+INFO - 2026-05-18 22:40:49 --> Loader Class Initialized
+INFO - 2026-05-18 22:40:49 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:40:49 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:40:49 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:40:49 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:40:49 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:40:49 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:40:49 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:40:49 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:40:49 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:40:49 --> Email Class Initialized
+INFO - 2026-05-18 22:40:49 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:40:49 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:40:49 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:40:49 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:40:49 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:40:49 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:40:49 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:40:49 --> Upload Class Initialized
+INFO - 2026-05-18 22:40:49 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:40:49 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:40:49 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:40:49 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:40:49 --> Controller Class Initialized
+INFO - 2026-05-18 22:40:49 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/header.php
+INFO - 2026-05-18 22:40:49 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\login/index.php
+INFO - 2026-05-18 22:40:49 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/footer.php
+INFO - 2026-05-18 22:40:49 --> Final output sent to browser
+DEBUG - 2026-05-18 22:40:49 --> Total execution time: 0.4382
+INFO - 2026-05-18 22:40:57 --> Config Class Initialized
+INFO - 2026-05-18 22:40:57 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:40:57 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:40:57 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:40:57 --> URI Class Initialized
+INFO - 2026-05-18 22:40:57 --> Router Class Initialized
+INFO - 2026-05-18 22:40:57 --> Output Class Initialized
+INFO - 2026-05-18 22:40:57 --> Security Class Initialized
+DEBUG - 2026-05-18 22:40:57 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:40:57 --> Input Class Initialized
+INFO - 2026-05-18 22:40:57 --> Language Class Initialized
+INFO - 2026-05-18 22:40:57 --> Loader Class Initialized
+INFO - 2026-05-18 22:40:57 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:40:57 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:40:57 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:40:57 --> Email Class Initialized
+INFO - 2026-05-18 22:40:57 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:40:57 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:40:57 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:40:57 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:40:57 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:40:57 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:40:57 --> Upload Class Initialized
+INFO - 2026-05-18 22:40:57 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:40:57 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:40:57 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:40:57 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:40:57 --> Controller Class Initialized
+INFO - 2026-05-18 22:40:57 --> Config Class Initialized
+INFO - 2026-05-18 22:40:57 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:40:57 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:40:57 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:40:57 --> URI Class Initialized
+INFO - 2026-05-18 22:40:57 --> Router Class Initialized
+INFO - 2026-05-18 22:40:57 --> Output Class Initialized
+INFO - 2026-05-18 22:40:57 --> Security Class Initialized
+DEBUG - 2026-05-18 22:40:57 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:40:57 --> Input Class Initialized
+INFO - 2026-05-18 22:40:57 --> Language Class Initialized
+INFO - 2026-05-18 22:40:57 --> Loader Class Initialized
+INFO - 2026-05-18 22:40:57 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:40:57 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:40:57 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:40:57 --> Email Class Initialized
+INFO - 2026-05-18 22:40:57 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:40:57 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:40:57 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:40:57 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:40:57 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:40:57 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:40:57 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:40:57 --> Upload Class Initialized
+INFO - 2026-05-18 22:40:57 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:40:57 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:40:57 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:40:57 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:40:57 --> Controller Class Initialized
+INFO - 2026-05-18 22:40:57 --> Model "Prestamos_model" initialized
+INFO - 2026-05-18 22:40:58 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/header.php
+INFO - 2026-05-18 22:40:58 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/navbar.php
+INFO - 2026-05-18 22:40:59 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/sidebar.php
+INFO - 2026-05-18 22:40:59 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\home/index.php
+INFO - 2026-05-18 22:40:59 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/footer.php
+INFO - 2026-05-18 22:40:59 --> Final output sent to browser
+DEBUG - 2026-05-18 22:40:59 --> Total execution time: 1.6823
+INFO - 2026-05-18 22:40:59 --> Config Class Initialized
+INFO - 2026-05-18 22:40:59 --> Config Class Initialized
+INFO - 2026-05-18 22:40:59 --> Hooks Class Initialized
+INFO - 2026-05-18 22:40:59 --> Hooks Class Initialized
+INFO - 2026-05-18 22:40:59 --> Config Class Initialized
+INFO - 2026-05-18 22:40:59 --> Hooks Class Initialized
+INFO - 2026-05-18 22:40:59 --> Config Class Initialized
+INFO - 2026-05-18 22:40:59 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:40:59 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:40:59 --> Utf8 Class Initialized
+DEBUG - 2026-05-18 22:40:59 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:40:59 --> Utf8 Class Initialized
+DEBUG - 2026-05-18 22:40:59 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:40:59 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:40:59 --> URI Class Initialized
+DEBUG - 2026-05-18 22:40:59 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:40:59 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:40:59 --> URI Class Initialized
+INFO - 2026-05-18 22:40:59 --> Router Class Initialized
+INFO - 2026-05-18 22:40:59 --> URI Class Initialized
+INFO - 2026-05-18 22:40:59 --> Router Class Initialized
+INFO - 2026-05-18 22:40:59 --> Output Class Initialized
+INFO - 2026-05-18 22:40:59 --> Router Class Initialized
+INFO - 2026-05-18 22:40:59 --> Output Class Initialized
+INFO - 2026-05-18 22:40:59 --> Security Class Initialized
+INFO - 2026-05-18 22:40:59 --> Security Class Initialized
+INFO - 2026-05-18 22:40:59 --> Output Class Initialized
+INFO - 2026-05-18 22:40:59 --> URI Class Initialized
+DEBUG - 2026-05-18 22:40:59 --> Global POST, GET and COOKIE data sanitized
+DEBUG - 2026-05-18 22:40:59 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:40:59 --> Security Class Initialized
+INFO - 2026-05-18 22:40:59 --> Input Class Initialized
+INFO - 2026-05-18 22:40:59 --> Input Class Initialized
+INFO - 2026-05-18 22:40:59 --> Language Class Initialized
+INFO - 2026-05-18 22:40:59 --> Language Class Initialized
+DEBUG - 2026-05-18 22:40:59 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:40:59 --> Router Class Initialized
+INFO - 2026-05-18 22:40:59 --> Input Class Initialized
+INFO - 2026-05-18 22:40:59 --> Language Class Initialized
+INFO - 2026-05-18 22:40:59 --> Output Class Initialized
+INFO - 2026-05-18 22:40:59 --> Loader Class Initialized
+INFO - 2026-05-18 22:40:59 --> Loader Class Initialized
+INFO - 2026-05-18 22:40:59 --> Security Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: url_helper
+DEBUG - 2026-05-18 22:40:59 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:40:59 --> Input Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:40:59 --> Language Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:40:59 --> Loader Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:40:59 --> Database Driver Class Initialized
+INFO - 2026-05-18 22:40:59 --> Database Driver Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:40:59 --> Loader Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: array_helper
+DEBUG - 2026-05-18 22:40:59 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+DEBUG - 2026-05-18 22:40:59 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:40:59 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:40:59 --> Email Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:40:59 --> Email Class Initialized
+INFO - 2026-05-18 22:40:59 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:40:59 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:40:59 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:40:59 --> Database Driver Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: language_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: language_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: form_helper
+DEBUG - 2026-05-18 22:40:59 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:40:59 --> Helper loaded: array_helper
+DEBUG - 2026-05-18 22:40:59 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:40:59 --> Session: Class initialized using 'files' driver.
+DEBUG - 2026-05-18 22:40:59 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:40:59 --> Email Class Initialized
+INFO - 2026-05-18 22:40:59 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:40:59 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:40:59 --> Helper loaded: language_helper
+INFO - 2026-05-18 22:40:59 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:40:59 --> Database Driver Class Initialized
+INFO - 2026-05-18 22:40:59 --> Form Validation Class Initialized
+DEBUG - 2026-05-18 22:40:59 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+DEBUG - 2026-05-18 22:40:59 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:40:59 --> Upload Class Initialized
+INFO - 2026-05-18 22:40:59 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:40:59 --> Email Class Initialized
+INFO - 2026-05-18 22:40:59 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:40:59 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:40:59 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:40:59 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:40:59 --> Controller Class Initialized
+INFO - 2026-05-18 22:40:59 --> Helper loaded: language_helper
+INFO - 2026-05-18 22:40:59 --> Model "Prestamos_model" initialized
+INFO - 2026-05-18 22:40:59 --> Final output sent to browser
+DEBUG - 2026-05-18 22:40:59 --> Total execution time: 0.1100
+DEBUG - 2026-05-18 22:40:59 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:40:59 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:40:59 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:40:59 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:40:59 --> Upload Class Initialized
+INFO - 2026-05-18 22:40:59 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:40:59 --> Controller Class Initialized
+INFO - 2026-05-18 22:40:59 --> Model "Prestamos_model" initialized
+INFO - 2026-05-18 22:40:59 --> Final output sent to browser
+DEBUG - 2026-05-18 22:40:59 --> Total execution time: 0.1314
+INFO - 2026-05-18 22:40:59 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:40:59 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:40:59 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:40:59 --> Upload Class Initialized
+INFO - 2026-05-18 22:40:59 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:40:59 --> Controller Class Initialized
+INFO - 2026-05-18 22:40:59 --> Model "Prestamos_model" initialized
+INFO - 2026-05-18 22:40:59 --> Final output sent to browser
+DEBUG - 2026-05-18 22:40:59 --> Total execution time: 0.1536
+INFO - 2026-05-18 22:40:59 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:40:59 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:40:59 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:40:59 --> Upload Class Initialized
+INFO - 2026-05-18 22:40:59 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:40:59 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:40:59 --> Controller Class Initialized
+INFO - 2026-05-18 22:40:59 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\custom_error_404.php
+INFO - 2026-05-18 22:40:59 --> Final output sent to browser
+DEBUG - 2026-05-18 22:40:59 --> Total execution time: 0.1960
+INFO - 2026-05-18 22:41:02 --> Config Class Initialized
+INFO - 2026-05-18 22:41:02 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:41:02 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:41:02 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:41:02 --> URI Class Initialized
+INFO - 2026-05-18 22:41:02 --> Router Class Initialized
+INFO - 2026-05-18 22:41:02 --> Output Class Initialized
+INFO - 2026-05-18 22:41:02 --> Security Class Initialized
+DEBUG - 2026-05-18 22:41:02 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:41:02 --> Input Class Initialized
+INFO - 2026-05-18 22:41:02 --> Language Class Initialized
+INFO - 2026-05-18 22:41:02 --> Loader Class Initialized
+INFO - 2026-05-18 22:41:02 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:41:02 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:41:02 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:41:02 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:41:02 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:41:02 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:41:02 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:41:02 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:41:02 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:41:02 --> Email Class Initialized
+INFO - 2026-05-18 22:41:02 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:41:02 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:41:02 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:41:02 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:41:02 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:41:02 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:41:02 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:41:02 --> Upload Class Initialized
+INFO - 2026-05-18 22:41:02 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:41:02 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:41:02 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:41:02 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:41:02 --> Controller Class Initialized
+DEBUG - 2026-05-18 22:41:02 --> Form_validation class already loaded. Second attempt ignored.
+DEBUG - 2026-05-18 22:41:02 --> Session class already loaded. Second attempt ignored.
+INFO - 2026-05-18 22:41:02 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/header.php
+INFO - 2026-05-18 22:41:02 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/navbar.php
+INFO - 2026-05-18 22:41:02 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/sidebar.php
+INFO - 2026-05-18 22:41:02 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\solicitudes/_uso_credito_modal.php
+INFO - 2026-05-18 22:41:02 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\solicitudes/index.php
+INFO - 2026-05-18 22:41:02 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/footer.php
+INFO - 2026-05-18 22:41:02 --> Final output sent to browser
+DEBUG - 2026-05-18 22:41:02 --> Total execution time: 0.5726
+INFO - 2026-05-18 22:41:05 --> Config Class Initialized
+INFO - 2026-05-18 22:41:05 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:41:05 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:41:05 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:41:05 --> URI Class Initialized
+INFO - 2026-05-18 22:41:05 --> Router Class Initialized
+INFO - 2026-05-18 22:41:05 --> Output Class Initialized
+INFO - 2026-05-18 22:41:05 --> Security Class Initialized
+DEBUG - 2026-05-18 22:41:05 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:41:05 --> Input Class Initialized
+INFO - 2026-05-18 22:41:05 --> Language Class Initialized
+INFO - 2026-05-18 22:41:05 --> Loader Class Initialized
+INFO - 2026-05-18 22:41:05 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:41:05 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:41:05 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:41:05 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:41:05 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:41:05 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:41:05 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:41:05 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:41:05 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:41:05 --> Email Class Initialized
+INFO - 2026-05-18 22:41:05 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:41:05 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:41:05 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:41:05 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:41:05 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:41:05 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:41:05 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:41:05 --> Upload Class Initialized
+INFO - 2026-05-18 22:41:05 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:41:05 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:41:05 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:41:05 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:41:05 --> Controller Class Initialized
+DEBUG - 2026-05-18 22:41:05 --> Form_validation class already loaded. Second attempt ignored.
+DEBUG - 2026-05-18 22:41:05 --> Session class already loaded. Second attempt ignored.
+INFO - 2026-05-18 22:41:06 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\solicitudes/print_solicitud_pdf.php
+DEBUG - 2026-05-18 22:41:06 --> Pdf class already loaded. Second attempt ignored.
+ERROR - 2026-05-18 22:41:06 --> Severity: Compile Error --> Declaration of Dompdf\Adapter\CPDF::__construct($paper, $orientation, Dompdf\Dompdf $dompdf) must be compatible with Dompdf\Canvas::__construct($paper = 'letter', $orientation = 'portrait', ?Dompdf\Dompdf $dompdf = NULL) D:\xampp\htdocs\crediblamen\dompdf\src\Adapter\CPDF.php 182
+INFO - 2026-05-18 22:45:07 --> Config Class Initialized
+INFO - 2026-05-18 22:45:07 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:45:07 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:45:07 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:45:07 --> URI Class Initialized
+INFO - 2026-05-18 22:45:07 --> Router Class Initialized
+INFO - 2026-05-18 22:45:07 --> Output Class Initialized
+INFO - 2026-05-18 22:45:07 --> Security Class Initialized
+DEBUG - 2026-05-18 22:45:07 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:45:07 --> Input Class Initialized
+INFO - 2026-05-18 22:45:07 --> Language Class Initialized
+INFO - 2026-05-18 22:45:07 --> Loader Class Initialized
+INFO - 2026-05-18 22:45:07 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:45:07 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:45:07 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:45:07 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:45:07 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:45:07 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:45:07 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:45:07 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:45:07 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:45:07 --> Email Class Initialized
+INFO - 2026-05-18 22:45:07 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:45:07 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:45:07 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:45:07 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:45:07 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:45:07 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:45:07 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:45:07 --> Upload Class Initialized
+INFO - 2026-05-18 22:45:07 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:45:07 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:45:07 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:45:07 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:45:07 --> Controller Class Initialized
+DEBUG - 2026-05-18 22:45:07 --> Form_validation class already loaded. Second attempt ignored.
+DEBUG - 2026-05-18 22:45:07 --> Session class already loaded. Second attempt ignored.
+INFO - 2026-05-18 22:45:07 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/header.php
+INFO - 2026-05-18 22:45:07 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/navbar.php
+INFO - 2026-05-18 22:45:07 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/sidebar.php
+INFO - 2026-05-18 22:45:07 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\solicitudes/_uso_credito_modal.php
+INFO - 2026-05-18 22:45:07 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\solicitudes/index.php
+INFO - 2026-05-18 22:45:07 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/footer.php
+INFO - 2026-05-18 22:45:07 --> Final output sent to browser
+DEBUG - 2026-05-18 22:45:07 --> Total execution time: 0.1229
+INFO - 2026-05-18 22:45:08 --> Config Class Initialized
+INFO - 2026-05-18 22:45:08 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:45:08 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:45:08 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:45:08 --> URI Class Initialized
+INFO - 2026-05-18 22:45:08 --> Router Class Initialized
+INFO - 2026-05-18 22:45:08 --> Output Class Initialized
+INFO - 2026-05-18 22:45:08 --> Security Class Initialized
+DEBUG - 2026-05-18 22:45:08 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:45:08 --> Input Class Initialized
+INFO - 2026-05-18 22:45:08 --> Language Class Initialized
+INFO - 2026-05-18 22:45:08 --> Loader Class Initialized
+INFO - 2026-05-18 22:45:08 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:45:08 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:45:08 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:45:08 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:45:08 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:45:08 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:45:08 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:45:08 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:45:08 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:45:08 --> Email Class Initialized
+INFO - 2026-05-18 22:45:08 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:45:08 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:45:08 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:45:08 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:45:08 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:45:08 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:45:08 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:45:08 --> Upload Class Initialized
+INFO - 2026-05-18 22:45:08 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:45:08 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:45:08 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:45:08 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:45:08 --> Controller Class Initialized
+DEBUG - 2026-05-18 22:45:08 --> Form_validation class already loaded. Second attempt ignored.
+DEBUG - 2026-05-18 22:45:08 --> Session class already loaded. Second attempt ignored.
+INFO - 2026-05-18 22:45:08 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/header.php
+INFO - 2026-05-18 22:45:08 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/navbar.php
+INFO - 2026-05-18 22:45:08 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/sidebar.php
+INFO - 2026-05-18 22:45:08 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\solicitudes/_uso_credito_modal.php
+INFO - 2026-05-18 22:45:08 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\solicitudes/index.php
+INFO - 2026-05-18 22:45:08 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\layout/footer.php
+INFO - 2026-05-18 22:45:08 --> Final output sent to browser
+DEBUG - 2026-05-18 22:45:08 --> Total execution time: 0.1562
+INFO - 2026-05-18 22:45:13 --> Config Class Initialized
+INFO - 2026-05-18 22:45:13 --> Hooks Class Initialized
+DEBUG - 2026-05-18 22:45:13 --> UTF-8 Support Enabled
+INFO - 2026-05-18 22:45:13 --> Utf8 Class Initialized
+INFO - 2026-05-18 22:45:13 --> URI Class Initialized
+INFO - 2026-05-18 22:45:13 --> Router Class Initialized
+INFO - 2026-05-18 22:45:13 --> Output Class Initialized
+INFO - 2026-05-18 22:45:13 --> Security Class Initialized
+DEBUG - 2026-05-18 22:45:13 --> Global POST, GET and COOKIE data sanitized
+INFO - 2026-05-18 22:45:13 --> Input Class Initialized
+INFO - 2026-05-18 22:45:13 --> Language Class Initialized
+INFO - 2026-05-18 22:45:13 --> Loader Class Initialized
+INFO - 2026-05-18 22:45:13 --> Helper loaded: url_helper
+INFO - 2026-05-18 22:45:13 --> Helper loaded: file_helper
+INFO - 2026-05-18 22:45:13 --> Helper loaded: string_helper
+INFO - 2026-05-18 22:45:13 --> Helper loaded: funcion_helper
+INFO - 2026-05-18 22:45:13 --> Helper loaded: date_helper
+INFO - 2026-05-18 22:45:13 --> Helper loaded: form_helper
+INFO - 2026-05-18 22:45:13 --> Helper loaded: array_helper
+INFO - 2026-05-18 22:45:13 --> Database Driver Class Initialized
+DEBUG - 2026-05-18 22:45:13 --> Config file loaded: D:\xampp\htdocs\crediblamen\application\config/ion_auth.php
+INFO - 2026-05-18 22:45:13 --> Email Class Initialized
+INFO - 2026-05-18 22:45:13 --> Language file loaded: language/spanish/ion_auth_lang.php
+INFO - 2026-05-18 22:45:13 --> Helper loaded: cookie_helper
+INFO - 2026-05-18 22:45:13 --> Helper loaded: language_helper
+DEBUG - 2026-05-18 22:45:13 --> Session: "sess_save_path" is empty; using "session.save_path" value from php.ini.
+INFO - 2026-05-18 22:45:13 --> Session: Class initialized using 'files' driver.
+INFO - 2026-05-18 22:45:13 --> Model "Ion_auth_model" initialized
+INFO - 2026-05-18 22:45:13 --> Form Validation Class Initialized
+INFO - 2026-05-18 22:45:13 --> Upload Class Initialized
+INFO - 2026-05-18 22:45:13 --> Model "Core_model" initialized
+INFO - 2026-05-18 22:45:13 --> Model "Home_model" initialized
+INFO - 2026-05-18 22:45:13 --> Model "Pagos_model" initialized
+INFO - 2026-05-18 22:45:13 --> Model "Tesoreria_model" initialized
+INFO - 2026-05-18 22:45:13 --> Controller Class Initialized
+DEBUG - 2026-05-18 22:45:13 --> Form_validation class already loaded. Second attempt ignored.
+DEBUG - 2026-05-18 22:45:13 --> Session class already loaded. Second attempt ignored.
+INFO - 2026-05-18 22:45:13 --> File loaded: D:\xampp\htdocs\crediblamen\application\views\solicitudes/print_solicitud_pdf.php
+DEBUG - 2026-05-18 22:45:13 --> Pdf class already loaded. Second attempt ignored.
+INFO - 2026-05-18 22:45:15 --> Final output sent to browser
+DEBUG - 2026-05-18 22:45:15 --> Total execution time: 2.0456

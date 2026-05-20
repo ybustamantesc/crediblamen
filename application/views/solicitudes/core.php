@@ -256,6 +256,8 @@ if (!empty($current_user_name)) {
                                     Garantía ofrecida: <span id="tmpl_garantias_display"><?php
                                         $g = [];
                                         if (s_val('garantia_hipotecaria')) $g[] = 'Hipotecaria';
+                                        if (s_val('garantia_mobiliaria')) $g[] = 'Mobiliaria';
+                                        if (s_val('garantia_sin')) $g[] = 'Sin';
                                         if (s_val('garantia_prendaria')) $g[] = 'Prendaria';
                                         if (s_val('garantia_fiador')) $g[] = 'Fiador';
                                         if (s_val('garantia_otra')) $g[] = 'Otra';
@@ -441,12 +443,19 @@ if (!empty($current_user_name)) {
                                         <div id="section-1">
                                             <div class="row">
                                                 <div class="col-md-3"><div class="form-group"><label>Fecha de solicitud</label><input type="datetime-local" class="form-control" name="fecha_solicitud" value="<?php echo s_date_fmt('fecha_solicitud', 'Y-m-d\TH:i', set_value('fecha_solicitud')); ?>"></div></div>
-                                                <div class="col-md-6"><div class="form-group"><label>Nombre completo <span class="text-danger">*</span></label><input type="text" required class="form-control" name="nombre_completo" id="nombre_completo_input" style="text-transform:uppercase;" value="<?php echo s_val('nombre_completo', trim(s_val('apellidos','') . ' ' . s_val('nombres','')) ?: set_value('nombre_completo')); ?>"></div></div>
+                                                <div class="col-md-3"><div class="form-group"><label>Nombre(s) <span class="text-danger">*</span></label><input type="text" required class="form-control" name="nombres" id="nombres_input" style="text-transform:uppercase;" value="<?php echo s_val('nombres', set_value('nombres')); ?>"></div></div>
+                                                <div class="col-md-3"><div class="form-group"><label>Apellido(s) <span class="text-danger">*</span></label><input type="text" required class="form-control" name="apellidos" id="apellidos_input" style="text-transform:uppercase;" value="<?php echo s_val('apellidos', set_value('apellidos')); ?>"></div></div>
                                                 <script>
                                                 document.addEventListener('DOMContentLoaded', function() {
-                                                    var nombreInput = document.getElementById('nombre_completo_input');
-                                                    if(nombreInput) {
-                                                        nombreInput.addEventListener('input', function() {
+                                                    var apellidosInput = document.getElementById('apellidos_input');
+                                                    if(apellidosInput) {
+                                                        apellidosInput.addEventListener('input', function() {
+                                                            this.value = this.value.toUpperCase();
+                                                        });
+                                                    }
+                                                    var nombresInput = document.getElementById('nombres_input');
+                                                    if(nombresInput) {
+                                                        nombresInput.addEventListener('input', function() {
                                                             this.value = this.value.toUpperCase();
                                                         });
                                                     }
@@ -511,9 +520,6 @@ if (!empty($current_user_name)) {
                                                     <label><input type="radio" name="condicion_vivienda" value="Otra" <?php echo (s_val('condicion_vivienda') == 'Otra' ? 'checked' : ''); ?>> Otra</label>
                                                 </div></div></div>
 
-                                                <!-- Keep legacy apellidos/nombres hidden for controller compatibility -->
-                                                <input type="hidden" name="apellidos" value="<?php echo s_val('apellidos', set_value('apellidos')); ?>">
-                                                <input type="hidden" name="nombres" value="<?php echo s_val('nombres', set_value('nombres')); ?>">
                                             </div>
                                         </div>
                                     </div>
@@ -751,7 +757,8 @@ if (!empty($current_user_name)) {
                                             };
 
                                             // Personal
-                                            setIfFound('nombre_completo', (src.apellidos ? src.apellidos + ' ' : '') + (src.nombres || ''));
+                                            setIfFound('apellidos', src.apellidos || '');
+                                            setIfFound('nombres', src.nombres || '');
                                             setIfFound('fecha_nacimiento', src.fecha_nacimiento || src.fecha_nac || src.fechaNac || '');
                                             setIfFound('edad', src.edad || '');
                                             // estado_civil (select)
@@ -892,9 +899,9 @@ if (!empty($current_user_name)) {
                                         <div class="form-group">
                                             <label>Foto de evidencia</label>
                                             <input type="file" accept="image/*" class="form-control-file" name="cuentas_por_cobrar_evidencia" id="cuentas_por_cobrar_evidencia">
-                                            <?php if (s_val('cuentas_por_cobrar_evidencia')): ?>
+                                            <?php if (s_val('cuentas_por_cobrar_evidencia') && isset($solicitud) && isset($solicitud->idsolicitud)): ?>
                                                 <div class="mt-2">
-                                                    <img src="<?php echo base_url('uploads/solicitudes/' . s_val('cuentas_por_cobrar_evidencia')); ?>" alt="Evidencia" style="max-width:200px;max-height:150px;border:1px solid #ddd;border-radius:4px;">
+                                                    <img src="<?php echo base_url('uploads/solicitudes/' . intval($solicitud->idsolicitud) . '/evidencia/' . s_val('cuentas_por_cobrar_evidencia')); ?>" alt="Evidencia" style="max-width:200px;max-height:150px;border:1px solid #ddd;border-radius:4px;">
                                                     <br><small class="text-muted">Archivo actual: <?php echo s_val('cuentas_por_cobrar_evidencia'); ?></small>
                                                 </div>
                                             <?php endif; ?>
@@ -1088,10 +1095,15 @@ if (!empty($current_user_name)) {
                                         }
 
                                         function uploadFiles(files, group, previewId, maxCount){
-                                            if (!files || !files.length) return;
+                                            if (!files || !files.length) return false;
                                             if (maxCount && files.length > maxCount) {
                                                 alert('Se pueden subir como máximo ' + maxCount + ' archivos para ' + group);
-                                                return;
+                                                return false;
+                                            }
+                                            // If the solicitud is not yet created, keep the files in the form and do not attempt AJAX upload.
+                                            if (!solId || solId <= 0) {
+                                                console.warn('Solicitud aún no existe; los archivos se guardarán al enviar el formulario.');
+                                                return false;
                                             }
                                             for (var i=0;i<files.length;i++) {
                                                 (function(f){
@@ -1117,20 +1129,21 @@ if (!empty($current_user_name)) {
                                                     xhr.send(fd);
                                                 })(files[i]);
                                             }
+                                            return true;
                                         }
 
                                         // Bind inputs
-                                        var fach = document.getElementById('fachada_input'); if (fach) fach.addEventListener('change', function(e){ var files = this.files; if(files.length>2){ alert('Fachada: máximo 2 fotos'); } uploadFiles(files, 'fachada', 'fachada_preview', 2); });
-                                        var inv = document.getElementById('inventario_input'); if (inv) inv.addEventListener('change', function(e){ var files = this.files; if(files.length>10){ alert('Inventario: máximo 10 fotos'); } uploadFiles(files, 'inventario', 'inventario_preview', 10); });
-                                        var cf = document.getElementById('cedula_front_input'); if (cf) cf.addEventListener('change', function(e){ var f = this.files; if(f.length>1){ alert('Solo una foto frontal de cédula permitida'); } uploadFiles(f, 'cedula_front', 'cedula_front_preview', 1); });
-                                        var cb = document.getElementById('cedula_back_input'); if (cb) cb.addEventListener('change', function(e){ var f = this.files; if(f.length>1){ alert('Solo una foto trasera de cédula permitida'); } uploadFiles(f, 'cedula_back', 'cedula_back_preview', 1); });
-                                        var oi1 = document.getElementById('otros_ingresos_1_input'); if (oi1) oi1.addEventListener('change', function(){ uploadFiles(this.files, 'otros_ingresos_1', 'otros_ingresos_1_preview', 3); });
-                                        var oi2 = document.getElementById('otros_ingresos_2_input'); if (oi2) oi2.addEventListener('change', function(){ uploadFiles(this.files, 'otros_ingresos_2', 'otros_ingresos_2_preview', 3); });
-                                        var oi3 = document.getElementById('otros_ingresos_3_input'); if (oi3) oi3.addEventListener('change', function(){ uploadFiles(this.files, 'otros_ingresos_3', 'otros_ingresos_3_preview', 3); });
+                                        var fach = document.getElementById('fachada_input'); if (fach) fach.addEventListener('change', function(e){ var files = this.files; if(files.length>2){ alert('Fachada: máximo 2 fotos'); } if (uploadFiles(files, 'fachada', 'fachada_preview', 2)) this.value = ''; });
+                                        var inv = document.getElementById('inventario_input'); if (inv) inv.addEventListener('change', function(e){ var files = this.files; if(files.length>10){ alert('Inventario: máximo 10 fotos'); } if (uploadFiles(files, 'inventario', 'inventario_preview', 10)) this.value = ''; });
+                                        var cf = document.getElementById('cedula_front_input'); if (cf) cf.addEventListener('change', function(e){ var f = this.files; if(f.length>1){ alert('Solo una foto frontal de cédula permitida'); } if (uploadFiles(f, 'cedula_front', 'cedula_front_preview', 1)) this.value = ''; });
+                                        var cb = document.getElementById('cedula_back_input'); if (cb) cb.addEventListener('change', function(e){ var f = this.files; if(f.length>1){ alert('Solo una foto trasera de cédula permitida'); } if (uploadFiles(f, 'cedula_back', 'cedula_back_preview', 1)) this.value = ''; });
+                                        var oi1 = document.getElementById('otros_ingresos_1_input'); if (oi1) oi1.addEventListener('change', function(){ if (uploadFiles(this.files, 'otros_ingresos_1', 'otros_ingresos_1_preview', 3)) this.value = ''; });
+                                        var oi2 = document.getElementById('otros_ingresos_2_input'); if (oi2) oi2.addEventListener('change', function(){ if (uploadFiles(this.files, 'otros_ingresos_2', 'otros_ingresos_2_preview', 3)) this.value = ''; });
+                                        var oi3 = document.getElementById('otros_ingresos_3_input'); if (oi3) oi3.addEventListener('change', function(){ if (uploadFiles(this.files, 'otros_ingresos_3', 'otros_ingresos_3_preview', 3)) this.value = ''; });
                                         // Nuevos campos con límite de 10 archivos
-                                        var dg = document.getElementById('docs_generales_input'); if (dg) dg.addEventListener('change', function(){ var files = this.files; if(files.length>10){ alert('Documentos Generales: máximo 10 archivos'); return; } uploadFiles(files, 'docs_generales', 'docs_generales_preview', 10); });
-                                        var dl = document.getElementById('docs_legales_input'); if (dl) dl.addEventListener('change', function(){ var files = this.files; if(files.length>10){ alert('Documentos Legales Variados: máximo 10 archivos'); return; } uploadFiles(files, 'docs_legales', 'docs_legales_preview', 10); });
-                                        var fa = document.getElementById('fotos_adicionales_input'); if (fa) fa.addEventListener('change', function(){ uploadFiles(this.files, 'fotos_adicionales', 'fotos_adicionales_preview'); });
+                                        var dg = document.getElementById('docs_generales_input'); if (dg) dg.addEventListener('change', function(){ var files = this.files; if(files.length>10){ alert('Documentos Generales: máximo 10 archivos'); return; } if (uploadFiles(files, 'docs_generales', 'docs_generales_preview', 10)) this.value = ''; });
+                                        var dl = document.getElementById('docs_legales_input'); if (dl) dl.addEventListener('change', function(){ var files = this.files; if(files.length>10){ alert('Documentos Legales Variados: máximo 10 archivos'); return; } if (uploadFiles(files, 'docs_legales', 'docs_legales_preview', 10)) this.value = ''; });
+                                        var fa = document.getElementById('fotos_adicionales_input'); if (fa) fa.addEventListener('change', function(){ if (uploadFiles(this.files, 'fotos_adicionales', 'fotos_adicionales_preview')) this.value = ''; });
                                     } catch(e) { console.warn('photo helper init error', e); }
 
                                         // Load existing uploaded photos and render with download/delete actions
@@ -1173,7 +1186,18 @@ if (!empty($current_user_name)) {
                                                 var groups = {};
                                                 // json.photos may be array of rows
                                                 if(Array.isArray(json.photos)){
-                                                    json.photos.forEach(function(p){ var g = (p.grupo || p.group || 'otros'); if(!groups[g]) groups[g]=[]; groups[g].push(p); });
+                                                    json.photos.forEach(function(p){
+                                                    var g = (p.grupo || p.group || 'otros');
+                                                    if ((!p.grupo && !p.group) && p.filename) {
+                                                        var fn = p.filename.replace(/\\/g,'/');
+                                                        var parts = fn.split('/');
+                                                        if (parts.length >= 3 && parts[2]) {
+                                                            g = parts[2].replace(/[^a-z0-9_\-]/gi,'_');
+                                                        }
+                                                    }
+                                                    if(!groups[g]) groups[g]=[];
+                                                    groups[g].push(p);
+                                                });
                                                 } else if(typeof json.photos === 'object'){
                                                     // fallback: if already grouped
                                                     groups = json.photos;
@@ -1705,6 +1729,14 @@ if (!empty($current_user_name)) {
 
                                     function validateVentasProcessed(){
                                         var out = document.getElementById('ventas_promedio_mensual');
+                                        var value = out ? (out.value || '').trim() : '';
+                                        
+                                        // Si ya tiene un valor, no necesita validación
+                                        if(value !== ''){
+                                            return true;
+                                        }
+                                        
+                                        // Si no tiene valor, verificar si fue calculado
                                         if(typeof window._ventas_promedio_calculated !== 'undefined' && window._ventas_promedio_calculated){
                                             return true;
                                         }

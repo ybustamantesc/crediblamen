@@ -697,6 +697,7 @@ class Solicitudes extends CI_Controller
                     try {
                         $allowed_types = array('image/jpeg', 'image/jpg', 'image/png');
                         $max_bytes = 5 * 1024 * 1024; // 5MB
+                        $allow_pdf_groups = array('docs_generales', 'docs_legales');
                         
                         // Handle single file upload for cuentas_por_cobrar_evidencia
                         if (isset($_FILES['cuentas_por_cobrar_evidencia']) && $_FILES['cuentas_por_cobrar_evidencia']['error'] === UPLOAD_ERR_OK) {
@@ -704,8 +705,8 @@ class Solicitudes extends CI_Controller
                             if ($file['size'] <= $max_bytes && in_array($file['type'], $allowed_types)) {
                                 $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
                                 $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
-                                $filename = 'cuentas_cobrar_' . time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
-                                $destDir = FCPATH . 'uploads/solicitudes/' . intval($insert_id) . '/';
+                                $filename = 'evidencia_' . time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
+                                $destDir = FCPATH . 'uploads/solicitudes/' . intval($insert_id) . '/evidencia/';
                                 if (!is_dir($destDir)) @mkdir($destDir, 0755, true);
                                 $target = $destDir . $filename;
                                 if (move_uploaded_file($file['tmp_name'], $target)) {
@@ -714,6 +715,24 @@ class Solicitudes extends CI_Controller
                                         array('cuentas_por_cobrar_evidencia' => $filename), 
                                         array('idsolicitud' => $insert_id)
                                     );
+                                    // Also register in tb_solicitud_photos for gallery view
+                                    $relPath = 'solicitudes/' . $insert_id . '/evidencia/' . $filename;
+                                    try {
+                                        $ins = array(
+                                            'idsolicitud' => $insert_id,
+                                            'filename' => $relPath,
+                                            'grupo' => 'evidencia',
+                                            'created_at' => date('Y-m-d H:i:s')
+                                        );
+                                        // avoid duplicate entries for same file
+                                        $exists = null;
+                                        try { $exists = $this->core_model->get_by_id('tb_solicitud_photos', array('idsolicitud' => $insert_id, 'filename' => $relPath)); } catch (Exception $_) { $exists = null; }
+                                        if (!$exists) {
+                                            $this->core_model->insert('tb_solicitud_photos', $ins, TRUE);
+                                        }
+                                    } catch (Exception $e) {
+                                        // ignore DB insert errors
+                                    }
                                 }
                             }
                         }
@@ -722,12 +741,16 @@ class Solicitudes extends CI_Controller
                             // single file fields (treated as single-element arrays)
                             'cedula_front' => 'cedula_front',
                             'cedula_back' => 'cedula_back',
+                            'consentimiento_filtrado' => 'consentimiento_filtrado',
                             // multi-file fields
                             'fachada' => 'fachada',
                             'inventario' => 'inventario',
                             'otros_ingresos_1' => 'otros_ingresos_1',
                             'otros_ingresos_2' => 'otros_ingresos_2',
-                            'otros_ingresos_3' => 'otros_ingresos_3'
+                            'otros_ingresos_3' => 'otros_ingresos_3',
+                            'docs_generales' => 'docs_generales',
+                            'docs_legales' => 'docs_legales',
+                            'fotos_adicionales' => 'fotos_adicionales'
                         );
                         foreach ($groups as $field => $group_name) {
                             if (!isset($_FILES[$field])) continue;
@@ -755,7 +778,11 @@ class Solicitudes extends CI_Controller
                             foreach ($files as $f) {
                                 if (!isset($f['tmp_name']) || !is_uploaded_file($f['tmp_name'])) continue;
                                 if ($f['size'] > $max_bytes) continue;
-                                if (!in_array($f['type'], $allowed_types)) continue;
+                                $type_ok = in_array($f['type'], $allowed_types);
+                                if (!$type_ok && in_array($group_name, $allow_pdf_groups) && $f['type'] === 'application/pdf') {
+                                    $type_ok = true;
+                                }
+                                if (!$type_ok) continue;
                                 $ext = pathinfo($f['name'], PATHINFO_EXTENSION);
                                 $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
                                 $name = time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
@@ -1220,8 +1247,112 @@ class Solicitudes extends CI_Controller
             } catch (Exception $e) { /* ignore comment save errors */ }
             if ($ok) {
                 $this->session->set_flashdata('success', 'Solicitud actualizada');
-            } else {
-                $this->session->set_flashdata('error', 'Error al actualizar la solicitud');
+                
+                // Process any uploaded files after successful update
+                try {
+                    $allowed_types = array('image/jpeg', 'image/jpg', 'image/png');
+                    $max_bytes = 5 * 1024 * 1024; // 5MB
+                    
+                    // Handle photo upload for cuentas_por_cobrar_evidencia in edit mode
+                    if (isset($_FILES['cuentas_por_cobrar_evidencia']) && $_FILES['cuentas_por_cobrar_evidencia']['error'] === UPLOAD_ERR_OK) {
+                        $file = $_FILES['cuentas_por_cobrar_evidencia'];
+                        if ($file['size'] <= $max_bytes && in_array($file['type'], $allowed_types)) {
+                            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
+                            $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
+                            $filename = 'evidencia_' . time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
+                            $destDir = FCPATH . 'uploads/solicitudes/' . intval($cliente_id) . '/evidencia/';
+                            if (!is_dir($destDir)) @mkdir($destDir, 0755, true);
+                            $target = $destDir . $filename;
+                            if (move_uploaded_file($file['tmp_name'], $target)) {
+                                // Update the solicitud record with the new filename
+                                $this->core_model->update('tb_solicitudes', 
+                                    array('cuentas_por_cobrar_evidencia' => $filename), 
+                                    array('idsolicitud' => $cliente_id)
+                                );
+                                // Also register in tb_solicitud_photos
+                                $relPath = 'solicitudes/' . $cliente_id . '/evidencia/' . $filename;
+                                try {
+                                    $ins = array(
+                                        'idsolicitud' => $cliente_id,
+                                        'filename' => $relPath,
+                                        'grupo' => 'evidencia',
+                                        'created_at' => date('Y-m-d H:i:s')
+                                    );
+                                    // avoid duplicate entries for same file
+                                    $exists = null;
+                                    try { $exists = $this->core_model->get_by_id('tb_solicitud_photos', array('idsolicitud' => $cliente_id, 'filename' => $relPath)); } catch (Exception $_) { $exists = null; }
+                                    if (!$exists) {
+                                        $this->core_model->insert('tb_solicitud_photos', $ins, TRUE);
+                                    }
+                                } catch (Exception $e) {
+                                    // ignore DB insert errors
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Handle other multi-file uploads
+                    $groups = array(
+                        'cedula_front' => 'cedula_front',
+                        'cedula_back' => 'cedula_back',
+                        'fachada' => 'fachada',
+                        'inventario' => 'inventario',
+                        'otros_ingresos_1' => 'otros_ingresos_1',
+                        'otros_ingresos_2' => 'otros_ingresos_2',
+                        'otros_ingresos_3' => 'otros_ingresos_3'
+                    );
+                    foreach ($groups as $field => $group_name) {
+                        if (!isset($_FILES[$field])) continue;
+                        // normalize to array of files
+                        $files = array();
+                        if (is_array($_FILES[$field]['name'])) {
+                            // multiple
+                            $cnt = count($_FILES[$field]['name']);
+                            for ($i = 0; $i < $cnt; $i++) {
+                                if ($_FILES[$field]['error'][$i] !== UPLOAD_ERR_OK) continue;
+                                $files[] = array(
+                                    'tmp_name' => $_FILES[$field]['tmp_name'][$i],
+                                    'name' => $_FILES[$field]['name'][$i],
+                                    'type' => $_FILES[$field]['type'][$i],
+                                    'size' => $_FILES[$field]['size'][$i]
+                                );
+                            }
+                        } else {
+                            // single
+                            if ($_FILES[$field]['error'] === UPLOAD_ERR_OK) {
+                                $files[] = $_FILES[$field];
+                            }
+                        }
+
+                        foreach ($files as $f) {
+                            if (!isset($f['tmp_name']) || !is_uploaded_file($f['tmp_name'])) continue;
+                            if ($f['size'] > $max_bytes) continue;
+                            if (!in_array($f['type'], $allowed_types)) continue;
+                            $ext = pathinfo($f['name'], PATHINFO_EXTENSION);
+                            $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
+                            $name = time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
+                            $destDir = FCPATH . 'uploads/solicitudes/' . intval($cliente_id) . '/' . $group_name . '/';
+                            if (!is_dir($destDir)) @mkdir($destDir, 0755, true);
+                            $target = $destDir . $name;
+                            if (move_uploaded_file($f['tmp_name'], $target)) {
+                                $relPath = 'solicitudes/' . $cliente_id . '/' . $group_name . '/' . $name;
+                                try {
+                                    $ins = array(
+                                        'idsolicitud' => $cliente_id,
+                                        'filename' => $relPath,
+                                        'grupo' => $group_name,
+                                        'created_at' => date('Y-m-d H:i:s')
+                                    );
+                                    $this->core_model->insert('tb_solicitud_photos', $ins, TRUE);
+                                } catch (Exception $e) {
+                                    // ignore DB insert errors
+                                }
+                            }
+                        }
+                    }
+                } catch (Exception $e) {
+                    // non-fatal - continue
+                }
             }
             redirect($this->router->fetch_class());
         }
@@ -3445,6 +3576,7 @@ class Solicitudes extends CI_Controller
         $row = array(
             'idsolicitud' => $idsolicitud,
             'filename' => $subpath . $filename,
+            'grupo' => $group,
             'mime' => $file['type'],
             'size' => (int)$file['size']
         );
@@ -3466,34 +3598,28 @@ class Solicitudes extends CI_Controller
         }
         try { $photos = $this->core_model->get_by_id_all('tb_solicitud_photos', array('idsolicitud' => $id)); } catch (Exception $e) { $photos = array(); }
         if (!is_array($photos)) $photos = array();
-
-        // Also include any files present on disk under uploads/solicitudes/{id} that don't have DB rows
+        $unique = array();
         $seen = array();
-        foreach ($photos as $p) { if (isset($p->filename)) $seen[ltrim(str_replace('\\','/',$p->filename), '/')] = true; }
-        $upload_dir = FCPATH . 'uploads/solicitudes/' . intval($id) . '/';
-        if (is_dir($upload_dir)) {
-            try {
-                $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($upload_dir, RecursiveDirectoryIterator::SKIP_DOTS));
-                foreach ($it as $file) {
-                    if (! $file->isFile()) continue;
-                    $ext = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
-                    if (! in_array($ext, array('jpg','jpeg','png','gif','pdf'))) continue;
-                    $abs = $file->getPathname();
-                    $rel = str_replace('\\', '/', substr($abs, strlen(FCPATH . 'uploads/')));
-                    if (isset($seen[$rel])) continue;
-                    $parts = explode('/', $rel);
-                    $group = 'otros';
-                    if (isset($parts[2])) { $group = preg_replace('/[^a-z0-9_\-]/i','_', $parts[2]); }
-                    $photos[] = (object) array(
-                        'idphoto' => null,
-                        'filename' => $rel,
-                        'grupo' => $group,
-                        'created_at' => date('Y-m-d H:i:s', $file->getMTime())
-                    );
+        foreach ($photos as $p) {
+            if (!empty($p->filename)) {
+                $filename = ltrim(str_replace('\\', '/', $p->filename), '/');
+                if (isset($seen[$filename])) continue;
+                $seen[$filename] = true;
+            }
+            if (empty($p->grupo) && !empty($p->filename)) {
+                $parts = explode('/', str_replace('\\', '/', $p->filename));
+                $group = 'otros';
+                if (isset($parts[2])) {
+                    $group = preg_replace('/[^a-z0-9_\-]/i', '_', $parts[2]);
                 }
-            } catch (Exception $e) { /* ignore */ }
+                $p->grupo = $group;
+            }
+            $unique[] = $p;
         }
+        $photos = $unique;
 
+        // NOTE: only return photos from the database metadata table.
+        // Do not scan the uploads folder for loose files.
         $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'photos' => $photos)));
     }
 
@@ -3509,50 +3635,29 @@ class Solicitudes extends CI_Controller
         }
         $photos = array();
         try { $photos = $this->core_model->get_by_id_all('tb_solicitud_photos', array('idsolicitud' => $id)); } catch (Exception $e) { $photos = array(); }
-
-        // Fallback: also scan uploads/solicitudes/{id} on disk and include files
-        // that may exist but don't have DB metadata (helps when files were uploaded manually).
+        $unique = array();
         $seen = array();
-        if (is_array($photos)) {
-            foreach ($photos as $p) {
-                if (isset($p->filename)) {
-                    $seen[ltrim(str_replace('\\', '/', $p->filename), '/')] = true;
-                }
+        foreach ($photos as $p) {
+            if (!empty($p->filename)) {
+                $filename = ltrim(str_replace('\\', '/', $p->filename), '/');
+                if (isset($seen[$filename])) continue;
+                $seen[$filename] = true;
             }
-        } else {
-            $photos = array();
+            if (empty($p->grupo) && !empty($p->filename)) {
+                $parts = explode('/', str_replace('\\', '/', $p->filename));
+                $group = 'otros';
+                if (isset($parts[2])) {
+                    $group = preg_replace('/[^a-z0-9_\-]/i', '_', $parts[2]);
+                }
+                $p->grupo = $group;
+            }
+            $unique[] = $p;
         }
+        $photos = $unique;
 
-        $upload_dir = FCPATH . 'uploads/solicitudes/' . intval($id) . '/';
-        if (is_dir($upload_dir)) {
-            try {
-                $it = new RecursiveIteratorIterator(new RecursiveDirectoryIterator($upload_dir, RecursiveDirectoryIterator::SKIP_DOTS));
-                foreach ($it as $file) {
-                    if (! $file->isFile()) continue;
-                    $ext = strtolower(pathinfo($file->getFilename(), PATHINFO_EXTENSION));
-                    if (! in_array($ext, array('jpg','jpeg','png','gif','pdf'))) continue;
-                    $abs = $file->getPathname();
-                    $rel = str_replace('\\', '/', substr($abs, strlen(FCPATH . 'uploads/')));
-                    // rel looks like 'solicitudes/21/fachada/xxx.jpg'
-                    if (isset($seen[$rel])) continue; // already in DB list
-                    // determine group from relative path segments
-                    $parts = explode('/', $rel);
-                    // expected parts: ['solicitudes','{id}','group', 'file'] or ['solicitudes','{id}','file']
-                    $group = 'otros';
-                    if (isset($parts[2])) {
-                        $group = preg_replace('/[^a-z0-9_\-]/i','_', $parts[2]);
-                    }
-                    $photos[] = (object) array(
-                        'idphoto' => null,
-                        'filename' => $rel,
-                        'grupo' => $group,
-                        'created_at' => date('Y-m-d H:i:s', $file->getMTime())
-                    );
-                }
-            } catch (Exception $e) {
-                // ignore scan errors
-            }
-        }
+        // NOTE: only show photos present in the database metadata table.
+        // Disk fallback is disabled so files that exist on disk without a DB row
+        // are not added to the gallery.
 
         $data = array(
             'titulo' => 'Fotos de Solicitud',
@@ -3611,7 +3716,16 @@ class Solicitudes extends CI_Controller
                 'grupo' => $group,
                 'created_at' => date('Y-m-d H:i:s')
             );
-            $idphoto = $this->core_model->insert('tb_solicitud_photos', $ins, TRUE);
+            // avoid duplicate entries for same file
+            $idphoto = null;
+            try {
+                $exists = $this->core_model->get_by_id('tb_solicitud_photos', array('idsolicitud' => $ids, 'filename' => $relPath));
+            } catch (Exception $_) { $exists = null; }
+            if (!$exists) {
+                $idphoto = $this->core_model->insert('tb_solicitud_photos', $ins, TRUE);
+            } else {
+                $idphoto = isset($exists->idphoto) ? $exists->idphoto : null;
+            }
         } catch (Exception $e) {
             // DB insert may fail if table missing; still return success for file saved
             $idphoto = null;

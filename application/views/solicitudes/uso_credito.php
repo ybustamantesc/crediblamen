@@ -82,7 +82,7 @@
                                         <td>
                                             <?php
                                                 // Prefer explicit name fields; show full name of cliente
-                                                $name = trim((isset($s->apellidos)?$s->apellidos:'') . ' ' . (isset($s->nombres)?$s->nombres:''));
+                                                $name = trim((isset($s->nombres)?$s->nombres:'') . ' ' . (isset($s->apellidos)?$s->apellidos:''));
                                                 if(!$name){
                                                     // fallback to identification if name missing
                                                     $name = isset($s->numero_doc) && $s->numero_doc ? $s->numero_doc : (isset($s->numero_documento) && $s->numero_documento ? $s->numero_documento : (isset($s->cedula) && $s->cedula ? $s->cedula : (isset($s->identificacion) && $s->identificacion ? $s->identificacion : '')));
@@ -123,7 +123,7 @@
                                         <div class="card-body py-2">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <div>
-                                                    <div class="font-weight-bold"><?php echo htmlspecialchars(trim((isset($s->apellidos)?$s->apellidos:'') . ' ' . (isset($s->nombres)?$s->nombres:''))); ?></div>
+                                                    <div class="font-weight-bold"><?php echo htmlspecialchars(trim((isset($s->nombres)?$s->nombres:'') . ' ' . (isset($s->apellidos)?$s->apellidos:''))); ?></div>
                                                     <div class="text-muted small"><?php echo 'SOL-' . str_pad($s->idsolicitud, 4, '0', STR_PAD_LEFT); ?></div>
                                                 </div>
                                                 <div class="text-right">

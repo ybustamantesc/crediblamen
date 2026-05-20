@@ -154,8 +154,9 @@
             if(data.solicitud){
                 var s = data.solicitud;
                 // Prefer normalized helper fields when present
-                document.getElementById('uso_nombre_completo').value = s.nombre_completo || ((s.apellidos || '') + ' ' + (s.nombres || ''));
+                document.getElementById('uso_nombre_completo').value = ((s.nombres || '') + ' ' + (s.apellidos || ''));
                 document.getElementById('uso_identificacion').value = s.numero_identificacion || s.cedula || s.identificacion || '';
+                console.log("La cédula es: " + s.numero_identificacion + ", o es " + s.cedula + ", o es " + s.identificacion);
                 document.getElementById('uso_telefono').value = s.telefono_contacto || s.telefono || s.celular || s.telefono_contacto || '';
                 document.getElementById('uso_email').value = s.correo_electronico || s.email || '';
                 document.getElementById('uso_fecha_solicitud').value = s.fecha_solicitud || s.fecha_recepcion || '';
@@ -174,8 +175,10 @@
                 if(document.getElementById('uso_flag_renovacion')){
                     if(s.es_renovacion == 1 || s.es_renovacion === true || s.es_renovacion === '1') { document.getElementById('uso_flag_renovacion').style.display = 'inline-block'; } else { document.getElementById('uso_flag_renovacion').style.display = 'none'; }
                 }
-                var fullName = ((s.apellidos || '') + ' ' + (s.nombres || '')).trim();
+                var fullName = ((s.nombres || '') + ' ' + (s.apellidos || '')).trim();
                 var idnum = s.numero_identificacion || s.cedula || s.identificacion || '';
+                console.log("El nombre completo es: " + fullName);
+                console.log("La cédula es: " + idnum);
                 // Build a prefix and wrap the remaining paragraph so line lengths (by character count)
                 // approximate the prefix length (to match the PDF visual layout requested).
                 var prefix = 'Yo, ' + (fullName || '________________________') + ' con Número de Identificación ' + (idnum || '________________') + ', declaro bajo juramento que la información';

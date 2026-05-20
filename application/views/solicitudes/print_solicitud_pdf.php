@@ -159,9 +159,8 @@
         <div class="field-label">Garantía ofrecida:</div>
         <div class="guarantees">
           <span class="chk"><?php echo (!empty($solicitud->garantia_hipotecaria) ? '[X]' : '[ ]'); ?> Hipotecaria</span>
-          <span class="chk"><?php echo (!empty($solicitud->garantia_prendaria) ? '[X]' : '[ ]'); ?> Prendaria</span>
-          <span class="chk"><?php echo (!empty($solicitud->garantia_fiador) ? '[X]' : '[ ]'); ?> Fiador</span>
-          <span class="chk"><?php echo (!empty($solicitud->garantia_otra) ? '[X]' : '[ ]'); ?> Otra</span>
+          <span class="chk"><?php echo (!empty($solicitud->garantia_mobiliaria) ? '[X]' : '[ ]'); ?> Mobiliaria</span>
+          <span class="chk"><?php echo (!empty($solicitud->garantia_sin) ? '[X]' : '[ ]'); ?> Sin</span>
         </div>
       </div>
 
@@ -174,7 +173,7 @@
           <div style="background:#0b3d91;color:#fff;padding:8px 10px;font-weight:700;font-size:13px;">DATOS GENERALES DEL CLIENTE</div>
         <div style="border:1px solid #e6e6e6;padding:10px;font-size:11px;">
           <div style="margin-bottom:6px;"><strong>Fecha de solicitud:</strong> <?php echo htmlspecialchars(isset($solicitud->fecha_solicitud) ? date('d/m/Y', strtotime($solicitud->fecha_solicitud)) : ''); ?></div>
-          <div style="margin-bottom:6px;"><strong>Nombre completo:</strong> <?php echo htmlspecialchars(trim((isset($solicitud->nombre_completo) && $solicitud->nombre_completo!='') ? $solicitud->nombre_completo : trim((($solicitud->apellidos ?? '') . ' ' . ($solicitud->nombres ?? ''))))); ?></div>
+          <div style="margin-bottom:6px;"><strong>Nombre completo:</strong> <?php echo htmlspecialchars(trim((isset($solicitud->nombre_completo) && $solicitud->nombre_completo!='') ? $solicitud->nombre_completo : trim((($solicitud->nombres ?? '') . ' ' . ($solicitud->apellidos ?? ''))))); ?></div>
           <div style="margin-bottom:6px;"><strong>Cédula de identidad:</strong> <?php echo htmlspecialchars($solicitud->numero_doc ?? ''); ?></div>
           <div style="margin-bottom:6px;"><strong>Fecha de nacimiento:</strong> <?php echo htmlspecialchars(isset($solicitud->fecha_nacimiento) && $solicitud->fecha_nacimiento ? date('d/m/Y', strtotime($solicitud->fecha_nacimiento)) : ''); ?> &nbsp; <strong>Edad:</strong> <?php echo htmlspecialchars($solicitud->edad ?? ''); ?> años</div>
           <div style="margin-bottom:6px;"><strong>Estado civil:</strong> <?php echo htmlspecialchars($solicitud->estado_civil ?? ''); ?> &nbsp; 

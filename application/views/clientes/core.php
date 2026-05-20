@@ -38,16 +38,16 @@
 								<div class="row">                                    
 									<div class="col-md-6">
 										<div class="form-group">
-											<label>Apellidos</label>
-											<input type="text" class="form-control" required name="apellidos" value="<?php echo (isset($cliente) ? $cliente->apellidos : set_value('apellidos')); ?>">
-											<?php echo form_error('apellidos', '<div class="text-danger">', '</div>') ?>
+											<label>Nombres</label>
+											<input type="text" class="form-control" required name="nombres" value="<?php echo (isset($cliente) ? $cliente->nombres : set_value('nombres')); ?>">
+											<?php echo form_error('nombres', '<div class="text-danger">', '</div>') ?>
 										</div>
 									</div>
 									<div class="col-md-6">
 										<div class="form-group">
-											<label>Nombres</label>
-											<input type="text" class="form-control" required name="nombres" value="<?php echo (isset($cliente) ? $cliente->nombres : set_value('nombres')); ?>">
-											<?php echo form_error('nombres', '<div class="text-danger">', '</div>') ?>
+											<label>Apellidos</label>
+											<input type="text" class="form-control" required name="apellidos" value="<?php echo (isset($cliente) ? $cliente->apellidos : set_value('apellidos')); ?>">
+											<?php echo form_error('apellidos', '<div class="text-danger">', '</div>') ?>
 										</div>
 									</div>
 									<div class="col-md-12">

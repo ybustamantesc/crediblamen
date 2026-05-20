@@ -38,7 +38,7 @@
         <div class="header-inner">
             <div style="float:left; max-width:75%">
                 <div class="title">FORMATO DE USO DEL CRÉDITO</div>
-                <div class="sub">Solicitud ID: <?php echo isset($solicitud->idsolicitud) ? $solicitud->idsolicitud : ''; ?> - Cliente: <?php echo isset($solicitud->apellidos) ? trim($solicitud->apellidos . ' ' . $solicitud->nombres) : ''; ?></div>
+                <div class="sub">Solicitud ID: <?php echo isset($solicitud->idsolicitud) ? $solicitud->idsolicitud : ''; ?> - Cliente: <?php echo isset($solicitud->nombres) ? trim($solicitud->nombres . ' ' . $solicitud->apellidos) : ''; ?></div>
             </div>
                         <div class="logo">
                                 <?php
@@ -65,8 +65,8 @@
     <div class="section">
         <div class="section-title">INFORMACIÓN GENERAL DEL SOLICITANTE</div>
         <div class="box">
-            <div class="detail"><strong>Nombre Completo:</strong> <?php echo isset($solicitud->apellidos) ? htmlspecialchars(trim($solicitud->apellidos . ' ' . $solicitud->nombres)) : '<span class="small text-muted">(sin datos)</span>'; ?></div>
-            <div class="detail"><strong>Número de Identificación:</strong> <?php echo isset($solicitud->cedula) ? htmlspecialchars($solicitud->cedula) : (isset($solicitud->identificacion) ? htmlspecialchars($solicitud->identificacion) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
+            <div class="detail"><strong>Nombre Completo:</strong> <?php echo isset($solicitud->nombres) ? htmlspecialchars(trim($solicitud->nombres . ' ' . $solicitud->apellidos)) : '<span class="small text-muted">(sin datos)</span>'; ?></div>
+            <div class="detail"><strong>Número de Identificación:</strong> <?php echo isset($solicitud->cedula) ? htmlspecialchars($solicitud->cedula) : (isset($solicitud->numero_identificacion) ? htmlspecialchars($solicitud->numero_identificacion) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
             <div class="detail"><strong>Teléfono de Contacto:</strong> <?php echo isset($solicitud->telefono) ? htmlspecialchars($solicitud->telefono) : (isset($solicitud->celular) ? htmlspecialchars($solicitud->celular) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
             <div class="detail"><strong>Correo Electrónico:</strong> <?php echo isset($solicitud->email) ? htmlspecialchars($solicitud->email) : (isset($solicitud->correo_electronico) ? htmlspecialchars($solicitud->correo_electronico) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
             <div class="detail"><strong>Fecha de Solicitud:</strong> <?php echo isset($solicitud->fecha_solicitud) ? htmlspecialchars($solicitud->fecha_solicitud) : (isset($solicitud->fecha_recepcion) ? htmlspecialchars($solicitud->fecha_recepcion) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
@@ -131,7 +131,7 @@
         <div class="section-title">Declaración y Autorización</div>
         <div class="box">
             <?php
-                $fullName = isset($solicitud->apellidos) ? trim($solicitud->apellidos . ' ' . $solicitud->nombres) : (isset($uso->declaracion_nombre) ? $uso->declaracion_nombre : '');
+                $fullName = isset($solicitud->nombres) ? trim($solicitud->nombres . ' ' . $solicitud->apellidos) : (isset($uso->declaracion_nombre) ? $uso->declaracion_nombre : '');
                 $idnum = isset($solicitud->cedula) ? $solicitud->cedula : (isset($solicitud->identificacion) ? $solicitud->identificacion : '');
                 // Build a prefix line (includes applicant name and ID) and wrap the remaining text
                 $prefix_raw = 'Yo, ' . ($fullName ? $fullName : '________________________') . ' con Número de Identificación ' . ($idnum ? $idnum : '________________') . ', declaro bajo juramento que la información';

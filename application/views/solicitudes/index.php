@@ -101,7 +101,7 @@
                                     <tr class="<?php echo $rowClass; ?>" data-id="<?php echo $s->idsolicitud; ?>" data-status="<?php echo $status; ?>">
                                         <td><?php echo $s->idsolicitud; ?></td>
                                         <td>
-                                            <?php echo trim($s->apellidos . ' ' . $s->nombres); ?>
+                                            <?php echo trim($s->nombres . ' ' . $s->apellidos); ?>
                                             <?php if ($status === 'annulled'): ?>
                                                 <span class="badge badge-secondary ml-1">Anulado</span>
                                             <?php endif; ?>
