@@ -22,6 +22,7 @@
 
 <script>
     (function(){
+        if (window.jQuery && window.jQuery.fn && window.jQuery.fn.DataTable) return;
         function applyPerfilFilters(){
             var q = document.getElementById('perfil_search').value.toLowerCase().trim();
             var status = document.getElementById('perfil_filter_status').value;
@@ -53,6 +54,34 @@
         if (f) f.addEventListener('change', applyPerfilFilters);
     })();
 </script>
+            <script>
+                (function waitForPerfilDataTable(){
+                    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.DataTable){
+                        (function($){
+                            try{
+                                var table = $('#perfil-table').DataTable({
+                                    "bSort": false,
+                                    "responsive": true,
+                                    "autoWidth": false,
+                                    "pageLength": 10,
+                                    "lengthMenu": [[10,25,50,100],[10,25,50,100]]
+                                });
+                                var wrapper = $(table.table().container());
+                                wrapper.find('.dataTables_filter').hide();
+                                $('#perfil_search').off('input.dt').on('input', function(){ table.search(this.value).draw(); });
+                                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex){
+                                    if (!settings || !settings.nTable || settings.nTable.id !== 'perfil-table') return true;
+                                    var status = $('#perfil_filter_status').val();
+                                    if (!status || status === 'all') return true;
+                                    var row = table.row(dataIndex).node();
+                                    return ($(row).data('status') || 'pending') === status;
+                                });
+                                $('#perfil_filter_status').off('change.dt').on('change', function(){ table.draw(); });
+                            }catch(e){ console.warn('Perfil integral DataTable not ready', e); }
+                        })(jQuery);
+                    } else { setTimeout(waitForPerfilDataTable, 100); }
+                })();
+            </script>
             <div class="card">
                 <div class="card-body">
                     <div class="row mb-2">
@@ -73,13 +102,26 @@
                         </div>
                     </div>
                     <style>
+                        #perfil-table{ table-layout: auto; width:100%; max-width: 100%; margin: 0; box-sizing: border-box; }
+                        #perfil-table{ max-width:100%; box-sizing:border-box; display: table; }
+                        #perfil-table th:first-child, #perfil-table td:first-child{
+                            width:auto; min-width:40px; max-width:80px; text-align:center;
+                            padding-left:.4rem; padding-right:.4rem;
+                            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                        }
+                        #perfil-table th:last-child, #perfil-table td:last-child{
+                            width: 90px; min-width:70px; white-space: nowrap;
+                            vertical-align: middle; text-align:center;
+                        }
                         /* Aggressively compact table tweaks for perfil_integral */
                         .table-compact td, .table-compact th{
                             padding: .12rem .28rem !important;
                             font-size: .72rem !important;
                             line-height: 1.02 !important;
                             vertical-align: middle !important;
-                            white-space: nowrap !important;
+                            white-space: normal !important;
+                            overflow-wrap: break-word !important;
+                            word-break: normal !important;
                         }
                         .table-compact thead th{
                             font-size: .68rem !important;
@@ -92,12 +134,12 @@
                             min-width: auto !important;
                         }
                         .table-compact td img{ max-height:22px; max-width:36px; }
-                        /* Truncate long Nombre and Tel/Cel fields to avoid stretching layout */
+                        /* Keep Nombre and Tel/Cel columns readable without forcing overflow */
                         #perfil-table td:nth-child(4), #perfil-table th:nth-child(4),
                         #perfil-table td:nth-child(5), #perfil-table th:nth-child(5){
                             max-width: 160px;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
+                            overflow-wrap: anywhere;
+                            word-break: break-word;
                         }
                         /* Narrow actions column */
                         #perfil-table td:last-child, #perfil-table th:last-child{
@@ -116,6 +158,16 @@
                             #perfil-table-wrap { display: block !important; }
                             #perfil-cards-wrap { display: none !important; }
                         }
+                        .perfil-card .btn {
+                            margin-right: .35rem;
+                            margin-bottom: .28rem;
+                        }
+                        .perfil-card .btn:last-child {
+                            margin-right: 0;
+                        }
+                        .perfil-card .btn + .btn {
+                            margin-left: 0;
+                        }
                     </style>
                     <div id="perfil-table-wrap" class="table-responsive d-none d-md-block">
                         <table id="perfil-table" class="table table-sm table-striped table-bordered table-compact">
@@ -123,7 +175,7 @@
                                 <tr>
                                     <th>#</th>
                                     <th>Solicitud</th>
-                                    <th>Código</th>
+                                    <th>ID de Solicitud</th>
                                     <th>Nombre</th>
                                     <th class="d-none d-md-table-cell">Tel/Cel</th>
                                     <th class="d-none d-md-table-cell">Nivel Riesgo</th>
@@ -162,9 +214,14 @@
                                         <td><?php echo html_escape(pref($p,$sol,['rubro_credito'])); ?></td>
                                         <td><?php echo html_escape(pref($p,$sol,['nombre_asesor','nombre_promotor'])); ?></td>
                                         <td>
-                                            <a href="<?php echo base_url('perfil_integral/create/'.$p->solicitud_id); ?>" class="btn btn-sm btn-info">Editar</a>
-                                            <a href="<?php echo base_url('perfil_integral/download/'.$p->id); ?>" class="btn btn-sm btn-secondary" target="_blank">Descargar</a>
-                                            <a href="<?php echo base_url('perfil_integral/download_matriz/'.$p->id); ?>" class="btn btn-sm btn-primary" target="_blank">Matriz PDF</a>
+                                            <div class="btn-group" role="group">
+                                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Acciones</button>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item" href="<?php echo base_url('perfil_integral/create/'.$p->solicitud_id); ?>">Editar</a>
+                                                    <a class="dropdown-item" href="<?php echo base_url('perfil_integral/download/'.$p->id); ?>" target="_blank">Descargar</a>
+                                                    <a class="dropdown-item" href="<?php echo base_url('perfil_integral/download_matriz/'.$p->id); ?>" target="_blank">Matriz PDF</a>
+                                                </div>
+                                            </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; else: ?>

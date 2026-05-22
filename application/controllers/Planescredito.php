@@ -40,8 +40,12 @@ class Planescredito extends CI_Controller
         if ($end_date) {
             $this->db->where('fecha_credito <=', $end_date);
         }
+        // Default ordering: newest-first by record id (idprestamo)
+        $this->db->order_by('idprestamo', 'DESC');
         $total_rows = $this->db->count_all_results('', false);
         $this->db->limit($per_page, $offset);
+        // Ensure ordering still present for the paged result
+        $this->db->order_by('idprestamo', 'DESC');
         $prestamos = $this->db->get()->result();
 
         // Optional text filter (search by solycitud number or0cliente nombre)

@@ -112,7 +112,7 @@
                                         <td><?php echo (!empty($s->fecha_recepcion) ? $s->fecha_recepcion : (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : '')); ?></td>
                                         <td>
                                             <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">Acciones</button>
+                                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Acciones</button>
                                                 <div class="dropdown-menu dropdown-menu-right">
                                                     <?php if ($status === 'annulled'): ?>
                                                         <span class="dropdown-item text-muted disabled" data-action="editar" style="pointer-events:none;">Editar (bloqueado por anulación)</span>
@@ -131,10 +131,12 @@
                                                         <span class="dropdown-item text-muted disabled" data-action="garantia" style="pointer-events:none;">Garantia (bloqueado por anulación)</span>
                                                         <span class="dropdown-item text-muted disabled" data-action="pic" style="pointer-events:none;">PIC (bloqueado por anulación)</span>
                                                         <span class="dropdown-item text-muted disabled" data-action="fotos" style="pointer-events:none;">Fotos (bloqueado por anulación)</span>
+                                                        <span class="dropdown-item text-muted disabled" data-action="documentos" style="pointer-events:none;">Documentos (bloqueado por anulación)</span>
                                                     <?php else: ?>
                                                         <a class="dropdown-item" data-action="garantia" href="<?php echo base_url('garantias/create/' . $s->idsolicitud); ?>">Garantia</a>
                                                         <a class="dropdown-item" data-action="pic" href="<?php echo base_url('perfil_integral/create/' . $s->idsolicitud); ?>">PIC</a>
                                                         <a class="dropdown-item" data-action="fotos" href="<?php echo base_url('solicitudes/photos/' . intval($s->idsolicitud)); ?>">Fotos</a>
+                                                        <a class="dropdown-item" data-action="documentos" href="<?php echo base_url('solicitudes/documents/' . intval($s->idsolicitud)); ?>">Documentos</a>
                                                     <?php endif; ?>
                                                     <a class="dropdown-item" data-action="pdf" href="<?php echo base_url('solicitudes/download_solicitud_pdf_force/' . intval($s->idsolicitud)); ?>"><i class="fas fa-file-pdf"></i> PDF</a>
                                                     <div class="dropdown-divider"></div>
@@ -186,12 +188,27 @@
 
             <style>
                 /* Compact table styles for solicitudes list (adjusted for readability) */
-                .table-compact td, .table-compact th{
+                     /* Use automatic table layout so columns size to content and remain responsive.
+                         Make the table fill the available container width without extra lateral margins. */
+                     #solicitudes-table{ table-layout: auto; width:100%; max-width: 100%; margin: 0; box-sizing: border-box; }
+                .table-compact td{
                     padding: .25rem .5rem;
                     vertical-align: middle;
                     font-size: .85rem;
                     line-height: 1.1;
-                    white-space: nowrap;
+                    /* allow wrapping in table cells at word boundaries only */
+                    white-space: normal;
+                    overflow-wrap: break-word;
+                    word-break: normal;
+                }
+                .table-compact th{
+                    padding: .25rem .5rem;
+                    vertical-align: middle;
+                    font-size: .85rem;
+                    line-height: 1.1;
+                    white-space: normal;
+                    word-break: normal;
+                    overflow-wrap: break-word;
                 }
                 .table-compact thead th{ font-size: .82rem; padding: .3rem .5rem; }
                 /* Ensure buttons (especially action dropdown) remain readable */
@@ -202,24 +219,35 @@
                 }
                 /* Specific rule to make the action dropdown more visible */
                 #solicitudes-table td:nth-child(5) .btn{
-                    font-size: .95rem; /* slightly larger for clarity */
-                    padding: .28rem .6rem;
-                    min-width: 100px;
+                    font-size: .95rem;
+                    padding: .22rem .35rem;
+                    min-width: 36px;
+                    max-width: 42px;
                 }
-                /* Truncate Cliente column to prevent layout stretching */
-                #solicitudes-table th:nth-child(2),
+                /* Constrain Cliente column to avoid extreme stretching but allow wrapping */
                 #solicitudes-table td:nth-child(2){
-                    max-width: 180px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+                    max-width: 220px;
+                    overflow-wrap: break-word;
+                }
+
+                /* Make first column (#) compact but flexible */
+                #solicitudes-table th:first-child, #solicitudes-table td:first-child{
+                    width:auto; min-width:40px; max-width:80px; text-align:center; padding-left:.4rem; padding-right:.4rem;
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                 }
                 /* Narrow action column (keep reasonable min width to avoid squashing content) */
-                #solicitudes-table th:nth-child(5),
-                #solicitudes-table td:nth-child(5){
-                    width: 140px;
+                #solicitudes-table th:last-child,
+                #solicitudes-table td:last-child{
+                    width: 90px;
+                    min-width: 70px;
                     white-space: nowrap;
                     vertical-align: middle;
+                    text-align: center;
                 }
+
+                /* Ensure the responsive container and table respect parent margins */
+                .table-responsive{ overflow-x:auto; max-width:100%; padding: 0; margin: 0; -webkit-overflow-scrolling: touch; }
+                #solicitudes-table{ max-width:100%; box-sizing:border-box; display: table; }
 
                 /* Responsive improvements for small screens (mobile) */
                 @media (max-width: 767.98px) {
@@ -265,11 +293,78 @@
                 }
             </style>
 
+            <style>
+                /* Override: force actions column to fit and reduce button min-width to avoid overflow */
+                #solicitudes-table th:last-child, #solicitudes-table td:last-child {
+                    width: auto !important;
+                    min-width: 42px !important;
+                    max-width: 70px !important;
+                    text-align: center !important;
+                    overflow: hidden !important;
+                    white-space: nowrap !important;
+                    vertical-align: middle !important;
+                    padding-right: .2rem !important;
+                }
+
+                .table-compact td .btn, .table-compact td .btn.btn-sm {
+                    min-width: 40px !important;
+                    padding: .22rem .35rem !important;
+                }
+
+                /* Ensure dropdown menu will not push table width (positioned over content) */
+                .table-compact .dropdown-menu {
+                    position: absolute !important;
+                    left: auto !important;
+                    right: 0 !important;
+                    min-width: 110px !important;
+                    z-index: 3000 !important;
+                }
+            </style>
+
+            <style>
+                /* Responsive adjustments: hide ID column and simplify actions on small screens */
+                @media (max-width: 767.98px) {
+                    /* Hide the first column (ID) to save horizontal space */
+                    #solicitudes-table th:nth-child(1),
+                    #solicitudes-table td:nth-child(1) {
+                        display: none !important;
+                    }
+
+                    /* Reduce padding and font-size for compactness */
+                    #solicitudes-table td, #solicitudes-table th {
+                        padding: .2rem .4rem !important;
+                        font-size: .78rem !important;
+                    }
+
+                    /* Make the actions button small and circular when collapsed */
+                    .sol-acciones-collapsed {
+                        width: 34px !important;
+                        height: 34px !important;
+                        padding: 0 !important;
+                        border-radius: 6px !important;
+                        text-align: center !important;
+                        line-height: 34px !important;
+                        font-weight: 700 !important;
+                    }
+
+                    /* Hide the dropdown caret for the tiny button to keep it clean */
+                    .sol-acciones-collapsed .dropdown-toggle::after { display: none !important; }
+
+                    /* Ensure dropdown menu still appears above content */
+                    .table-compact .dropdown-menu{ z-index: 3000; }
+                }
+            </style>
+
             <script>
                 // Initialize client-side filtering for the solicitudes list; wait for jQuery
+                // If DataTables is present we skip the manual row show/hide and let DataTables handle search/pagination.
                 (function waitForjQuery(){
                     if(window.jQuery){
                         (function($){
+                            if($.fn && $.fn.DataTable){
+                                // DataTables will handle filtering/pagination for this table
+                                return;
+                            }
                             function applySolFilters(){
                                 var q = $('#sol_search').val().toLowerCase().trim();
                                 var status = $('#sol_filter_status').val();
@@ -290,6 +385,97 @@
                         })(jQuery);
                     } else {
                         setTimeout(waitForjQuery, 100);
+                    }
+                })();
+            </script>
+
+            <script>
+                // Initialize DataTables for solicitudes list when plugin is available.
+                (function waitForDataTable(){
+                    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.DataTable){
+                        (function($){
+                            try{
+                                var table = $('#solicitudes-table').DataTable({
+                                    "bSort": false,
+                                    "responsive": true,
+                                    "autoWidth": false,
+                                    "pageLength": 10,
+                                    "lengthMenu": [[10,25,50,100],[10,25,50,100]]
+                                });
+
+                                // Custom status filter: use DataTables ext.search
+                                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex){
+                                    if(!settings || !settings.nTable) return true;
+                                    if(settings.nTable.id !== 'solicitudes-table') return true;
+                                    var status = $('#sol_filter_status').val();
+                                    if(!status || status === 'all') return true;
+                                    var row = table.row(dataIndex).node();
+                                    var rowStatus = $(row).data('status') || 'pending';
+                                    return status === rowStatus;
+                                });
+
+                                // Bind search input to DataTables search
+                                $('#sol_search').off('input.dt').on('input', function(){
+                                    table.search(this.value).draw();
+                                });
+
+                                // Bind status select to redraw which will apply the ext.search above
+                                $('#sol_filter_status').off('change.dt').on('change', function(){
+                                    table.draw();
+                                });
+                            }catch(e){ console.error('DataTable init error', e); }
+                        })(jQuery);
+                    } else {
+                        setTimeout(waitForDataTable, 100);
+                    }
+                })();
+            </script>
+            <script>
+                (function waitForjQueryResponsive(){
+                    if(window.jQuery){
+                        (function($){
+                            var resizeTimer = null;
+                            function applyResponsiveActions(){
+                                var w = $(window).width();
+                                if (w <= 767) {
+                                    // hide id column (already hidden by CSS) and collapse action buttons
+                                    $('#solicitudes-table tbody tr').each(function(){
+                                        var $btn = $(this).find('td').last().find('.btn-group > .btn').first();
+                                        if ($btn.length && !$btn.data('orig-text')) {
+                                            $btn.data('orig-text', $btn.text());
+                                        }
+                                        if ($btn.length) {
+                                            $btn.addClass('sol-acciones-collapsed');
+                                            $btn.text('+');
+                                        }
+                                    });
+                                } else {
+                                    $('#solicitudes-table tbody tr').each(function(){
+                                        var $btn = $(this).find('td').last().find('.btn-group > .btn').first();
+                                        if ($btn.length) {
+                                            var orig = $btn.data('orig-text');
+                                            if (orig !== undefined && orig !== null) $btn.text(orig);
+                                            $btn.removeClass('sol-acciones-collapsed');
+                                        }
+                                    });
+                                }
+                            }
+                            $(window).on('resize', function(){
+                                clearTimeout(resizeTimer);
+                                resizeTimer = setTimeout(applyResponsiveActions, 150);
+                            });
+                            // run on ready
+                            $(function(){
+                                // store original texts for buttons if not present
+                                $('#solicitudes-table tbody tr').each(function(){
+                                    var $btn = $(this).find('td').last().find('.btn-group > .btn').first();
+                                    if ($btn.length && !$btn.data('orig-text')) $btn.data('orig-text', $btn.text());
+                                });
+                                applyResponsiveActions();
+                            });
+                        })(jQuery);
+                    } else {
+                        setTimeout(waitForjQueryResponsive, 100);
                     }
                 })();
             </script>
@@ -718,6 +904,121 @@
                 waitForjQueryRef(50); // espera hasta ~5s
             })();
             </script>
+
+            <style>
+                /* Allow dropdown menus in the solicitudes table to display above its responsive wrapper */
+                .card-body > .table-responsive { overflow: visible !important; }
+                #solicitudes-table td:last-child,
+                #solicitudes-table th:last-child {
+                    overflow: visible !important;
+                }
+                #solicitudes-table .btn-group {
+                    position: relative;
+                    overflow: visible !important;
+                }
+                #solicitudes-table .dropdown-menu {
+                    z-index: 12000 !important;
+                }
+            </style>
+
+            <script>
+                // Center the dropdown arrow (--dropdown-arrow-left) over the toggle button
+                window.addEventListener('load', function(){
+                    function initCentering(){
+                        if(typeof jQuery === 'undefined' || !jQuery.fn || !jQuery.fn.dropdown) return;
+                        var $ = jQuery;
+
+                        $(document).on('shown.bs.dropdown', '#solicitudes-table .btn-group', function(){
+                            try{
+                                var $group = $(this);
+                                var $btn = $group.find('.dropdown-toggle').first();
+                                var $menu = $group.find('.dropdown-menu').first();
+                                if(!$btn.length || !$menu.length) return;
+                                var btnRect = $btn[0].getBoundingClientRect();
+                                var menuRect = $menu[0].getBoundingClientRect();
+                                // center point of button relative to menu left
+                                var desired = (btnRect.left + (btnRect.width/2)) - menuRect.left;
+                                // clamp to keep arrow inside menu (12px padding from edges)
+                                var clamp = function(v, a, b){ return Math.max(a, Math.min(v, b)); };
+                                desired = clamp(desired, 12, Math.max(12, menuRect.width - 12));
+                                $menu[0].style.setProperty('--dropdown-arrow-left', desired + 'px');
+                                // Small vertical nudge to bring the menu closer to the toggle button.
+                                // We adjust the popper-applied transform Y value by a few pixels toward the button.
+                                try{
+                                    var placement = $menu.attr('x-placement') || $menu[0].getAttribute('x-placement') || '';
+                                    var comp = window.getComputedStyle($menu[0]);
+                                    var t = comp.transform || $menu[0].style.transform || '';
+                                    var parse = function(str){
+                                        var out = {x:0,y:0,z:0};
+                                        if(!str || str === 'none') return out;
+                                        // translate3d(...) case
+                                        var m = /translate3d\(([-0-9.]+)px,\s*([-0-9.]+)px,\s*([-0-9.]+)px\)/.exec(str);
+                                        if(m){ out.x = parseFloat(m[1]); out.y = parseFloat(m[2]); out.z = parseFloat(m[3]); return out; }
+                                        // matrix(a,b,c,d,tx,ty)
+                                        m = /matrix\(([^)]+)\)/.exec(str);
+                                        if(m){ var parts = m[1].split(',').map(function(s){return parseFloat(s.trim());}); if(parts.length>=6){ out.x = parts[4]; out.y = parts[5]; out.z = 0; } return out; }
+                                        // matrix3d(..., tx, ty, tz)
+                                        m = /matrix3d\(([^)]+)\)/.exec(str);
+                                        if(m){ var parts = m[1].split(',').map(function(s){return parseFloat(s.trim());}); if(parts.length>=14){ out.x = parts[12]; out.y = parts[13]; out.z = parts[14]||0; } return out; }
+                                        return out;
+                                    };
+                                    var vals = parse(t);
+                                    var delta = 8; // pixels to move menu closer
+                                    var newY = vals.y;
+                                    if(placement.indexOf('top') === 0){
+                                        // menu above button: y is negative; increase toward zero
+                                        newY = vals.y + delta;
+                                    } else if(placement.indexOf('bottom') === 0){
+                                        // menu below button: y is positive; decrease toward zero
+                                        newY = vals.y - delta;
+                                    }
+                                    // write back transform preserving X/Z
+                                    $menu[0].style.transform = 'translate3d(' + (vals.x||0) + 'px, ' + (newY||0) + 'px, ' + (vals.z||0) + 'px)';
+                                }catch(e){ console.warn('nudge error', e); }
+                            }catch(err){ console.warn('arrow-centering error', err); }
+                        });
+
+                        $(document).on('hidden.bs.dropdown', '#solicitudes-table .btn-group', function(){
+                            try{
+                                var $menu = $(this).find('.dropdown-menu').first();
+                                if($menu && $menu.length) $menu[0].style.removeProperty('--dropdown-arrow-left');
+                            }catch(e){ }
+                        });
+                    }
+
+                    // attempt init (in case jQuery already loaded) and also try later
+                    var tries = 0;
+                    function tryInit(){ if(typeof jQuery !== 'undefined'){ initCentering(); } else if(tries < 50){ tries++; setTimeout(tryInit, 100); } }
+                    tryInit();
+                });
+            </script>
+
+            <style>
+                /* Make the dropdown arrow point toward the source button when menu opens above it */
+                /* For top-placed menus, flip the arrow to the bottom edge and align it to the button */
+                .table-compact .dropdown-menu[x-placement^="top"]::after {
+                    top: 100% !important;
+                    bottom: auto !important;
+                    /* switch arrow direction */
+                    border-bottom-color: transparent !important;
+                    border-top-color: #ffffff !important;
+                    /* position horizontally using a runtime-updated CSS variable so the arrow
+                       can be centered exactly on the source button regardless of table layout */
+                    left: var(--dropdown-arrow-left, 12px) !important;
+                    right: auto !important;
+                    transform: translateX(-50%) !important;
+                }
+
+                /* If desired, remove the decorative triangle entirely for the solicitudes table */
+                .table-compact .dropdown-menu::before,
+                .table-compact .dropdown-menu::after {
+                    display: none !important;
+                    content: none !important;
+                    border: 0 !important;
+                    box-shadow: none !important;
+                }
+            </style>
+
             <footer class="footer">
                 <div class="w-100 clearfix">
                     <span class="text-center text-sm-left d-md-inline-block">Copyright © 2026 Crediblamen System v1 All Rights Reserved.</span>

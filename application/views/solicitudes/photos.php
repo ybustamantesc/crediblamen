@@ -40,7 +40,11 @@
                                 'otros_ingresos_1' => array(),
                                 'otros_ingresos_2' => array(),
                                 'otros_ingresos_3' => array(),
-                                'otros' => array()
+                                'otros' => array(),
+                                'docs_generales' => array(),
+                                'docs_legales' => array(),
+                                'consentimiento_filtrado' => array(),
+                                'fotos_adicionales' => array()
                             );
                             if (!empty($photos) && is_array($photos)){
                                 foreach($photos as $p){

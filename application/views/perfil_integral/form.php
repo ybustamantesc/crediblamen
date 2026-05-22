@@ -37,6 +37,42 @@ $this->load->view('layout/navbar'); ?>
                         }
                         return $default;
                     }
+                    function pv_full_names($perfil, $sol, $default = ''){
+                        $names = '';
+                        if (!empty($perfil)) {
+                            if (!empty($perfil->nombres)) return $perfil->nombres;
+                            if (!empty($perfil->nombre)) {
+                                $names = trim($perfil->nombre . ' ' . ($perfil->segundo_nombre ?? ''));
+                                if ($names !== '') return $names;
+                            }
+                        }
+                        if (!empty($sol)) {
+                            if (!empty($sol->nombres)) return $sol->nombres;
+                            if (!empty($sol->nombre)) {
+                                $names = trim($sol->nombre . ' ' . ($sol->segundo_nombre ?? ''));
+                                if ($names !== '') return $names;
+                            }
+                        }
+                        return $default;
+                    }
+                    function pv_full_surnames($perfil, $sol, $default = ''){
+                        $surnames = '';
+                        if (!empty($perfil)) {
+                            if (!empty($perfil->apellidos)) return $perfil->apellidos;
+                            if (!empty($perfil->primer_apellido)) {
+                                $surnames = trim($perfil->primer_apellido . ' ' . ($perfil->segundo_apellido ?? ''));
+                                if ($surnames !== '') return $surnames;
+                            }
+                        }
+                        if (!empty($sol)) {
+                            if (!empty($sol->apellidos)) return $sol->apellidos;
+                            if (!empty($sol->primer_apellido)) {
+                                $surnames = trim($sol->primer_apellido . ' ' . ($sol->segundo_apellido ?? ''));
+                                if ($surnames !== '') return $surnames;
+                            }
+                        }
+                        return $default;
+                    }
                     // Compute prefills from solicitud (when perfil is empty) and perform simple conversions
                     $pref_sexo = pv($perfil, $solicitud, ['sexo']);
                     $pref_n_dependientes = pv($perfil, $solicitud, ['n_dependientes','numero_dependientes','numero_de_dependientes']);
@@ -109,21 +145,13 @@ $this->load->view('layout/navbar'); ?>
                     <input type="hidden" name="solicitud_id" value="<?php echo html_escape($solicitud->idsolicitud); ?>">
 
                     <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label>Primer Nombre</label>
-                            <input type="text" name="nombre" class="form-control" value="<?php echo html_escape(pv($perfil, $solicitud, ['nombre','nombres','first_name'])); ?>">
+                        <div class="form-group col-md-6">
+                            <label>Nombres</label>
+                            <input type="text" name="nombre" class="form-control" value="<?php echo html_escape(pv_full_names($perfil, $solicitud)); ?>" placeholder="Ej: María Kamila"> 
                         </div>
-                        <div class="form-group col-md-3">
-                            <label>Segundo Nombre</label>
-                            <input type="text" name="segundo_nombre" class="form-control" value="<?php echo html_escape(pv($perfil, $solicitud, ['segundo_nombre','middle_name'])); ?>">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label>Primer Apellido</label>
-                            <input type="text" name="primer_apellido" class="form-control" value="<?php echo html_escape(pv($perfil, $solicitud, ['primer_apellido','apellidos','apellido1'])); ?>">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label>Segundo Apellido</label>
-                            <input type="text" name="segundo_apellido" class="form-control" value="<?php echo html_escape(pv($perfil, $solicitud, ['segundo_apellido','apellido2'])); ?>">
+                        <div class="form-group col-md-6">
+                            <label>Apellidos</label>
+                            <input type="text" name="primer_apellido" class="form-control" value="<?php echo html_escape(pv_full_surnames($perfil, $solicitud)); ?>" placeholder="Ej: Hernández Morales"> 
                         </div>
                     </div>
 
@@ -719,21 +747,9 @@ $this->load->view('layout/navbar'); ?>
                     <hr />
                     <h5>Datos del cónyuge / unión de hecho</h5>
                     <div class="form-row">
-                        <div class="form-group col-md-3">
-                            <label>Primer nombre</label>
-                            <input type="text" name="conyuge_primer_nombre" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['conyuge_primer_nombre','conyuge_nombre'])); ?>">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label>Segundo nombre</label>
-                            <input type="text" name="conyuge_segundo_nombre" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['conyuge_segundo_nombre'])); ?>">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label>Primer apellido</label>
-                            <input type="text" name="conyuge_primer_apellido" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['conyuge_primer_apellido'])); ?>">
-                        </div>
-                        <div class="form-group col-md-3">
-                            <label>Segundo apellido</label>
-                            <input type="text" name="conyuge_segundo_apellido" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['conyuge_segundo_apellido'])); ?>">
+                        <div class="form-group col-md-12">
+                            <label>Nombre completo del cónyuge / unión de hecho</label>
+                            <input type="text" name="nombre_conyuge" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['nombre_conyuge']) ?: trim(pv($perfil,$solicitud,['conyuge_primer_nombre']) . ' ' . pv($perfil,$solicitud,['conyuge_segundo_nombre']) . ' ' . pv($perfil,$solicitud,['conyuge_primer_apellido']) . ' ' . pv($perfil,$solicitud,['conyuge_segundo_apellido']))); ?>" placeholder="Ej: Jose Mario Lopez Fernandez">
                         </div>
                     </div>
                     <div class="form-row">

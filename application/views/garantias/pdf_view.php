@@ -7,7 +7,7 @@ $cliente_nombre = '';
 if (!empty($solicitud)) {
     $cliente_nombre = trim((string)($solicitud->nombre_completo ?? ''));
     if ($cliente_nombre === '') {
-        $cliente_nombre = trim((string)($solicitud->apellidos ?? '') . ' ' . (string)($solicitud->nombres ?? ''));
+        $cliente_nombre = trim((string)($solicitud->nombres ?? '') . ' ' . (string)($solicitud->apellidos ?? ''));
     }
 }
 
@@ -143,7 +143,7 @@ foreach ($logo_names as $lp) {
                         </tr>
                         <tr style="background:#f8f9fa; font-weight:bold;">
                             <td colspan="5" class="text-right" style="padding:10px 8px;">SUBTOTAL AVALÚO (US$)</td>
-                            <td colspan="2" class="text-right" style="padding:10px 8px;">$<?php echo number_format($subtotal_avaluo_usd,2); ?></td>
+                            <td colspan="1" class="text-right" style="padding:10px 8px;">$<?php echo number_format($subtotal_avaluo_usd,2); ?></td>
                             <td colspan="2">&nbsp;</td>
                         </tr>
                         <!-- Tasa de cambio ocultada -->

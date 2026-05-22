@@ -3,7 +3,8 @@ $(document).ready(function() {
         "bSort": false,
         "responsive": true,
         "autoWidth": false,
-        "lengthMenu": [25, 50, 75, 100]
+        "pageLength": 10,
+        "lengthMenu": [[10, 25, 50, 100], [10, 25, 50, 100]]
     });
 
     $('.alert').fadeIn();

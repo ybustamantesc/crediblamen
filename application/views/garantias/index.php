@@ -44,24 +44,42 @@
                         </div>
                     </div>
                     <style>
+                        #garantias-table{ table-layout: auto; width:100%; max-width: 100%; margin: 0; box-sizing: border-box; }
+                        #garantias-table{ max-width:100%; box-sizing:border-box; display: table; }
+                        #garantias-table th:first-child, #garantias-table td:first-child{
+                            width:auto; min-width:40px; max-width:80px; text-align:center;
+                            padding-left:.4rem; padding-right:.4rem;
+                            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                        }
+                        #garantias-table th:last-child, #garantias-table td:last-child{
+                            width: 120px; min-width:90px; white-space: nowrap;
+                            vertical-align: middle; text-align:center;
+                        }
                         /* Match compact table styles used by solicitudes list so dimensions align */
                         #garantias-table.table-compact td, #garantias-table.table-compact th{
-                            padding: .12rem .28rem !important;
+                            padding: .18rem .4rem !important;
                             vertical-align: middle !important;
-                            font-size: .72rem !important;
-                            line-height: 1.02 !important;
-                            white-space: nowrap !important;
+                            font-size: .82rem !important;
+                            line-height: 1.1 !important;
+                            white-space: normal !important;
+                            overflow-wrap: break-word !important;
+                            word-break: normal !important;
                         }
-                        #garantias-table.table-compact thead th{ font-size: .7rem !important; padding: .18rem .28rem !important; }
-                        #garantias-table.table-compact .btn{ padding: .12rem .28rem !important; font-size: .72rem !important; min-width: auto !important; }
-                        /* Truncate Cliente to prevent layout stretching */
+                        #garantias-table.table-compact thead th{ font-size: .82rem !important; padding: .22rem .38rem !important; }
+                        #garantias-table.table-compact .btn{ padding: .16rem .38rem !important; font-size: .82rem !important; min-width: auto !important; }
                         #garantias-table th:nth-child(4), #garantias-table td:nth-child(4){
                             max-width: 180px;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
+                            overflow-wrap: break-word;
+                            word-break: normal;
                         }
-                        /* Actions column: allow wider space and prevent overflow */
-                        #garantias-table th:last-child, #garantias-table td:last-child{ width: 220px; white-space: nowrap; }
+                        #garantias-table td:last-child .btn-group{
+                            display: inline-flex;
+                            justify-content: center;
+                            width: 100%;
+                        }
+                        #garantias-table td:last-child .btn{
+                            min-width: 110px;
+                        }
                     </style>
                     <style>
                         /* Ensure only one of table or cards is visible (avoid conflicts from other CSS) */
@@ -97,8 +115,8 @@
                                         elseif ($status === 'annulled') $rowClass = 'table-secondary';
                                         elseif ($status === 'pending') $rowClass = 'table-warning';
                                         $cliente_nombre = '';
-                                        if (isset($g->apellidos) || isset($g->nombres)) {
-                                            $cliente_nombre = trim((isset($g->apellidos)?$g->apellidos:'') . ' ' . (isset($g->nombres)?$g->nombres:''));
+                                        if (isset($g->nombres) || isset($g->apellidos)) {
+                                            $cliente_nombre = trim((isset($g->nombres)?$g->nombres:'') . ' ' . (isset($g->apellidos)?$g->apellidos:''));
                                         } elseif (isset($g->cliente_nombre)) {
                                             $cliente_nombre = $g->cliente_nombre;
                                         }
@@ -111,16 +129,19 @@
                                             <td><?php echo html_escape(isset($g->rubro_credito) ? $g->rubro_credito : ''); ?></td>
                                             <td><?php echo html_escape(isset($g->nombre_asesor) ? $g->nombre_asesor : ''); ?></td>
                                             <td>
-                                                <!-- Inline buttons for desktop -->
+                                                <!-- Inline dropdown for desktop to preserve column width -->
                                                 <div class="d-none d-md-flex btn-group" role="group" aria-label="Acciones">
-                                                    <a class="btn btn-sm btn-info" href="<?php echo base_url('garantias/create/'.$g->solicitud_id); ?>">Editar</a>
-                                                    <a class="btn btn-sm btn-secondary" href="<?php echo base_url('garantias/view_by_solicitud/'.$g->solicitud_id); ?>">Ver</a>
-                                                    <a class="btn btn-sm btn-secondary" href="<?php echo base_url('garantias/pdf_by_solicitud/'.$g->solicitud_id); ?>">PDF</a>
-                                                    <?php if (isset($g->verified) && $g->verified): ?>
-                                                        <a class="btn btn-sm btn-outline-secondary" href="<?php echo base_url('garantias/download_verificacion/'.$g->id); ?>">Descargar</a>
-                                                    <?php else: ?>
-                                                        <button type="button" class="btn btn-sm btn-warning btn-verify" data-id="<?php echo $g->id; ?>" data-solicitud="<?php echo $g->solicitud_id; ?>">Verificar</button>
-                                                    <?php endif; ?>
+                                                    <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Acciones</button>
+                                                    <div class="dropdown-menu dropdown-menu-right">
+                                                        <a class="dropdown-item" href="<?php echo base_url('garantias/create/'.$g->solicitud_id); ?>">Editar</a>
+                                                        <a class="dropdown-item" href="<?php echo base_url('garantias/view_by_solicitud/'.$g->solicitud_id); ?>">Ver</a>
+                                                        <a class="dropdown-item" href="<?php echo base_url('garantias/pdf_by_solicitud/'.$g->solicitud_id); ?>">PDF</a>
+                                                        <?php if (isset($g->verified) && $g->verified): ?>
+                                                            <a class="dropdown-item" href="<?php echo base_url('garantias/download_verificacion/'.$g->id); ?>">Descargar Verificación</a>
+                                                        <?php else: ?>
+                                                            <a class="dropdown-item btn-verify" href="#" data-id="<?php echo $g->id; ?>" data-solicitud="<?php echo $g->solicitud_id; ?>">Verificar</a>
+                                                        <?php endif; ?>
+                                                    </div>
                                                 </div>
 
                                                 <!-- Compact dropdown for small screens -->
@@ -158,8 +179,8 @@
                                 elseif ($status === 'rejected') $cardClass = 'border-danger';
                                 elseif ($status === 'annulled') $cardClass = 'border-secondary';
                                 $cliente_nombre = '';
-                                if (isset($g->apellidos) || isset($g->nombres)) {
-                                    $cliente_nombre = trim((isset($g->apellidos)?$g->apellidos:'') . ' ' . (isset($g->nombres)?$g->nombres:''));
+                                if (isset($g->nombres) || isset($g->apellidos)) {
+                                    $cliente_nombre = trim((isset($g->nombres)?$g->nombres:'') . ' ' . (isset($g->apellidos)?$g->apellidos:''));
                                 } elseif (isset($g->cliente_nombre)) {
                                     $cliente_nombre = $g->cliente_nombre;
                                 }
@@ -196,6 +217,35 @@
                     </div>
                 </div>
             </div>
+
+            <script>
+                (function waitForGarantiasDataTable(){
+                    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.DataTable){
+                        (function($){
+                            try{
+                                var table = $('#garantias-table').DataTable({
+                                    "bSort": false,
+                                    "responsive": true,
+                                    "autoWidth": false,
+                                    "pageLength": 10,
+                                    "lengthMenu": [[10,25,50,100],[10,25,50,100]]
+                                });
+                                var wrapper = $(table.table().container());
+                                wrapper.find('.dataTables_filter').hide();
+                                $('#garantias_search').off('input.dt').on('input', function(){ table.search(this.value).draw(); });
+                                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex){
+                                    if (!settings || !settings.nTable || settings.nTable.id !== 'garantias-table') return true;
+                                    var status = $('#garantias_filter_status').val();
+                                    if (!status || status === 'all') return true;
+                                    var row = table.row(dataIndex).node();
+                                    return ($(row).data('status') || 'pending') === status;
+                                });
+                                $('#garantias_filter_status').off('change.dt').on('change', function(){ table.draw(); });
+                            }catch(e){ console.error('Garantias DataTable error', e); }
+                        })(jQuery);
+                    } else { setTimeout(waitForGarantiasDataTable, 100); }
+                })();
+            </script>
 
                     <!-- Modal Verificación -->
                     <div class="modal fade" id="modalVerificacion" tabindex="-1" role="dialog" aria-hidden="true">
@@ -286,8 +336,9 @@
                                             alert((resp && resp.message) ? resp.message : 'Error en la verificación');
                                         }
                                     },
-                                    error: function(){
-                                        alert('Error de red al guardar la verificación.');
+                                    error: function(xhr){
+                                        console.error('Error al guardar verificación:', xhr);
+                                        alert('Error de red al guardar la verificación.\nHTTP ' + xhr.status + ' ' + xhr.statusText + '\n' + xhr.responseText);
                                     }
                                 });
                             });
@@ -320,6 +371,11 @@
                                     body: fd,
                                     credentials: 'same-origin'
                                 }).then(function(resp){
+                                    if (!resp.ok) {
+                                        return resp.text().then(function(text){
+                                            throw new Error('HTTP ' + resp.status + ' ' + resp.statusText + '\n' + text);
+                                        });
+                                    }
                                     return resp.json();
                                 }).then(function(data){
                                     if (data && data.success) {
@@ -335,8 +391,9 @@
                                     } else {
                                         alert((data && data.message) ? data.message : 'Error en la verificación');
                                     }
-                                }).catch(function(){
-                                    alert('Error de red al guardar la verificación.');
+                                }).catch(function(err){
+                                    console.error('Error al guardar verificación:', err);
+                                    alert('Error de red al guardar la verificación.\n' + (err && err.message ? err.message : 'Revise la consola para más detalles.'));
                                 });
                             });
                         }

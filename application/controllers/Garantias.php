@@ -147,7 +147,7 @@ class Garantias extends CI_Controller {
                     $sid = isset($g1->solicitud_id) ? (int)$g1->solicitud_id : 0;
                     if ($sid && isset($sol_map[$sid])) {
                         $s = $sol_map[$sid];
-                        $g1->cliente_nombre = trim((string)($s->apellidos ?? '') . ' ' . (string)($s->nombres ?? ''));
+                        $g1->cliente_nombre = trim((string)($s->nombres ?? '') . ' ' . (string)($s->apellidos ?? ''));
                         if ($g1->cliente_nombre === '') {
                             $g1->cliente_nombre = (string)($s->nombre_completo ?? '');
                         }
@@ -972,6 +972,14 @@ class Garantias extends CI_Controller {
      */
     public function save_verificacion()
     {
+        // Always return JSON from this endpoint
+        header('Content-Type: application/json; charset=utf-8');
+
+        // Prevent CodeIgniter from rendering DB debug HTML on DB errors
+        if (isset($this->db) && is_object($this->db)) {
+            $this->db->db_debug = FALSE;
+        }
+
         $post = $this->input->post();
         $garantia_id = isset($post['garantia_id']) ? intval($post['garantia_id']) : null;
         $solicitud_id = isset($post['solicitud_id']) ? intval($post['solicitud_id']) : null;
@@ -987,7 +995,15 @@ class Garantias extends CI_Controller {
             echo json_encode(['success' => false, 'message' => 'Falta el ID de la garantía.']);
             return;
         }
-        $existing = $this->Garantia_verificacion_model->get_by_garantia($garantia_id);
+
+        try {
+            $existing = $this->Garantia_verificacion_model->get_by_garantia($garantia_id);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al comprobar verificación previa: ' . $e->getMessage()]);
+            return;
+        }
+
         if (! empty($existing)) {
             echo json_encode(['success' => false, 'message' => 'La garantía ya fue verificada. No se puede validar más de una vez.']);
             return;
@@ -1028,17 +1044,24 @@ class Garantias extends CI_Controller {
                 } else {
                     // ignore single file errors but capture
                     $error = $this->upload->display_errors('', '');
+                    http_response_code(400);
                     echo json_encode(['success' => false, 'message' => 'Error al subir archivo: ' . strip_tags($error)]);
                     return;
                 }
             }
         }
 
-        $insert_id = $this->Garantia_verificacion_model->insert($record);
-        if ($insert_id) {
-            echo json_encode(['success' => true, 'message' => 'Verificación guardada.']);
-        } else {
-            echo json_encode(['success' => false, 'message' => 'No se pudo guardar la verificación.']);
+        try {
+            $insert_id = $this->Garantia_verificacion_model->insert($record);
+            if ($insert_id) {
+                echo json_encode(['success' => true, 'message' => 'Verificación guardada.','id'=>$insert_id]);
+            } else {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'No se pudo guardar la verificación.']);
+            }
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
         }
     }
 
@@ -1075,7 +1098,12 @@ class Garantias extends CI_Controller {
         }
         finfo_close($finfo);
 
-        $html = $this->load->view('garantias/verificacion_pdf', ['v' => $v, 'imgs' => $imgs], true);
+        $solicitud = null;
+        if (! empty($v->solicitud_id)) {
+            $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $v->solicitud_id));
+        }
+
+        $html = $this->load->view('garantias/verificacion_pdf', ['v' => $v, 'imgs' => $imgs, 'solicitud' => $solicitud], true);
 
         // Ensure Dompdf available
         if (file_exists(FCPATH . 'dompdf/autoload.inc.php')) {

@@ -68,9 +68,12 @@
                                         <td class="d-none"><?php echo isset($s->fecha_solicitud) ? $s->fecha_solicitud : ''; ?></td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <button class="btn btn-sm btn-primary btn-referencias" data-id="<?php echo $s->idsolicitud; ?>">Completar Referencias</button>
-                                                <a class="btn btn-sm btn-secondary" href="<?php echo base_url('solicitudes/download_referencias/' . $s->idsolicitud); ?>" target="_blank">Descargar PDF</a>
+                                            <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Acciones</button>
+                                            <div class="dropdown-menu dropdown-menu-right">
+                                                <a class="dropdown-item btn-referencias" href="#" data-id="<?php echo $s->idsolicitud; ?>">Completar Referencias</a>
+                                                <a class="dropdown-item" href="<?php echo base_url('solicitudes/download_referencias/' . $s->idsolicitud); ?>" target="_blank">Descargar PDF</a>
                                             </div>
+                                        </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; else: ?>
@@ -112,6 +115,35 @@
                     </div>
                 </div>
             </div>
+
+            <script>
+                (function waitForReferenciasDataTable(){
+                    if(window.jQuery && window.jQuery.fn && window.jQuery.fn.DataTable){
+                        (function($){
+                            try{
+                                var table = $('#referencias-table').DataTable({
+                                    "bSort": false,
+                                    "responsive": true,
+                                    "autoWidth": false,
+                                    "pageLength": 10,
+                                    "lengthMenu": [[10,25,50,100],[10,25,50,100]]
+                                });
+                                var wrapper = $(table.table().container());
+                                wrapper.find('.dataTables_filter').hide();
+                                $('#ref_search').off('input.dt').on('input', function(){ table.search(this.value).draw(); });
+                                $.fn.dataTable.ext.search.push(function(settings, data, dataIndex){
+                                    if (!settings || !settings.nTable || settings.nTable.id !== 'referencias-table') return true;
+                                    var status = $('#ref_filter_status').val();
+                                    if (!status || status === 'all') return true;
+                                    var row = table.row(dataIndex).node();
+                                    return ($(row).data('status') || 'pending') === status;
+                                });
+                                $('#ref_filter_status').off('change.dt').on('change', function(){ table.draw(); });
+                            }catch(e){ console.error('Referencias DataTable error', e); }
+                        })(jQuery);
+                    } else { setTimeout(waitForReferenciasDataTable, 100); }
+                })();
+            </script>
 
             <!-- Modal para editar las dos referencias -->
             <div class="modal fade" id="modalReferencias" tabindex="-1" role="dialog" aria-hidden="true">
@@ -165,7 +197,7 @@
                                     </div>
                                     <div class="form-group">
                                         <label>Teléfono</label>
-                                        <input type="text" class="form-control" name="telefono_<?php echo $i; ?>" id="telefono_<?php echo $i; ?>">
+                                        <input type="tel" inputmode="tel" pattern="^\+?[0-9]*$" title="Solo números y +" class="form-control phone-input" name="telefono_<?php echo $i; ?>" id="telefono_<?php echo $i; ?>">
                                     </div>
                                     <div class="form-group">
                                         <label>Tipo de referencia</label>
@@ -237,21 +269,34 @@
             </div>
 
             <style>
+                #referencias-table{ table-layout: auto; width:100%; max-width: 100%; margin: 0; box-sizing: border-box; }
+                #referencias-table{ max-width:100%; box-sizing:border-box; display: table; }
+                #referencias-table th:first-child, #referencias-table td:first-child{
+                    width:auto; min-width:40px; max-width:80px; text-align:center;
+                    padding-left:.4rem; padding-right:.4rem;
+                    white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                }
+                #referencias-table th:last-child, #referencias-table td:last-child{
+                    width: 90px; min-width:70px; white-space: nowrap;
+                    vertical-align: middle; text-align:center;
+                }
                 /* Match compact table styles used by solicitudes list so dimensions align */
                 #referencias-table.table-compact td, #referencias-table.table-compact th{
                     padding: .12rem .28rem;
                     vertical-align: middle;
                     font-size: .72rem;
                     line-height: 1.02;
-                    white-space: nowrap;
+                    white-space: normal;
+                    overflow-wrap: break-word;
+                    word-break: normal;
                 }
                 #referencias-table.table-compact thead th{ font-size: .7rem; padding: .18rem .28rem; }
                 #referencias-table.table-compact .btn{ padding: .12rem .28rem; font-size: .72rem; min-width: auto; }
-                /* Truncate Cliente column to prevent layout stretching */
+                /* Keep Cliente column from stretching too far while allowing wrapping */
                 #referencias-table th:nth-child(2), #referencias-table td:nth-child(2){
                     max-width: 180px;
-                    overflow: hidden;
-                    text-overflow: ellipsis;
+                    overflow-wrap: break-word;
+                    word-break: normal;
                 }
                 /* Narrow action column */
                 #referencias-table th:last-child, #referencias-table td:last-child{
@@ -377,6 +422,14 @@
                             reader.readAsDataURL(file);
                         } else {
                             $preview.empty();
+                        }
+                    });
+
+                    // Permit only digits and + in phone inputs
+                    $(document).on('input', '.phone-input', function(){
+                        var cleaned = this.value.replace(/[^0-9+]/g, '');
+                        if (cleaned !== this.value) {
+                            this.value = cleaned;
                         }
                     });
 

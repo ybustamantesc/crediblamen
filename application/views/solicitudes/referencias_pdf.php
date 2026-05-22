@@ -48,7 +48,7 @@
     <?php
     $cliente_nombre = trim((string)($solicitud->nombre_completo ?? ''));
     if ($cliente_nombre === '') {
-        $cliente_nombre = trim((string)($solicitud->apellidos ?? '') . ' ' . (string)($solicitud->nombres ?? ''));
+        $cliente_nombre = trim((string)($solicitud->nombres ?? '') . ' ' . (string)($solicitud->apellidos ?? ''));
     }
     if ($cliente_nombre === '') {
         $cliente_nombre = trim((string)($solicitud->nombre_cliente ?? ''));

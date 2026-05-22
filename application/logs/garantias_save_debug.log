@@ -3989,3 +3989,564 @@ CHECKPOINT 3: rowCount=1
 CHECKPOINT 4: Processing row 0
 CHECKPOINT 6: Inserted garantia_id=1
 SAVE completed for solicitud_id=1
+=== GARANTIAS SAVE DEBUG 2026-05-20T13:03:09-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 12
+    [cantidad] => Array
+        (
+            [0] => 0
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+        )
+
+    [costo] => Array
+        (
+            [0] => 500
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 0.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => pngtree-generic-manual-focus-photo-camera-lens-isolated-png-image_11511754.png
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/png
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php9E32.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 37844
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 6: Inserted garantia_id=2
+SAVE completed for solicitud_id=12
+=== GARANTIAS SAVE DEBUG 2026-05-20T13:03:53-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 12
+    [cantidad] => Array
+        (
+            [0] => 0
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+        )
+
+    [costo] => Array
+        (
+            [0] => 500.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 0.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => png-transparent-user-person-generic-single-general-symbol-blue-icon-male.png
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/png
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php4B4B.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 87869
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=2
+SAVE completed for solicitud_id=12
+=== GARANTIAS SAVE DEBUG 2026-05-20T13:07:56-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 12
+    [cantidad] => Array
+        (
+            [0] => 0
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+            [1] => Foto de edificio
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+            [1] => MD1
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => Rojo
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+            [1] => 0012
+        )
+
+    [costo] => Array
+        (
+            [0] => 500.00
+            [1] => 15
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => Bien
+        )
+
+    [total] => 15.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => images (4).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpFE90.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => 7304
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=2
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 6: Inserted garantia_id=3
+SAVE completed for solicitud_id=12
+=== GARANTIAS SAVE DEBUG 2026-05-20T13:12:21-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 12
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+            [1] => Foto de edificio
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+            [1] => MD1
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => Rojo
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+            [1] => 0012
+        )
+
+    [costo] => Array
+        (
+            [0] => 500.00
+            [1] => 15.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => Bien
+        )
+
+    [total] => 515.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=2
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=3
+SAVE completed for solicitud_id=12
+=== GARANTIAS SAVE DEBUG 2026-05-20T13:12:32-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 12
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+            [1] => Foto de edificio
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+            [1] => MD1
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => Rojo
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+            [1] => 0012
+        )
+
+    [costo] => Array
+        (
+            [0] => 500.00
+            [1] => 15.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => Bien
+        )
+
+    [total] => 515.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=2
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=3
+SAVE completed for solicitud_id=12
+=== GARANTIAS SAVE DEBUG 2026-05-20T13:12:43-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 12
+    [cantidad] => Array
+        (
+            [0] => 2
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+            [1] => Foto de edificio
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+            [1] => MD1
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => Rojo
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+            [1] => 0012
+        )
+
+    [costo] => Array
+        (
+            [0] => 500.00
+            [1] => 15.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => Bien
+        )
+
+    [total] => 1015.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=2
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=3
+SAVE completed for solicitud_id=12
+=== GARANTIAS SAVE DEBUG 2026-05-20T13:56:08-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 11
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cosa
+        )
+
+    [modelo] => Array
+        (
+            [0] => Su
+        )
+
+    [marca] => Array
+        (
+            [0] => Verde
+        )
+
+    [n_serie] => Array
+        (
+            [0] => dfsa
+        )
+
+    [costo] => Array
+        (
+            [0] => 100
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Ok
+        )
+
+    [total] => 100.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 6: Inserted garantia_id=4
+SAVE completed for solicitud_id=11

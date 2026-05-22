@@ -76,6 +76,14 @@
       $p_telefono = $pf(array('telefono','telefono_domicilio','telefono_fijo'));
       $p_celular = $pf(array('celular','celular_personal','movil'));
       $p_email = $pf(array('email','correo_electronico','correo'));
+      $p_profesion = $pf(array('profesion','cargo','ocupacion','ocupacion_actual'));
+      $p_ocupacion_actual = $pf(array('ocupacion_actual','ocupacion'));
+      $p_nombre_centro_trabajo = $pf(array('nombre_centro_trabajo','empresa','nombre_empresa'));
+      $p_direccion_centro_trabajo = $pf(array('direccion_centro_trabajo','direccion_centro','direccion'));
+      $p_telefono_centro_trabajo = $pf(array('telefono_centro_trabajo','telefono','telefono_domicilio'));
+      $p_fax_centro_trabajo = $pf(array('fax_centro_trabajo','fax'));
+      $p_email_centro_trabajo = $pf(array('email_centro_trabajo','correo_electronico_centro_trabajo','email_centro'));
+      $p_nombre_conyuge = $pf(array('nombre_conyuge','conyuge_nombre','conyuge_primer_nombre','nombre_conyuge_completo'));
     ?>
 
     <div class="header-dark">
@@ -101,70 +109,68 @@
             <div style="padding:10px 12px; background:#fff;">
                 <table style="width:100%; border-collapse:collapse; font-family: DejaVu Sans, Arial, sans-serif; font-size:11px; color:#222;">
                     <tr>
-                        <td style="width:16%; padding:4px 6px;"><strong>Primer nombre:</strong></td>
+                        <td style="width:16%; padding:4px 6px;"><strong>Nombres:</strong></td>
                         <td style="width:34%; padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_primer_nombre','conyuge_nombre'))); ?></td>
-                        <td style="width:16%; padding:4px 6px;"><strong>Segundo nombre:</strong></td>
+                            <?php echo htmlspecialchars($p_nombre); ?></td>
+                        <td style="width:16%; padding:4px 6px;"><strong>Apellidos:</strong></td>
                         <td style="width:34%; padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_segundo_nombre'))); ?></td>
+                            <?php echo htmlspecialchars($p_primer_apellido); ?></td>
                     </tr>
                     <tr>
-                        <td style="padding:4px 6px;"><strong>Primer apellido:</strong></td>
-                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_primer_apellido'))); ?></td>
-                        <td style="padding:4px 6px;"><strong>Segundo apellido:</strong></td>
-                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_segundo_apellido'))); ?></td>
+                        <td style="padding:4px 6px;">&nbsp;</td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">&nbsp;</td>
+                        <td style="padding:4px 6px;">&nbsp;</td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">&nbsp;</td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Dirección del domicilio:</strong></td>
                         <td colspan="3" style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo nl2br(htmlspecialchars($pf(array('conyuge_direccion')))); ?></td>
+                            <?php echo nl2br(htmlspecialchars($p_direccion)); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>N° teléfono del domicilio:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_telefono_domicilio','conyuge_telefono')) ?: ''); ?></td>
+                            <?php echo htmlspecialchars($p_telefono ?: ''); ?></td>
                         <td style="padding:4px 6px;"><strong>N° de celular:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_celular'))); ?></td>
+                            <?php echo htmlspecialchars($p_celular); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Correo electrónico personal:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_email_personal')) ?: ''); ?></td>
+                            <?php echo htmlspecialchars($p_email ?: ''); ?></td>
                         <td style="padding:4px 6px;"><strong>Profesión:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_profesion')) ?: ''); ?></td>
+                            <?php echo htmlspecialchars($p_profesion ?: ''); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Ocupación actual:</strong></td>
                         <td colspan="3" style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_ocupacion_actual'))); ?></td>
+                            <?php echo htmlspecialchars($p_ocupacion_actual); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Nombre del centro de trabajo:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_nombre_centro_trabajo'))); ?></td>
+                            <?php echo htmlspecialchars($p_nombre_centro_trabajo); ?></td>
                         <td style="padding:4px 6px;"><strong>Dirección del centro de trabajo:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo nl2br(htmlspecialchars($pf(array('conyuge_direccion_centro_trabajo')))); ?></td>
+                            <?php echo nl2br(htmlspecialchars($p_direccion_centro_trabajo)); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Correo electrónico del centro de trabajo:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_email_centro_trabajo')) ?: ''); ?></td>
+                            <?php echo htmlspecialchars($p_email_centro_trabajo ?: ''); ?></td>
                         <td style="padding:4px 6px;"><strong>Sitio WEB:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_sitio_web')) ?: ''); ?></td>
+                            <?php echo htmlspecialchars($pf(array('sitio_web_centro_trabajo','sitio_web')) ?: ''); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>N° de teléfono del centro de trabajo:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_telefono_centro_trabajo')) ?: ''); ?></td>
+                            <?php echo htmlspecialchars($p_telefono_centro_trabajo ?: ''); ?></td>
                         <td style="padding:4px 6px;"><strong>N° de fax del centro de trabajo:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($pf(array('conyuge_fax_centro_trabajo')) ?: ''); ?></td>
+                            <?php echo htmlspecialchars($p_fax_centro_trabajo ?: ''); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Apartado postal del centro de trabajo:</strong></td>
@@ -172,8 +178,9 @@
                             <?php echo htmlspecialchars($pf(array('conyuge_apartado_postal')) ?: ''); ?></td>
                     </tr>
                     <tr>
-                        <td style="padding:4px 6px;"><strong>Ingreso mensual equivalente a:</strong></td>
-                        <td colspan="3" style="padding:4px 6px;"> <strong>Dólares (US$):</strong> <?php echo htmlspecialchars($pf(array('conyuge_ingreso_usd')) ?: ''); ?> &nbsp;&nbsp; <strong>Córdobas (C$):</strong> <?php echo htmlspecialchars($pf(array('conyuge_ingreso_cordobas')) ?: ''); ?></td>
+                        <td  style="padding:4px 6px;"><strong>Ingreso mensual equivalente a:</strong></td>
+                        <td colspan="3" style="padding:4px 6px;"> <strong>Dólares (US$):</strong> 
+                        <?php echo isset($perfil->ingreso_mensual_usd)?htmlspecialchars($perfil->ingreso_mensual_usd):''; ?> &nbsp;&nbsp; <strong>Córdobas (C$):</strong> <?php echo isset($perfil->ingreso_mensual_cordobas)?htmlspecialchars($perfil->ingreso_mensual_cordobas):''; ?></td>
                     </tr>
                 </table>
             </div>
@@ -326,16 +333,9 @@
             <div style="padding:8px 10px; background:#fff;">
                 <table style="width:100%; border-collapse:collapse; font-size:11px; font-family:DejaVu Sans, Arial, sans-serif; color:#222;">
                     <tr>
-                        <td style="width:16%; padding:4px 6px;"><strong>Primer nombre:</strong></td>
-                        <td style="width:34%; padding:4px 6px; border-bottom:1px solid #e6e6e6;"><?php echo isset($perfil->conyuge_primer_nombre)?htmlspecialchars($perfil->conyuge_primer_nombre):''; ?></td>
-                        <td style="width:16%; padding:4px 6px;"><strong>Segundo nombre:</strong></td>
-                        <td style="width:34%; padding:4px 6px; border-bottom:1px solid #e6e6e6;"><?php echo isset($perfil->conyuge_segundo_nombre)?htmlspecialchars($perfil->conyuge_segundo_nombre):''; ?></td>
-                    </tr>
-                    <tr>
-                        <td style="padding:4px 6px;"><strong>Primer apellido:</strong></td>
-                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;"><?php echo isset($perfil->conyuge_primer_apellido)?htmlspecialchars($perfil->conyuge_primer_apellido):''; ?></td>
-                        <td style="padding:4px 6px;"><strong>Segundo apellido:</strong></td>
-                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;"><?php echo isset($perfil->conyuge_segundo_apellido)?htmlspecialchars($perfil->conyuge_segundo_apellido):''; ?></td>
+                        <td style="width:16%; padding:4px 6px;"><strong>Nombre completo del cónyuge:</strong></td>
+                        <td colspan="3" style="width:84%; padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($p_nombre_conyuge); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Dirección del domicilio:</strong></td>

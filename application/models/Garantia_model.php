@@ -31,7 +31,8 @@ class Garantia_model extends CI_Model {
 
     public function get_all_by_solicitud($solicitud_id)
     {
-        return $this->db->order_by('id','ASC')->get_where($this->table, ['solicitud_id' => $solicitud_id])->result();
+        // Return newest first by record id
+        return $this->db->order_by('id','DESC')->get_where($this->table, ['solicitud_id' => $solicitud_id])->result();
     }
 
     public function delete_by_solicitud($solicitud_id)

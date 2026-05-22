@@ -99,10 +99,10 @@
                 <div class="form-row">
                     <div class="col-md-6 form-group">
                         <label>Firma del Solicitante (texto)</label>
-                        <input id="uso_declaracion_firma" class="form-control" />
+                        <input id="uso_declaracion_firma" class="form-control" readonly />
                     </div>
                     <div class="col-md-6 form-group">
-                        <label>Fecha</label>
+                        <label>Fecha de firma</label>
                         <input id="uso_declaracion_fecha" type="date" class="form-control" />
                     </div>
                 </div>
@@ -146,13 +146,42 @@
             if(btn){ btn.style.display = isReadonly ? 'none' : ''; }
         }
         var selId = null;
+        var defaultSignerName = '';
+        function resetUsoFields(){
+            defaultSignerName = '';
+            window.lastUsoAprobStatus = null;
+            setUsoReadonly(false);
+            var clearIds = [
+                'uso_nombre_completo','uso_identificacion','uso_telefono','uso_email','uso_fecha_solicitud','uso_monto_solicitado','uso_plazo_solicitado','uso_descripcion',
+                'uso_fuente_ingreso','uso_monto_estimado','uso_destino_simple','uso_destino_detalle','uso_declaracion_firma','uso_declaracion_fecha',
+                'uso_evaluador_credito','uso_fecha_evaluacion'
+            ];
+            clearIds.forEach(function(id){
+                var el = document.getElementById(id);
+                if(el){
+                    if(el.tagName === 'INPUT' || el.tagName === 'TEXTAREA'){
+                        el.value = '';
+                    }
+                }
+            });
+            if(document.getElementById('uso_declaracion_text')){
+                document.getElementById('uso_declaracion_text').innerHTML = 'Por favor espere: cargando información del solicitante...';
+            }
+        }
         function renderUso(data){
             if(!data) return;
             var aprob = (data && data.solicitud && data.solicitud.aprob_status) ? data.solicitud.aprob_status : 'pending';
             var isReadonly = (aprob === 'approved' || aprob === 'rejected');
+            window.lastUsoAprobStatus = aprob;
             setUsoReadonly(isReadonly);
             if(data.solicitud){
                 var s = data.solicitud;
+                if (data.uso && data.uso.evaluador_credito) {
+                    s.evaluador_credito = data.uso.evaluador_credito;
+                }
+                if (data.uso && data.uso.fecha_evaluacion) {
+                    s.fecha_evaluacion = data.uso.fecha_evaluacion;
+                }
                 // Prefer normalized helper fields when present
                 document.getElementById('uso_nombre_completo').value = ((s.nombres || '') + ' ' + (s.apellidos || ''));
                 document.getElementById('uso_identificacion').value = s.numero_identificacion || s.cedula || s.identificacion || '';
@@ -160,11 +189,13 @@
                 document.getElementById('uso_telefono').value = s.telefono_contacto || s.telefono || s.celular || s.telefono_contacto || '';
                 document.getElementById('uso_email').value = s.correo_electronico || s.email || '';
                 document.getElementById('uso_fecha_solicitud').value = s.fecha_solicitud || s.fecha_recepcion || '';
+                document.getElementById('uso_declaracion_fecha').value = s.fecha_firma || s.fecha_firma_solicitud || '';
+                document.getElementById('uso_fecha_evaluacion').value = s.fecha_evaluacion || '';
+
                 // additional solicitud fields
                 if(document.getElementById('uso_destino_credito')) document.getElementById('uso_destino_credito').value = s.destino_credito || '';
                 if(document.getElementById('uso_rubro_conami')) document.getElementById('uso_rubro_conami').value = s.rubro_credito || s.destino_conami || '';
                 if(document.getElementById('uso_firma_solicitante')) document.getElementById('uso_firma_solicitante').value = s.firma_solicitante || s.firma || '';
-                if(document.getElementById('uso_fecha_firma')) document.getElementById('uso_fecha_firma').value = s.fecha_firma || s.fecha_firma_solicitud || '';
                 if(document.getElementById('uso_nombre_promotor')) document.getElementById('uso_nombre_promotor').value = s.nombre_promotor || '';
                 if(document.getElementById('uso_observaciones_promotor')) document.getElementById('uso_observaciones_promotor').value = s.observaciones_promotor || s.observaciones || '';
                 if(document.getElementById('uso_ddc_investigacion')) document.getElementById('uso_ddc_investigacion').value = s.ddc_investigacion_campo || '';
@@ -177,8 +208,12 @@
                 }
                 var fullName = ((s.nombres || '') + ' ' + (s.apellidos || '')).trim();
                 var idnum = s.numero_identificacion || s.cedula || s.identificacion || '';
-                console.log("El nombre completo es: " + fullName);
-                console.log("La cédula es: " + idnum);
+                var firmaField = document.getElementById('uso_declaracion_firma');
+                if (firmaField) {
+                    firmaField.value = fullName;
+                    firmaField.readOnly = true;
+                    firmaField.disabled = true;
+                }
                 // Build a prefix and wrap the remaining paragraph so line lengths (by character count)
                 // approximate the prefix length (to match the PDF visual layout requested).
                 var prefix = 'Yo, ' + (fullName || '________________________') + ' con Número de Identificación ' + (idnum || '________________') + ', declaro bajo juramento que la información';
@@ -203,12 +238,22 @@
                 var wrappedRest = wrapByChars(rest.trim(), prefix.length);
                 var declText = prefix + '<br/>' + wrappedRest;
                 var dtEl = document.getElementById('uso_declaracion_text'); if(dtEl) dtEl.innerHTML = declText;
-                if((!document.getElementById('uso_declaracion_firma').value || document.getElementById('uso_declaracion_firma').value==='') && fullName) {
-                    document.getElementById('uso_declaracion_firma').value = fullName;
-                }
             }
             var u = data.uso || {};
             var solic = data.solicitud || {};
+            if (data.uso && data.uso.evaluador_credito && data.uso.evaluador_credito.toString().trim() !== '') {
+                var evCreditField = document.getElementById('uso_evaluador_credito');
+                if (evCreditField) {
+                    evCreditField.value = data.uso.evaluador_credito;
+                }
+            }
+            if (data.uso && data.uso.fecha_evaluacion && data.uso.fecha_evaluacion.toString().trim() !== '') {
+                var evDateField = document.getElementById('uso_fecha_evaluacion');
+                if (evDateField) {
+                    evDateField.value = data.uso.fecha_evaluacion;
+                }
+            }
+            defaultSignerName = ((solic.nombres || '') + ' ' + (solic.apellidos || '')).trim() || '';
             document.getElementById('uso_monto_solicitado').value = u.monto_solicitado || solic.monto_solicitado || solic.cuota_estim_estimada || '';
             document.getElementById('uso_plazo_solicitado').value = u.plazo_solicitado || solic.plazo_solicitado || solic.plazo_meses || solic.plazo || '';
             document.getElementById('uso_descripcion').value = u.descripcion || solic.detalle_inventario || '';
@@ -228,12 +273,17 @@
                 document.getElementById('uso_destino_detalle').value = detalleVal;
             }
             document.getElementById('uso_destino_detalle').value = u.destino_detalle || '';
-            document.getElementById('uso_declaracion_nombre').value = u.declaracion_nombre || '';
-            document.getElementById('uso_declaracion_firma').value = u.declaracion_firma || '';
+            document.getElementById('uso_declaracion_nombre').value = defaultSignerName;
+            var firmaField = document.getElementById('uso_declaracion_firma');
+            if (firmaField) {
+                firmaField.value = defaultSignerName;
+                firmaField.readOnly = true;
+                firmaField.disabled = true;
+            }
             if(u.declaracion_fecha){ document.getElementById('uso_declaracion_fecha').value = u.declaracion_fecha; } else { document.getElementById('uso_declaracion_fecha').value = ''; }
-            document.getElementById('uso_evaluador_credito').value = u.evaluador_credito || '';
-            if(u.fecha_evaluacion){ document.getElementById('uso_fecha_evaluacion').value = u.fecha_evaluacion; } else { document.getElementById('uso_fecha_evaluacion').value = ''; }
-        }
+            document.getElementById('uso_evaluador_credito').value = (u.evaluador_credito && u.evaluador_credito.toString().trim() !== '') ? u.evaluador_credito : (solic.evaluador_credito || '');
+            if(u.fecha_evaluacion){ document.getElementById('uso_fecha_evaluacion').value = u.fecha_evaluacion; } else if(solic.fecha_evaluacion){ document.getElementById('uso_fecha_evaluacion').value = solic.fecha_evaluacion; } else { document.getElementById('uso_fecha_evaluacion').value = ''; }
+            }
 
         function loadUso(id){
             var url = '<?php echo base_url($this->router->fetch_class() . '/get_uso_ajax/'); ?>' + id;
@@ -255,7 +305,7 @@
                 e.preventDefault();
                 selId = btn.getAttribute('data-id') || btn.dataset.id;
                 document.getElementById('uso_ids').textContent = selId;
-                renderUso(null);
+                resetUsoFields();
                 if (typeof jQuery !== 'undefined' && jQuery && jQuery('#usoModal').modal) {
                     jQuery('#usoModal').modal('show');
                 }
@@ -287,6 +337,11 @@
                     alert('No se puede modificar el formato porque la solicitud ya está aprobada o rechazada.');
                     return;
                 }
+                if(!selId){
+                    e.preventDefault();
+                    alert('No se pudo determinar la solicitud. Vuelva a abrir el formato e intente de nuevo.');
+                    return;
+                }
                 e.preventDefault();
                 var payload = new URLSearchParams();
                 payload.append('idsolicitud', selId);
@@ -299,8 +354,8 @@
                 if(document.getElementById('uso_destino_simple')) selDest = document.getElementById('uso_destino_simple').value || '';
                 payload.append('destino_prestamo', selDest);
                 payload.append('destino_detalle', document.getElementById('uso_destino_detalle') ? document.getElementById('uso_destino_detalle').value || '' : '');
-                payload.append('declaracion_nombre', document.getElementById('uso_declaracion_nombre') ? document.getElementById('uso_declaracion_nombre').value || '' : '');
-                payload.append('declaracion_firma', document.getElementById('uso_declaracion_firma') ? document.getElementById('uso_declaracion_firma').value || '' : '');
+                payload.append('declaracion_nombre', defaultSignerName);
+                payload.append('declaracion_firma', defaultSignerName);
                 payload.append('declaracion_fecha', document.getElementById('uso_declaracion_fecha') ? document.getElementById('uso_declaracion_fecha').value || '' : '');
                 payload.append('evaluador_credito', document.getElementById('uso_evaluador_credito') ? document.getElementById('uso_evaluador_credito').value || '' : '');
                 payload.append('fecha_evaluacion', document.getElementById('uso_fecha_evaluacion') ? document.getElementById('uso_fecha_evaluacion').value || '' : '');

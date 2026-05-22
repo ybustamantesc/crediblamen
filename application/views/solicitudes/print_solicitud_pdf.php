@@ -160,7 +160,7 @@
         <div class="guarantees">
           <span class="chk"><?php echo (!empty($solicitud->garantia_hipotecaria) ? '[X]' : '[ ]'); ?> Hipotecaria</span>
           <span class="chk"><?php echo (!empty($solicitud->garantia_mobiliaria) ? '[X]' : '[ ]'); ?> Mobiliaria</span>
-          <span class="chk"><?php echo (!empty($solicitud->garantia_sin) ? '[X]' : '[ ]'); ?> Sin</span>
+          <span class="chk"><?php echo (!empty($solicitud->garantia_sin) ? '[X]' : '[ ]'); ?> Sin garantía</span>
         </div>
       </div>
 
@@ -226,10 +226,7 @@
             <div style="margin-bottom:6px;"><strong>Actividad económica principal:</strong> <?php echo htmlspecialchars($solicitud->actividad_economica ?? ''); ?></div>
             <div style="margin-bottom:6px;"><strong>Ubicación del negocio:</strong> <?php echo nl2br(htmlspecialchars($solicitud->ubicacion_negocio ?? '')); ?></div>
             <div style="margin-bottom:6px;"><strong>Teléfono del negocio:</strong> <?php echo htmlspecialchars($solicitud->telefono_negocio ?? ''); ?></div>
-            <div style="margin-bottom:6px;"><strong>Tiempo de operación:</strong> <?php echo htmlspecialchars($solicitud->tiempo_operacion_anios ?? ''); ?> años / <?php echo htmlspecialchars($solicitud->tiempo_operacion_meses ?? ''); ?> meses &nbsp; <strong>Local:</strong>
-              <span style="margin-left:8px;"><?php echo (!empty($solicitud->local_condicion) && $solicitud->local_condicion=='Propio') ? '[X] Propio' : '[ ] Propio'; ?></span>
-              <span style="margin-left:8px;"><?php echo (!empty($solicitud->local_condicion) && $solicitud->local_condicion=='Alquilado') ? '[X] Alquilado' : '[ ] Alquilado'; ?></span>
-              <span style="margin-left:8px;"><?php echo (!empty($solicitud->local_condicion) && $solicitud->local_condicion=='Otro') ? '[X] Otro' : '[ ] Otro'; ?></span>
+            <div style="margin-bottom:6px;"><strong>Tiempo de operación:</strong> <?php echo htmlspecialchars($solicitud->tiempo_operacion_anios ?? ''); ?> años / <?php echo htmlspecialchars($solicitud->tiempo_operacion_meses ?? ''); ?> meses &nbsp; 
             </div>
 
             <div style="margin-top:8px; font-weight:600;">Ingresos y Ventas</div>
@@ -360,8 +357,16 @@
             Declaro que la información proporcionada es verídica y autorizo a Crediblame S.A. a verificar mis datos en las fuentes necesarias para fines de análisis crediticio y cumplimiento regulatorio, así mismo acepto y autorizo el cobro por cargo de comisión por desembolso del <strong><?php echo htmlspecialchars((float)($solicitud->comision_desembolso ?? '')); ?>%</strong>.
           </div>
           <div style="margin-top:6px;">
-            <div style="display:inline-block; width:48%; vertical-align:top;"><strong>Firma del solicitante:</strong> ________________________</div>
-            <div style="display:inline-block; width:24%; vertical-align:top;"><strong>Fecha:</strong> __/__/____</div>
+            <div style="display:inline-block; width:48%; vertical-align:top;"><strong>Firma del solicitante:</strong>
+            <?php echo htmlspecialchars(trim((isset($solicitud->nombre_completo) && $solicitud->nombre_completo!='') ? $solicitud->nombre_completo : trim((($solicitud->nombres ?? '') . ' ' . ($solicitud->apellidos ?? ''))))); 
+            ?></div>
+            <div style="display:inline-block; width:24%; vertical-align:top;"><strong>Fecha:</strong>
+            <?php
+              $fr = '';
+              if (!empty($solicitud->fecha_firma)) { $fr = $solicitud->fecha_firma; }
+              elseif (!empty($solicitud->fecha_recepcion_solicitud)) { $fr = $solicitud->fecha_recepcion_solicitud; }
+              echo htmlspecialchars($fr ? date('d/m/Y', strtotime($fr)) : '');
+            ?></div>
             <div style="display:inline-block; width:24%; vertical-align:top; text-align:right;"><strong>DDC - Investigación de campo</strong></div>
           </div>
         </div>

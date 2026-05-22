@@ -20,7 +20,10 @@ if (! function_exists('s_val')) {
 if (! function_exists('s_checked')) {
     function s_checked($field){
         $v = s_val($field);
-        return ($v === '1' || $v === 1 || $v === true) ? 'checked' : '';
+        if ($v === null || $v === false || $v === '' || $v === '0' || $v === 0) {
+            return '';
+        }
+        return 'checked';
     }
 }
 if (! function_exists('s_date_fmt')){
@@ -258,9 +261,6 @@ if (!empty($current_user_name)) {
                                         if (s_val('garantia_hipotecaria')) $g[] = 'Hipotecaria';
                                         if (s_val('garantia_mobiliaria')) $g[] = 'Mobiliaria';
                                         if (s_val('garantia_sin')) $g[] = 'Sin';
-                                        if (s_val('garantia_prendaria')) $g[] = 'Prendaria';
-                                        if (s_val('garantia_fiador')) $g[] = 'Fiador';
-                                        if (s_val('garantia_otra')) $g[] = 'Otra';
                                         echo htmlspecialchars(implode(', ', $g));
                                         ?></span>
                                 </div>
@@ -273,6 +273,8 @@ if (!empty($current_user_name)) {
                                 <?php if (isset($solicitud) && isset($solicitud->idsolicitud)): ?>
                                     <!-- Hidden field populated from modal on submit -->
                                     <input type="hidden" name="edit_comment" id="edit_comment_hidden" value="">
+                                    <!-- Hidden field to collect deleted photo IDs -->
+                                    <input type="hidden" name="photos_to_delete" id="photos_to_delete_hidden" value="">
                                 <?php endif; ?>
 
                                             <div class="col-md-12"><div class="form-group"><label>Giro del Negocio</label><input id="giro_negocio" type="text" class="form-control" name="giro_negocio" value="<?php echo s_val('giro_negocio', set_value('giro_negocio')); ?>" placeholder="Escriba el giro del negocio"></div></div>
@@ -349,7 +351,7 @@ if (!empty($current_user_name)) {
                                                 <div class="input-group-append"><button id="btn_procesar_cuota" type="button" class="btn btn-secondary">Procesar cuota</button></div>
                                             </div>
                                             <label style="margin-top:8px;">Promedio de cuota estimada quincenal/catorcenal: U$</label>
-                                            <input id="cuota_estimado_quincenal" type="text" class="form-control" name="cuota_estimado_quincenal" readonly>
+                                            <input id="cuota_estimado_quincenal" type="text" class="form-control" name="cuota_estimado_quincenal" value="<?php echo s_val('cuota_estimado_quincenal', set_value('cuota_estimado_quincenal')); ?>" readonly>
                                             <div id="plan_pago_preview" style="font-size:13px; color:#333; margin-top:6px;"></div>
                                         </div></div>
 
@@ -899,10 +901,16 @@ if (!empty($current_user_name)) {
                                         <div class="form-group">
                                             <label>Foto de evidencia</label>
                                             <input type="file" accept="image/*" class="form-control-file" name="cuentas_por_cobrar_evidencia" id="cuentas_por_cobrar_evidencia">
-                                            <?php if (s_val('cuentas_por_cobrar_evidencia') && isset($solicitud) && isset($solicitud->idsolicitud)): ?>
+                                            <div id="cuentas_por_cobrar_evidencia_preview" style="margin-top:6px;display:flex;gap:6px;flex-wrap:wrap;"></div>
+                                            <?php if (s_val('cuentas_por_cobrar_evidencia') && isset($solicitud) && isset($solicitud->idsolicitud)):
+                                                $evidence_name = s_val('cuentas_por_cobrar_evidencia');
+                                                $evidence_url = base_url('uploads/solicitudes/' . intval($solicitud->idsolicitud) . '/evidencia/' . rawurlencode($evidence_name));
+                                            ?>
                                                 <div class="mt-2">
-                                                    <img src="<?php echo base_url('uploads/solicitudes/' . intval($solicitud->idsolicitud) . '/evidencia/' . s_val('cuentas_por_cobrar_evidencia')); ?>" alt="Evidencia" style="max-width:200px;max-height:150px;border:1px solid #ddd;border-radius:4px;">
-                                                    <br><small class="text-muted">Archivo actual: <?php echo s_val('cuentas_por_cobrar_evidencia'); ?></small>
+                                                    <a href="<?php echo $evidence_url; ?>" target="_blank" rel="noopener">
+                                                        <img src="<?php echo $evidence_url; ?>" alt="Evidencia" style="max-width:200px;max-height:150px;border:1px solid #ddd;border-radius:4px;">
+                                                    </a>
+                                                    <br><small class="text-muted">Archivo actual: <?php echo htmlspecialchars($evidence_name); ?></small>
                                                 </div>
                                             <?php endif; ?>
                                         </div>
@@ -1079,18 +1087,59 @@ if (!empty($current_user_name)) {
                                         var solId = '<?php echo isset($solicitud->idsolicitud) ? intval($solicitud->idsolicitud) : 0; ?>';
 
                                         function renderPreview(containerId, file, removable){
-                                            var url = URL.createObjectURL(file);
-                                            var img = document.createElement('img');
-                                            img.src = url;
-                                            img.style.maxWidth = '120px';
-                                            img.style.maxHeight = '90px';
-                                            img.style.border = '1px solid #ddd';
-                                            img.style.padding = '2px';
-                                            img.style.display = 'block';
                                             var wrapper = document.createElement('div');
                                             wrapper.style.display = 'inline-block';
                                             wrapper.style.marginRight = '6px';
-                                            wrapper.appendChild(img);
+                                            wrapper.style.border = '1px solid #ddd';
+                                            wrapper.style.padding = '8px';
+                                            wrapper.style.background = '#fff';
+                                            wrapper.style.maxWidth = '160px';
+                                            wrapper.style.minWidth = '120px';
+                                            wrapper.style.fontSize = '12px';
+                                            wrapper.style.textAlign = 'center';
+                                            wrapper.style.color = '#333';
+                                            wrapper.style.fontFamily = 'Arial, sans-serif';
+                                            var title = document.createElement('div');
+                                            title.style.marginBottom = '6px';
+                                            title.style.wordBreak = 'break-word';
+                                            title.style.maxHeight = '36px';
+                                            title.style.overflow = 'hidden';
+                                            var fileName = file.name || 'Archivo';
+                                            var previewNode;
+                                            if (file.type && file.type.indexOf('image/') === 0) {
+                                                previewNode = document.createElement('img');
+                                                previewNode.src = URL.createObjectURL(file);
+                                                previewNode.style.maxWidth = '120px';
+                                                previewNode.style.maxHeight = '90px';
+                                                previewNode.style.border = '1px solid #ddd';
+                                                previewNode.style.padding = '2px';
+                                                previewNode.style.display = 'block';
+                                                wrapper.appendChild(previewNode);
+                                            } else {
+                                                previewNode = document.createElement('div');
+                                                previewNode.style.display = 'flex';
+                                                previewNode.style.alignItems = 'center';
+                                                previewNode.style.justifyContent = 'center';
+                                                previewNode.style.height = '90px';
+                                                previewNode.style.background = '#f7f7f7';
+                                                previewNode.style.border = '1px solid #ddd';
+                                                previewNode.style.marginBottom = '6px';
+                                                previewNode.style.color = '#d9534f';
+                                                previewNode.style.fontSize = '36px';
+                                                previewNode.innerHTML = '<span class="fas fa-file-pdf"></span>';
+                                                wrapper.appendChild(previewNode);
+                                            }
+                                            title.textContent = fileName;
+                                            wrapper.appendChild(title);
+                                            if (removable) {
+                                                var removeBtn = document.createElement('button');
+                                                removeBtn.type = 'button';
+                                                removeBtn.textContent = 'Eliminar';
+                                                removeBtn.style.marginTop = '4px';
+                                                removeBtn.className = 'btn btn-sm btn-danger';
+                                                removeBtn.addEventListener('click', function(){ wrapper.remove(); });
+                                                wrapper.appendChild(removeBtn);
+                                            }
                                             document.getElementById(containerId).appendChild(wrapper);
                                         }
 
@@ -1103,6 +1152,9 @@ if (!empty($current_user_name)) {
                                             // If the solicitud is not yet created, keep the files in the form and do not attempt AJAX upload.
                                             if (!solId || solId <= 0) {
                                                 console.warn('Solicitud aún no existe; los archivos se guardarán al enviar el formulario.');
+                                                for (var i=0;i<files.length;i++) {
+                                                    renderPreview(previewId, files[i], true);
+                                                }
                                                 return false;
                                             }
                                             for (var i=0;i<files.length;i++) {
@@ -1140,35 +1192,199 @@ if (!empty($current_user_name)) {
                                         var oi1 = document.getElementById('otros_ingresos_1_input'); if (oi1) oi1.addEventListener('change', function(){ if (uploadFiles(this.files, 'otros_ingresos_1', 'otros_ingresos_1_preview', 3)) this.value = ''; });
                                         var oi2 = document.getElementById('otros_ingresos_2_input'); if (oi2) oi2.addEventListener('change', function(){ if (uploadFiles(this.files, 'otros_ingresos_2', 'otros_ingresos_2_preview', 3)) this.value = ''; });
                                         var oi3 = document.getElementById('otros_ingresos_3_input'); if (oi3) oi3.addEventListener('change', function(){ if (uploadFiles(this.files, 'otros_ingresos_3', 'otros_ingresos_3_preview', 3)) this.value = ''; });
+                                        var cpc = document.getElementById('cuentas_por_cobrar_evidencia'); if (cpc) cpc.addEventListener('change', function(e){ var f = this.files; if (f.length>1) { alert('Solo una foto de evidencia permitida'); } if (uploadFiles(f, 'cuentas_por_cobrar_evidencia', 'cuentas_por_cobrar_evidencia_preview', 1)) this.value = ''; });
                                         // Nuevos campos con límite de 10 archivos
                                         var dg = document.getElementById('docs_generales_input'); if (dg) dg.addEventListener('change', function(){ var files = this.files; if(files.length>10){ alert('Documentos Generales: máximo 10 archivos'); return; } if (uploadFiles(files, 'docs_generales', 'docs_generales_preview', 10)) this.value = ''; });
                                         var dl = document.getElementById('docs_legales_input'); if (dl) dl.addEventListener('change', function(){ var files = this.files; if(files.length>10){ alert('Documentos Legales Variados: máximo 10 archivos'); return; } if (uploadFiles(files, 'docs_legales', 'docs_legales_preview', 10)) this.value = ''; });
                                         var fa = document.getElementById('fotos_adicionales_input'); if (fa) fa.addEventListener('change', function(){ if (uploadFiles(this.files, 'fotos_adicionales', 'fotos_adicionales_preview')) this.value = ''; });
+                                        var cf = document.getElementById('consentimiento_filtrado_input'); if (cf) cf.addEventListener('change', function(e){ var f = this.files; if (f.length > 1) { alert('Solo una foto de consentimiento de filtrado permitida'); } if (uploadFiles(f, 'consentimiento_filtrado', 'consentimiento_filtrado_preview', 1)) this.value = ''; });
                                     } catch(e) { console.warn('photo helper init error', e); }
+
+                                        // Keep a queue of deleted photos/files until the user saves the form
+                                        var deletedPhotosForSave = [];
+                                        function syncPhotosToDeleteHidden(){
+                                            var hidden = document.getElementById('photos_to_delete_hidden');
+                                            if (!hidden) return;
+                                            try { hidden.value = JSON.stringify(deletedPhotosForSave); } catch (e) { hidden.value = ''; }
+                                        }
+                                        function markPhotoDeleted(photo){
+                                            if (!photo) return;
+                                            var idphoto = photo.idphoto || '';
+                                            var filename = (photo.filename || '').toString();
+                                            if (!idphoto && !filename) return;
+                                            var exists = deletedPhotosForSave.some(function(item){
+                                                return (item.idphoto == idphoto && item.filename === filename);
+                                            });
+                                            if (!exists) {
+                                                deletedPhotosForSave.push({ idphoto: idphoto, filename: filename });
+                                                syncPhotosToDeleteHidden();
+                                            }
+                                        }
 
                                         // Load existing uploaded photos and render with download/delete actions
                                         function renderServerPhoto(containerId, photo){
                                             try{
+                                                var filename = photo.filename || '';
+                                                var url = '<?php echo base_url('uploads/'); ?>' + filename;
+                                                var mime = (photo.mime || '').toLowerCase();
+
+                                                // If this is a PDF in the documents containers, render as a responsive list item
+                                                if ((mime.indexOf('application/pdf') === 0 || (filename && filename.match(/\.pdf(\?|$)/i))) && (containerId === 'docs_generales_preview' || containerId === 'docs_legales_preview')){
+                                                    var row = document.createElement('div');
+                                                    row.style.border = '1px solid #ddd';
+                                                    row.style.padding = '10px 12px';
+                                                    row.style.marginBottom = '10px';
+                                                    row.style.background = '#fff';
+                                                    row.style.display = 'flex';
+                                                    row.style.alignItems = 'flex-start';
+                                                    row.style.justifyContent = 'space-between';
+                                                    row.style.gap = '10px';
+                                                    row.style.flexWrap = 'wrap';
+                                                    row.style.borderRadius = '4px';
+                                                    row.setAttribute('data-idphoto', photo.idphoto || '');
+
+                                                    var left = document.createElement('div'); 
+                                                    left.style.display = 'flex'; 
+                                                    left.style.alignItems = 'flex-start'; 
+                                                    left.style.gap = '10px';
+                                                    left.style.flex = '1 1 auto';
+                                                    left.style.minWidth = '0';
+                                                    
+                                                    var icon = document.createElement('div'); 
+                                                    icon.style.width = '36px'; 
+                                                    icon.style.height = '36px'; 
+                                                    icon.style.minWidth = '36px';
+                                                    icon.style.display = 'flex'; 
+                                                    icon.style.alignItems = 'center'; 
+                                                    icon.style.justifyContent = 'center'; 
+                                                    icon.style.background = '#f5f5f5'; 
+                                                    icon.style.border = '1px solid #ddd'; 
+                                                    icon.style.borderRadius = '3px';
+                                                    icon.innerHTML = '<span class="fas fa-file-pdf" style="color:#d9534f;font-size:18px;"></span>';
+                                                    left.appendChild(icon);
+                                                    
+                                                    var meta = document.createElement('div'); 
+                                                    meta.style.display='block';
+                                                    meta.style.flex = '1 1 auto';
+                                                    meta.style.minWidth = '0';
+                                                    
+                                                    var name = document.createElement('div'); 
+                                                    name.style.fontSize='13px'; 
+                                                    name.style.fontWeight='600'; 
+                                                    name.style.color = '#333';
+                                                    name.style.wordBreak = 'break-word';
+                                                    name.style.marginBottom = '4px';
+                                                    name.style.maxHeight = '2.6em';
+                                                    name.style.overflow = 'hidden';
+                                                    name.style.display = '-webkit-box';
+                                                    name.style.webkitLineClamp = '2';
+                                                    name.style.webkitBoxOrient = 'vertical';
+                                                    var displayName = filename ? filename.split('/').pop() : 'Archivo';
+                                                    name.textContent = displayName;
+                                                    name.title = displayName;
+                                                    
+                                                    var tipo = document.createElement('div'); 
+                                                    tipo.style.fontSize='12px'; 
+                                                    tipo.style.color='#888'; 
+                                                    tipo.textContent = 'Tipo: ' + (mime ? mime : 'application/pdf');
+                                                    meta.appendChild(name); 
+                                                    meta.appendChild(tipo);
+                                                    left.appendChild(meta);
+
+                                                    var right = document.createElement('div'); 
+                                                    right.style.display='flex'; 
+                                                    right.style.alignItems='center'; 
+                                                    right.style.gap='6px';
+                                                    right.style.flexShrink = '0';
+                                                    right.style.marginTop = '4px';
+                                                    
+                                                    var a = document.createElement('a'); 
+                                                    a.href = url; 
+                                                    a.target = '_blank'; 
+                                                    a.className='btn btn-sm btn-outline-secondary'; 
+                                                    a.style.fontSize='12px';
+                                                    a.style.padding = '6px 10px';
+                                                    a.style.whiteSpace = 'nowrap';
+                                                    a.textContent='Descargar';
+                                                    
+                                                    var del = document.createElement('button'); 
+                                                    del.type='button'; 
+                                                    del.className='btn btn-sm btn-danger'; 
+                                                    del.style.fontSize='12px';
+                                                    del.style.padding = '6px 10px';
+                                                    del.style.whiteSpace = 'nowrap';
+                                                    del.textContent='Eliminar';
+                                                    del.addEventListener('click', function(){
+                                                        var ok = confirm('Eliminar este archivo?'); if(!ok) return;
+                                                        markPhotoDeleted(photo);
+                                                        if (row && row.parentNode) { row.parentNode.removeChild(row); }
+                                                    });
+                                                    right.appendChild(a); 
+                                                    right.appendChild(del);
+
+                                                    row.appendChild(left); 
+                                                    row.appendChild(right);
+                                                    var container = document.getElementById(containerId);
+                                                    if(container) container.appendChild(row);
+                                                    return;
+                                                }
+
+                                                // Fallback: existing card-style rendering for images and other files
                                                 var wrapper = document.createElement('div');
-                                                wrapper.style.display = 'inline-block'; wrapper.style.marginRight = '6px'; wrapper.style.position = 'relative';
+                                                wrapper.style.display = 'inline-block'; 
+                                                wrapper.style.marginRight = '6px'; 
+                                                wrapper.style.marginBottom = '6px';
+                                                wrapper.style.position = 'relative';
+                                                wrapper.style.border = '1px solid #ddd';
+                                                wrapper.style.padding = '8px';
+                                                wrapper.style.background = '#fff';
+                                                wrapper.style.width = '140px';
+                                                wrapper.style.fontSize = '12px';
+                                                wrapper.style.textAlign = 'center';
+                                                wrapper.style.color = '#333';
+                                                wrapper.style.boxSizing = 'border-box';
                                                 wrapper.className = 'sol-photo-item';
                                                 wrapper.setAttribute('data-idphoto', photo.idphoto || '');
-                                                // image
-                                                var img = document.createElement('img'); img.src = '<?php echo base_url('uploads/'); ?>' + (photo.filename || ''); img.style.maxWidth='120px'; img.style.maxHeight='90px'; img.style.border='1px solid #ddd'; img.style.padding='2px'; img.style.display='block';
-                                                wrapper.appendChild(img);
-                                                // actions container
-                                                var actions = document.createElement('div'); actions.style.textAlign='center'; actions.style.marginTop='4px';
-                                                // download link
-                                                var a = document.createElement('a'); a.href = '<?php echo base_url('uploads/'); ?>' + (photo.filename || ''); a.target = '_blank'; a.className = 'btn btn-sm btn-outline-secondary'; a.style.fontSize='11px'; a.style.marginRight='4px'; a.textContent = 'Descargar';
+                                                var previewNode;
+                                                if (mime.indexOf('image/') === 0 || (!mime && filename.match(/\.(jpg|jpeg|png|gif|bmp)(\?|$)/i))) {
+                                                    previewNode = document.createElement('img');
+                                                    previewNode.src = url;
+                                                    previewNode.style.maxWidth='120px'; previewNode.style.maxHeight='90px'; previewNode.style.border='1px solid #ddd'; previewNode.style.padding='2px'; previewNode.style.display='block';
+                                                    wrapper.appendChild(previewNode);
+                                                } else {
+                                                    previewNode = document.createElement('div');
+                                                    previewNode.style.display = 'flex';
+                                                    previewNode.style.alignItems = 'center';
+                                                    previewNode.style.justifyContent = 'center';
+                                                    previewNode.style.height = '90px';
+                                                    previewNode.style.background = '#f7f7f7';
+                                                    previewNode.style.border = '1px solid #ddd';
+                                                    previewNode.style.marginBottom = '6px';
+                                                    previewNode.style.color = '#d9534f';
+                                                    previewNode.style.fontSize = '36px';
+                                                    previewNode.innerHTML = '<span class="fas fa-file-pdf"></span>';
+                                                    wrapper.appendChild(previewNode);
+                                                }
+                                                var title = document.createElement('div');
+                                                title.style.wordBreak = 'break-word';
+                                                title.style.marginTop = '6px';
+                                                title.style.maxHeight = '36px';
+                                                title.style.overflow = 'hidden';
+                                                title.textContent = filename ? filename.split('/').pop() : 'Archivo';
+                                                wrapper.appendChild(title);
+                                                var actions = document.createElement('div'); 
+                                                actions.style.display = 'flex';
+                                                actions.style.gap = '4px';
+                                                actions.style.justifyContent = 'center';
+                                                actions.style.flexWrap = 'wrap';
+                                                actions.style.marginTop = '6px';
+                                                var a = document.createElement('a'); a.href = url; a.target = '_blank'; a.className='btn btn-sm btn-outline-secondary'; a.style.fontSize='11px'; a.style.padding = '4px 8px'; a.style.flex = '1 1 auto'; a.style.minWidth = '70px'; a.textContent='Descargar';
                                                 actions.appendChild(a);
-                                                // delete button
-                                                var del = document.createElement('button'); del.type='button'; del.className='btn btn-sm btn-danger'; del.style.fontSize='11px'; del.textContent='Eliminar';
+                                                var del = document.createElement('button'); del.type='button'; del.className='btn btn-sm btn-danger'; del.style.fontSize='11px'; del.style.padding = '4px 8px'; del.style.flex = '1 1 auto'; del.style.minWidth = '70px'; del.textContent='Eliminar';
                                                 del.addEventListener('click', function(){
-                                                    if(!photo.idphoto){ if(!confirm('Eliminar imagen?')) return; }
-                                                    var ok = confirm('Eliminar esta imagen?'); if(!ok) return;
-                                                    var fd = new FormData(); fd.append('idphoto', photo.idphoto || '');
-                                                    fetch('<?php echo base_url('solicitudes/delete_photo_ajax'); ?>', { method:'POST', credentials:'same-origin', body: fd })
-                                                        .then(function(r){ return r.json(); }).then(function(j){ if(j && j.status){ try{ loadExistingPhotos(); }catch(e){} } else { alert('No se pudo eliminar'); } }).catch(function(){ alert('Error al eliminar'); });
+                                                    var ok = confirm('Eliminar este archivo?'); if(!ok) return;
+                                                    markPhotoDeleted(photo);
+                                                    if (wrapper && wrapper.parentNode) { wrapper.parentNode.removeChild(wrapper); }
                                                 });
                                                 actions.appendChild(del);
                                                 wrapper.appendChild(actions);
@@ -1213,10 +1429,19 @@ if (!empty($current_user_name)) {
                                                     'otros_ingresos_3': 'otros_ingresos_3_preview',
                                                     'docs_generales': 'docs_generales_preview',
                                                     'docs_legales': 'docs_legales_preview',
-                                                    'fotos_adicionales': 'fotos_adicionales_preview'
+                                                    'fotos_adicionales': 'fotos_adicionales_preview',
+                                                    'consentimiento_filtrado': 'consentimiento_filtrado_preview'
                                                 };
-                                                // clear
-                                                Object.keys(mapping).forEach(function(k){ var el = document.getElementById(mapping[k]); if(el){ el.innerHTML = ''; } });
+                                                // clear and set layout for doc containers (list for documents, flex for image previews)
+                                                Object.keys(mapping).forEach(function(k){ var el = document.getElementById(mapping[k]); if(el){ el.innerHTML = '';
+                                                    if(mapping[k] === 'docs_generales_preview' || mapping[k] === 'docs_legales_preview'){
+                                                        el.style.display = 'block';
+                                                    } else {
+                                                        el.style.display = 'flex';
+                                                        el.style.gap = '6px';
+                                                        el.style.flexWrap = 'wrap';
+                                                    }
+                                                } });
                                                 // render
                                                 Object.keys(groups).forEach(function(g){ var arr = groups[g] || []; var contId = mapping[g] || null; arr.forEach(function(p){ if(contId) renderServerPhoto(contId, p); }); });
                                             }).catch(function(e){ console.warn('list_photos error', e); });
@@ -1895,9 +2120,6 @@ if (!empty($current_user_name)) {
                                         if(document.querySelector('input[name="garantia_hipotecaria"]') && document.querySelector('input[name="garantia_hipotecaria"]').checked) gar.push('Hipotecaria');
                                         if(document.querySelector('input[name="garantia_mobiliaria"]') && document.querySelector('input[name="garantia_mobiliaria"]').checked) gar.push('Mobiliaria');
                                         if(document.querySelector('input[name="garantia_sin"]') && document.querySelector('input[name="garantia_sin"]').checked) gar.push('Sin garantía');
-                                        if(document.querySelector('input[name="garantia_prendaria"]') && document.querySelector('input[name="garantia_prendaria"]').checked) gar.push('Prendaria');
-                                        if(document.querySelector('input[name="garantia_fiador"]') && document.querySelector('input[name="garantia_fiador"]').checked) gar.push('Fiador');
-                                        if(document.querySelector('input[name="garantia_otra"]') && document.querySelector('input[name="garantia_otra"]').checked) gar.push('Otra');
                                         setText('tmpl_garantias_display', gar.join(', '));
                                         var er = id('es_rural');
                                         if (er) {
@@ -1909,7 +2131,7 @@ if (!empty($current_user_name)) {
                                     }
                                     document.addEventListener('DOMContentLoaded', function(){ syncAll(); });
                                     ['monto_solicitado','plazo_meses','frecuencia','tasa_interes','cuota_estimado','giro_negocio'].forEach(function(k){ var el = document.getElementById(k); if(el) el.addEventListener('input', syncAll); });
-                                    ['garantia_hipotecaria','garantia_mobiliaria','garantia_sin','garantia_prendaria','garantia_fiador','garantia_otra'].forEach(function(n){ var el=document.querySelector('input[name="'+n+'"]'); if(el) el.addEventListener('change', syncAll); });
+                                    ['garantia_hipotecaria','garantia_mobiliaria','garantia_sin'].forEach(function(n){ var el=document.querySelector('input[name="'+n+'"]'); if(el) el.addEventListener('change', syncAll); });
                                     var ruralSel = document.getElementById('es_rural');
                                     if (ruralSel) ruralSel.addEventListener('change', syncAll);
                                 })();

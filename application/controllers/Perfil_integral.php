@@ -52,12 +52,22 @@ class Perfil_integral extends CI_Controller {
         $offset = ($page - 1) * $per_page;
 
         $total = $this->db->count_all('tb_perfil_integral_cliente');
+        // Default newest-first by record id
+        $this->db->order_by('id', 'DESC');
         $perfiles = $this->db->limit($per_page, $offset)->get('tb_perfil_integral_cliente')->result();
 
         $data = [
             'titulo' => 'Perfil Integral del Cliente',
             'subtitulo' => 'Listado de perfiles integrales',
             'icono' => 'fas fa-id-card',
+            'styles' => array(
+                'plugins/datatables.net-bs4/css/dataTables.bootstrap4.min.css'
+            ),
+            'scripts' => array(
+                'plugins/datatables.net/js/jquery.dataTables.min.js',
+                'plugins/datatables.net-bs4/js/dataTables.bootstrap4.min.js',
+                'plugins/datatables.net/js/activaDatatable.js'
+            ),
             'perfiles' => $perfiles,
             'pagination' => [
                 'total' => intval($total),
@@ -351,51 +361,31 @@ class Perfil_integral extends CI_Controller {
 
         // try to find existing perfil
         $perfil = $this->Perfil_integral_model->get_by_solicitud($solicitud_id);
-        // If there is no perfil yet, attempt to prefill first/second name and surnames
+        // If there is no perfil yet, attempt to prefill combined nombres/apellidos
         if (! $perfil) {
-            // Prefer the explicit 'nombre_completo' field if present; otherwise use 'nombres' + ' ' + 'apellidos'
-            $full = '';
+            // Prefer combined fields when available
             if (! empty($sol->nombre_completo)) {
-                $full = trim($sol->nombre_completo);
+                $sol->nombre = trim($sol->nombre_completo);
             } else {
-                $full = trim((isset($sol->nombres) ? $sol->nombres : '') . ' ' . (isset($sol->apellidos) ? $sol->apellidos : ''));
+                $names = trim((isset($sol->nombres) ? $sol->nombres : '') . ' ' . (isset($sol->nombre) ? $sol->nombre : ''));
+                if ($names !== '') {
+                    $sol->nombre = preg_replace('/\s+/', ' ', $names);
+                }
             }
-
-            if ($full !== '') {
-                // split on whitespace
-                $parts = preg_split('/\s+/', $full);
-                $cnt = count($parts);
-                $first = $second = $pa = $sa = null;
-                if ($cnt >= 4) {
-                    // first two tokens -> nombres, last two tokens -> apellidos
-                    $first = $parts[0];
-                    $second = $parts[1];
-                    $pa = $parts[$cnt - 2];
-                    $sa = $parts[$cnt - 1];
-                } elseif ($cnt === 3) {
-                    $first = $parts[0];
-                    $second = $parts[1];
-                    $pa = $parts[2];
-                } elseif ($cnt === 2) {
-                    $first = $parts[0];
-                    $pa = $parts[1];
-                } elseif ($cnt === 1) {
-                    $first = $parts[0];
+            if (! empty($sol->apellidos)) {
+                $sol->primer_apellido = trim($sol->apellidos);
+            } else {
+                $surnames = trim((isset($sol->primer_apellido) ? $sol->primer_apellido : '') . ' ' . (isset($sol->segundo_apellido) ? $sol->segundo_apellido : ''));
+                if ($surnames !== '') {
+                    $sol->primer_apellido = preg_replace('/\s+/', ' ', $surnames);
                 }
-
-                // Attach parsed values to the solicitud object so the view helper `pv()` can pick them
-                if ($first) $sol->nombre = $first;
-                if ($second) $sol->segundo_nombre = $second;
-                if ($pa) $sol->primer_apellido = $pa;
-                if ($sa) $sol->segundo_apellido = $sa;
-
-                // Also set conventional keys used elsewhere: 'nombres' as combined given names, 'apellidos' as combined surnames
-                if (! isset($sol->nombres) || trim($sol->nombres) === '') {
-                    $sol->nombres = trim(($first ? $first : '') . ($second ? ' ' . $second : ''));
-                }
-                if (! isset($sol->apellidos) || trim($sol->apellidos) === '') {
-                    $sol->apellidos = trim(($pa ? $pa : '') . ($sa ? ' ' . $sa : ''));
-                }
+            }
+            // Also ensure conventional combined keys exist for views that prefer them
+            if (!empty($sol->nombre)) {
+                $sol->nombres = $sol->nombre;
+            }
+            if (!empty($sol->primer_apellido)) {
+                $sol->apellidos = $sol->primer_apellido;
             }
         }
 
@@ -449,9 +439,9 @@ class Perfil_integral extends CI_Controller {
                 if ($s2) $sol->conyuge_segundo_nombre = $s2;
                 if ($pa) $sol->conyuge_primer_apellido = $pa;
                 if ($sa) $sol->conyuge_segundo_apellido = $sa;
-                // also provide a combined key for fallback
-                if (!isset($sol->conyuge_nombre) || trim($sol->conyuge_nombre) === '') {
-                    $sol->conyuge_nombre = trim(($f ? $f : '') . ($s2 ? ' ' . $s2 : '') . ($pa ? ' ' . $pa : '') . ($sa ? ' ' . $sa : ''));
+                // provide full spouse name for views: prefer solicitud->nombre_conyuge, otherwise build from parsed parts
+                if (!isset($sol->nombre_conyuge) || trim($sol->nombre_conyuge) === '') {
+                    $sol->nombre_conyuge = trim(($f ? $f : '') . ($s2 ? ' ' . $s2 : '') . ($pa ? ' ' . $pa : '') . ($sa ? ' ' . $sa : ''));
                 }
             }
 
@@ -499,6 +489,7 @@ class Perfil_integral extends CI_Controller {
     public function save()
     {
         $post = $this->input->post();
+        // Accept `nombre_conyuge` as a single full-name field (no automatic splitting)
         $solicitud_id = isset($post['solicitud_id']) ? intval($post['solicitud_id']) : 0;
         if (! $solicitud_id) {
             $this->session->set_flashdata('error', 'Solicitud inválida.');
@@ -546,6 +537,7 @@ class Perfil_integral extends CI_Controller {
             'sitio_web_centro_trabajo' => $this->nf($post['sitio_web_centro_trabajo'] ?? null),
             'ingreso_mensual_usd' => $this->nn($post['ingreso_mensual_usd'] ?? null),
             'ingreso_mensual_cordobas' => $this->nn($post['ingreso_mensual_cordobas'] ?? null),
+            'nombre_conyuge' => $this->nf($post['nombre_conyuge'] ?? null),
             'conyuge_primer_nombre' => $this->nf($post['conyuge_primer_nombre'] ?? null),
             'conyuge_segundo_nombre' => $this->nf($post['conyuge_segundo_nombre'] ?? null),
             'conyuge_primer_apellido' => $this->nf($post['conyuge_primer_apellido'] ?? null),

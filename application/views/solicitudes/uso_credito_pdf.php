@@ -103,9 +103,14 @@
         <div class="box">
             <div class="detail"><strong>Opción seleccionada:</strong>
                 <?php
-                    $map = array('vivienda'=>'Mejoramiento de vivienda','educacion'=>'Educación','apertura_negocio'=>'Apertura o mejora de negocio','salud'=>'Salud','compra_bienes'=>'Compra de bienes o servicios','otros'=>'Otros');
-                    $sel = isset($uso->destino_prestamo) ? $uso->destino_prestamo : '';
-                    echo isset($map[$sel]) ? htmlspecialchars($map[$sel]) : '<span class="small text-muted">(sin datos)</span>';
+                    $destino_sol = '';
+                    if (!empty($solicitud->destino_credito)) $destino_sol = $solicitud->destino_credito;
+                    elseif (!empty($solicitud->destino)) $destino_sol = $solicitud->destino;
+                    elseif (!empty($uso->destino_prestamo)) $destino_sol = $uso->destino_prestamo;
+                    echo $destino_sol !== '' ? htmlspecialchars($destino_sol) : '<span class="small text-muted">(sin datos)</span>';
+                    //$map = array('vivienda'=>'Mejoramiento de vivienda','educacion'=>'Educación','apertura_negocio'=>'Apertura o mejora de negocio','salud'=>'Salud','compra_bienes'=>'Compra de bienes o servicios','otros'=>'Otros');
+                    //$sel = isset($uso->destino_prestamo) ? $uso->destino_prestamo : '';
+                    //echo isset($map[$sel]) ? htmlspecialchars($map[$sel]) : '<span class="small text-muted">(sin datos)</span>';
                 ?>
             </div>
             <div class="detail" style="margin-top:6px;"><strong>Detalle del uso:</strong> <?php echo isset($uso->destino_detalle) && trim($uso->destino_detalle) !== '' ? nl2br(htmlspecialchars($uso->destino_detalle)) : '<span class="small text-muted">(sin datos)</span>'; ?></div>
@@ -143,8 +148,8 @@
                 echo '<div class="decl-box"><p>' . $decl_par . '</p></div>';
             ?>
             <div style="margin-top:12px;">
-                <div style="display:block; margin-bottom:18px;">Firma del Solicitante: ____________________________________________</div>
-                <div>Fecha: ________________________</div>
+                <div style="display:block; margin-bottom:18px;">Firma del Solicitante: <?php echo isset($solicitud->nombres) ? trim($solicitud->nombres . ' ' . $solicitud->apellidos) : (isset($uso->declaracion_nombre) ? $uso->declaracion_nombre : '') ?> </div>
+                <div>Fecha de firma: <?php echo isset($solicitud->fecha_firma) ? htmlspecialchars($solicitud->fecha_firma) : (isset($solicitud->fecha_firma_solicitud) ? htmlspecialchars($solicitud->fecha_firma_solicitud) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
             </div>
         </div>
     </div>

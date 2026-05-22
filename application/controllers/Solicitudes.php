@@ -71,6 +71,16 @@ class Solicitudes extends CI_Controller
         } catch (Exception $e) { /* ignore */ }
     }
 
+    private function _garantia_has($values, $needle)
+    {
+        foreach ($values as $value) {
+            if (stripos($value, $needle) !== false) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /**
      * Expose boolean flags for garantia and tipo_contrato and prepare product lines for PDF
      */
@@ -81,12 +91,16 @@ class Solicitudes extends CI_Controller
             // Parse garantia string into flags
             if (isset($sol->garantia) && is_string($sol->garantia) && trim($sol->garantia) !== '') {
                 $g = array_map('trim', explode(',', $sol->garantia));
-                $sol->garantia_hipotecaria = (in_array('Hipotecaria', $g) ? 1 : 0);
-                $sol->garantia_prendaria = (in_array('Prendaria', $g) ? 1 : 0);
-                $sol->garantia_fiador = (in_array('Fiador', $g) ? 1 : 0);
-                $sol->garantia_otra = (in_array('Otra', $g) ? 1 : 0);
+                $sol->garantia_hipotecaria = ($this->_garantia_has($g, 'Hipotecaria') ? 1 : 0);
+                $sol->garantia_mobiliaria = ($this->_garantia_has($g, 'Mobiliaria') ? 1 : 0);
+                $sol->garantia_sin = ($this->_garantia_has($g, 'Sin') ? 1 : 0);
+                $sol->garantia_prendaria = ($this->_garantia_has($g, 'Prendaria') ? 1 : 0);
+                $sol->garantia_fiador = ($this->_garantia_has($g, 'Fiador') ? 1 : 0);
+                $sol->garantia_otra = ($this->_garantia_has($g, 'Otra') ? 1 : 0);
             } else {
                 $sol->garantia_hipotecaria = isset($sol->garantia_hipotecaria) ? (int)$sol->garantia_hipotecaria : 0;
+                $sol->garantia_mobiliaria = isset($sol->garantia_mobiliaria) ? (int)$sol->garantia_mobiliaria : 0;
+                $sol->garantia_sin = isset($sol->garantia_sin) ? (int)$sol->garantia_sin : 0;
                 $sol->garantia_prendaria = isset($sol->garantia_prendaria) ? (int)$sol->garantia_prendaria : 0;
                 $sol->garantia_fiador = isset($sol->garantia_fiador) ? (int)$sol->garantia_fiador : 0;
                 $sol->garantia_otra = isset($sol->garantia_otra) ? (int)$sol->garantia_otra : 0;
@@ -151,25 +165,21 @@ class Solicitudes extends CI_Controller
             'filter_end_date' => $end_date
         );
 
-        // Fetch solicitudes, optionally filtered by date range if provided
-        if ($start_date || $end_date) {
-            $date_field = 'fecha_recepcion';
-            if (! $this->db->field_exists($date_field, 'tb_solicitudes')) {
-                $date_field = $this->db->field_exists('fecha_solicitud', 'tb_solicitudes') ? 'fecha_solicitud' : $date_field;
-            }
-            $this->db->select('tb_solicitudes.*, CONCAT(IFNULL(tb_asesores.nombres,""), "") as nombre_asesor');
-            $this->db->from('tb_solicitudes');
-            $this->db->join('tb_asesores', 'tb_solicitudes.idasesor = tb_asesores.idasesor', 'left');
-            if ($start_date) $this->db->where($date_field . ' >=', $start_date);
-            if ($end_date) $this->db->where($date_field . ' <=', $end_date);
-            $this->db->order_by($date_field, 'ASC');
-            $data['solicitudes'] = $this->db->get()->result();
-        } else {
-            $this->db->select('tb_solicitudes.*, CONCAT(IFNULL(tb_asesores.nombres,""), "") as nombre_asesor');
-            $this->db->from('tb_solicitudes');
-            $this->db->join('tb_asesores', 'tb_solicitudes.idasesor = tb_asesores.idasesor', 'left');
-            $data['solicitudes'] = $this->db->get()->result();
+        // Determine date field to use for ordering (prefer recepción, then solicitud)
+        $date_field = 'fecha_recepcion';
+        if (! $this->db->field_exists($date_field, 'tb_solicitudes')) {
+            $date_field = $this->db->field_exists('fecha_solicitud', 'tb_solicitudes') ? 'fecha_solicitud' : 'idsolicitud';
         }
+
+        // Fetch solicitudes, optionally filtered by date range if provided
+        $this->db->select('tb_solicitudes.*, CONCAT(IFNULL(tb_asesores.nombres,""), "") as nombre_asesor');
+        $this->db->from('tb_solicitudes');
+        $this->db->join('tb_asesores', 'tb_solicitudes.idasesor = tb_asesores.idasesor', 'left');
+        if ($start_date) $this->db->where($date_field . ' >=', $start_date);
+        if ($end_date) $this->db->where($date_field . ' <=', $end_date);
+        // Default ordering: newest first by record id
+        $this->db->order_by('idsolicitud', 'DESC');
+        $data['solicitudes'] = $this->db->get()->result();
 
         // Determine approval status for each solicitud: pending|approved|rejected|annulled
         foreach ($data['solicitudes'] as $s) {
@@ -266,7 +276,7 @@ class Solicitudes extends CI_Controller
             'giro_negocio','monto_solicitado','plazo_meses','frecuencia','tasa_interes','cuota_estim_estimada','garantia','es_rural','comision_desembolso',
             // note: product helper fields are written into existing fields (eg. propuesta_tipos)
             // do NOT attempt to persist product_* columns unless DB has them
-            'ventas_promedio_diarios','ventas_promedio_mensual','ventas_dias_buenos','ventas_dias_malos','ventas_dias_buenos_mask','ventas_dias_malos_mask','margen_comercial',
+            'ventas_promedio_diarios','ventas_promedio_mensual','ventas_dias_buenos','ventas_dias_malos','ventas_dias_buenos_mask','ventas_dias_malos_mask','ventas_al_credito','margen_comercial',
             'detalle_inventario','nombre_negocio','actividad_economica','ubicacion_negocio','numero_empleados','cuentas_por_cobrar_amount','cuentas_por_cobrar_evidencia','caja_amount','banco_amount',
             'pago_alquiler','pago_trabajadores','energia','agua','internet','gastos_fijos','gastos_operativos','otros_gastos','gastos_personales','gastos_transporte','otros_ingresos_detalle',
             // fields matching view names (ensure posted keys pass whitelist)
@@ -277,7 +287,7 @@ class Solicitudes extends CI_Controller
             // employment / employer fields (Section 2)
             'nombre_empresa','direccion_empresa','telefono_empresa','cargo_puesto','tiempo_empleo_anios','tiempo_empleo_meses','tipo_contrato','ingreso_mensual_neto','deducciones',
             // personal / household fields (section 1)
-            'nombre_conyuge','dni_conyuge','ocupacion_conyuge','telefono_conyuge','numero_dependientes','tiempo_residir_anios','tiempo_residir_meses','condicion_vivienda',
+            'nombre_conyuge','dni_conyuge','ocupacion_conyuge','ingresos_conyuge','telefono_conyuge','numero_dependientes','tiempo_residir_anios','tiempo_residir_meses','condicion_vivienda',
             'promotor','fecha_recepcion','observaciones','observaciones_promotor','datos_personales','datos_conyuge','propuesta_tipos','es_nuevo','es_renovacion','edit_comment'
         );
         $view_word_mode = $use_word_template;
@@ -350,18 +360,26 @@ class Solicitudes extends CI_Controller
             }
 
             if ($this->form_validation->run()) {
-                                // Si no viene nombre_promotor, usar el usuario logueado
-                                if (empty($data['nombre_promotor'])) {
-                                    if ($this->ion_auth->logged_in()) {
-                                        $u = $this->ion_auth->user()->row();
-                                        if ($u) {
-                                            $nombre = trim($u->first_name . ' ' . $u->last_name);
-                                            $data['nombre_promotor'] = $nombre !== '' ? $nombre : $u->username;
-                                        }
-                                    }
-                                }
                 // Accept only whitelist in Word-mode
                 $data = ($use_word_template) ? elements($word_allowed_fields, $this->input->post()) : $this->input->post();
+                // Si no viene nombre_promotor, usar el usuario logueado
+                if (empty($data['nombre_promotor'])) {
+                    if ($this->ion_auth->logged_in()) {
+                        $u = $this->ion_auth->user()->row();
+                        if ($u) {
+                            $nombre = trim($u->first_name . ' ' . $u->last_name);
+                            $data['nombre_promotor'] = $nombre !== '' ? $nombre : $u->username;
+                        }
+                    }
+                }
+                // Preserve the cuentas_por_cobrar_amount value for save
+                if ($this->input->post('cuentas_por_cobrar_amount') !== null) {
+                    $raw = trim((string)$this->input->post('cuentas_por_cobrar_amount'));
+                    $data['cuentas_por_cobrar_amount'] = ($raw === '' ? null : $raw);
+                    if (!$this->db->field_exists('cuentas_por_cobrar_amount', 'tb_solicitudes') && $this->db->field_exists('cuentas_por_cobrar', 'tb_solicitudes')) {
+                        $data['cuentas_por_cobrar'] = $data['cuentas_por_cobrar_amount'];
+                    }
+                }
                 // Guardar idasesor (Ruta/Asesor) si viene del formulario
                 if ($this->input->post('idasesor') !== null) {
                     $raw_idasesor = trim($this->input->post('idasesor'));
@@ -399,6 +417,8 @@ class Solicitudes extends CI_Controller
                 // Merge garantia_* checkboxes into single `garantia` column (comma-separated)
                 $gar_list = array();
                 if ($this->input->post('garantia_hipotecaria')) $gar_list[] = 'Hipotecaria';
+                if ($this->input->post('garantia_mobiliaria')) $gar_list[] = 'Mobiliaria';
+                if ($this->input->post('garantia_sin')) $gar_list[] = 'Sin garantía';
                 if ($this->input->post('garantia_prendaria')) $gar_list[] = 'Prendaria';
                 if ($this->input->post('garantia_fiador')) $gar_list[] = 'Fiador';
                 if ($this->input->post('garantia_otra')) $gar_list[] = 'Otra';
@@ -469,9 +489,9 @@ class Solicitudes extends CI_Controller
                 // normalize
                 $numeric_fields = array(
                     'monto_solicitado', 'plazo_meses', 'tasa_interes', 'cuota_estim_estimada', 'comision_desembolso',
-                    'ventas_promedio_diarios', 'ventas_promedio_mensual', 'ventas_dias_buenos', 'ventas_dias_malos', 'ventas_buenos_amount', 'ventas_malos_amount', 'ventas_promedio_mensual', 'margen_comercial',
+                    'ventas_promedio_diarios', 'ventas_promedio_mensual', 'ventas_dias_buenos', 'ventas_dias_malos', 'ventas_buenos_amount', 'ventas_malos_amount', 'ventas_promedio_mensual', 'ventas_al_credito', 'margen_comercial',
                     'ventas_dias_buenos_mask', 'ventas_dias_malos_mask', 'margen_comercial', 'numero_empleados', 'numero_dependientes', 'edad',
-                    'tiempo_residir_anios','tiempo_residir_meses', 'tiempo_empleo_anios','tiempo_empleo_meses','ingreso_mensual_neto', 'tiempo_operacion_anios','tiempo_operacion_meses',
+                    'tiempo_residir_anios','tiempo_residir_meses', 'tiempo_empleo_anios','tiempo_empleo_meses','ingreso_mensual_neto','ingresos_conyuge', 'tiempo_operacion_anios','tiempo_operacion_meses',
                     'cuentas_por_cobrar_amount', 'caja_amount', 'banco_amount', 'pago_alquiler', 'pago_trabajadores',
                         'energia', 'agua', 'internet', 'gastos_fijos', 'gastos_operativos', 'gastos_personales', 'gastos_transporte',
                         // accept numeric inputs coming from the view names as well
@@ -703,11 +723,15 @@ class Solicitudes extends CI_Controller
                         if (isset($_FILES['cuentas_por_cobrar_evidencia']) && $_FILES['cuentas_por_cobrar_evidencia']['error'] === UPLOAD_ERR_OK) {
                             $file = $_FILES['cuentas_por_cobrar_evidencia'];
                             if ($file['size'] <= $max_bytes && in_array($file['type'], $allowed_types)) {
-                                $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                                $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
-                                $filename = 'evidencia_' . time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
+                                $origName = isset($file['name']) ? basename($file['name']) : 'evidencia';
+                                $safeName = preg_replace('/[^A-Za-z0-9\.\_\- ]+/', '_', $origName);
+                                $safeName = mb_substr($safeName, 0, 200);
                                 $destDir = FCPATH . 'uploads/solicitudes/' . intval($insert_id) . '/evidencia/';
                                 if (!is_dir($destDir)) @mkdir($destDir, 0755, true);
+                                $filename = $safeName;
+                                if (is_file($destDir . $filename)) {
+                                    $filename = time() . '_' . $filename;
+                                }
                                 $target = $destDir . $filename;
                                 if (move_uploaded_file($file['tmp_name'], $target)) {
                                     // Update the solicitud record with the filename
@@ -783,11 +807,15 @@ class Solicitudes extends CI_Controller
                                     $type_ok = true;
                                 }
                                 if (!$type_ok) continue;
-                                $ext = pathinfo($f['name'], PATHINFO_EXTENSION);
-                                $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
-                                $name = time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
+                                $origName = isset($f['name']) ? basename($f['name']) : 'upload';
+                                $safeName = preg_replace('/[^A-Za-z0-9\.\_\- ]+/', '_', $origName);
+                                $safeName = mb_substr($safeName, 0, 200);
                                 $destDir = FCPATH . 'uploads/solicitudes/' . intval($insert_id) . '/' . $group_name . '/';
                                 if (!is_dir($destDir)) @mkdir($destDir, 0755, true);
+                                $name = $safeName;
+                                if (is_file($destDir . $name)) {
+                                    $name = time() . '_' . $name;
+                                }
                                 $target = $destDir . $name;
                                 if (move_uploaded_file($f['tmp_name'], $target)) {
                                     $relPath = 'solicitudes/' . $insert_id . '/' . $group_name . '/' . $name;
@@ -857,12 +885,16 @@ class Solicitudes extends CI_Controller
         try {
             if (isset($sol->garantia) && is_string($sol->garantia) && trim($sol->garantia) !== '') {
                 $g = array_map('trim', explode(',', $sol->garantia));
-                $sol->garantia_hipotecaria = (in_array('Hipotecaria', $g) ? 1 : 0);
-                $sol->garantia_prendaria = (in_array('Prendaria', $g) ? 1 : 0);
-                $sol->garantia_fiador = (in_array('Fiador', $g) ? 1 : 0);
-                $sol->garantia_otra = (in_array('Otra', $g) ? 1 : 0);
+                $sol->garantia_hipotecaria = ($this->_garantia_has($g, 'Hipotecaria') ? 1 : 0);
+                $sol->garantia_mobiliaria = ($this->_garantia_has($g, 'Mobiliaria') ? 1 : 0);
+                $sol->garantia_sin = ($this->_garantia_has($g, 'Sin') ? 1 : 0);
+                $sol->garantia_prendaria = ($this->_garantia_has($g, 'Prendaria') ? 1 : 0);
+                $sol->garantia_fiador = ($this->_garantia_has($g, 'Fiador') ? 1 : 0);
+                $sol->garantia_otra = ($this->_garantia_has($g, 'Otra') ? 1 : 0);
             } else {
                 $sol->garantia_hipotecaria = isset($sol->garantia_hipotecaria) ? $sol->garantia_hipotecaria : 0;
+                $sol->garantia_mobiliaria = isset($sol->garantia_mobiliaria) ? $sol->garantia_mobiliaria : 0;
+                $sol->garantia_sin = isset($sol->garantia_sin) ? $sol->garantia_sin : 0;
                 $sol->garantia_prendaria = isset($sol->garantia_prendaria) ? $sol->garantia_prendaria : 0;
                 $sol->garantia_fiador = isset($sol->garantia_fiador) ? $sol->garantia_fiador : 0;
                 $sol->garantia_otra = isset($sol->garantia_otra) ? $sol->garantia_otra : 0;
@@ -885,8 +917,13 @@ class Solicitudes extends CI_Controller
         // Provide convenient fallback properties used by the view
         try {
             // cuota_estimado (form) expects this name; DB stores cuota_estim_estimada
-            if (!isset($sol->cuota_estimado) && isset($sol->cuota_estim_estimada)) {
+            // Always sync from DB column to form field name, even if empty
+            if (isset($sol->cuota_estim_estimada)) {
                 $sol->cuota_estimado = $sol->cuota_estim_estimada;
+            }
+            // cuota_estimado_quincenal (form) expects this name; DB stores cuota_estim_estimada_quincenal
+            if (isset($sol->cuota_estim_estimada_quincenal)) {
+                $sol->cuota_estimado_quincenal = $sol->cuota_estim_estimada_quincenal;
             }
             // Additional fallbacks for view field names vs DB columns
             try {
@@ -976,6 +1013,20 @@ class Solicitudes extends CI_Controller
             if (!isset($sol->producto_tasa) && isset($sol->tasa_interes)) { $sol->producto_tasa = $sol->tasa_interes; }
             if (!isset($sol->producto_comision) && isset($sol->comision_desembolso)) { $sol->producto_comision = $sol->comision_desembolso; }
             if (!isset($sol->producto_plazo) && isset($sol->plazo_meses)) { $sol->producto_plazo = $sol->plazo_meses; }
+            // Fallback to evidence photo record when the solicitud row has no direct evidence filename
+            if (empty($sol->cuentas_por_cobrar_evidencia) && isset($sol->idsolicitud)) {
+                try {
+                    $evidence_photo = $this->core_model->get_by_id('tb_solicitud_photos', array(
+                        'idsolicitud' => $sol->idsolicitud,
+                        'grupo' => 'evidencia'
+                    ));
+                    if ($evidence_photo && !empty($evidence_photo->filename)) {
+                        $sol->cuentas_por_cobrar_evidencia = basename($evidence_photo->filename);
+                    }
+                } catch (Exception $e) {
+                    // ignore DB lookup failures
+                }
+            }
             // if product proposal exists, try to read product classification to preselect the classification dropdown
             if ((!isset($sol->clasificacion) || $sol->clasificacion === null || $sol->clasificacion === '') && !empty($sol->propuesta_tipos)) {
                 try {
@@ -1074,6 +1125,14 @@ class Solicitudes extends CI_Controller
 
         if ($this->form_validation->run()) {
             $data = elements($word_allowed_fields, $this->input->post());
+            // Preserve the cuentas_por_cobrar_amount value for save
+            if ($this->input->post('cuentas_por_cobrar_amount') !== null) {
+                $raw = trim((string)$this->input->post('cuentas_por_cobrar_amount'));
+                $data['cuentas_por_cobrar_amount'] = ($raw === '' ? null : $raw);
+                if (!$this->db->field_exists('cuentas_por_cobrar_amount', 'tb_solicitudes') && $this->db->field_exists('cuentas_por_cobrar', 'tb_solicitudes')) {
+                    $data['cuentas_por_cobrar'] = $data['cuentas_por_cobrar_amount'];
+                }
+            }
             // Guardar idasesor (Ruta/Asesor) si viene del formulario (modo edición)
             if ($this->input->post('idasesor') !== null) {
                 $raw_idasesor = trim($this->input->post('idasesor'));
@@ -1120,6 +1179,8 @@ class Solicitudes extends CI_Controller
             // Merge garantia_* checkbox inputs into single `garantia` string
             $gar_list = array();
             if ($this->input->post('garantia_hipotecaria')) $gar_list[] = 'Hipotecaria';
+            if ($this->input->post('garantia_mobiliaria')) $gar_list[] = 'Mobiliaria';
+            if ($this->input->post('garantia_sin')) $gar_list[] = 'Sin garantía';
             if ($this->input->post('garantia_prendaria')) $gar_list[] = 'Prendaria';
             if ($this->input->post('garantia_fiador')) $gar_list[] = 'Fiador';
             if ($this->input->post('garantia_otra')) $gar_list[] = 'Otra';
@@ -1182,7 +1243,7 @@ class Solicitudes extends CI_Controller
                 elseif (is_numeric($vm)) { $data['ventas_dias_malos'] = floatval(str_replace(',', '.', $vm)); }
             }
             $normalize_numeric($data, array(
-                'monto_solicitado', 'plazo_meses', 'comision_desembolso', 'ventas_dias_buenos', 'ventas_dias_malos',
+                'monto_solicitado', 'plazo_meses', 'comision_desembolso', 'ventas_dias_buenos', 'ventas_dias_malos', 'ventas_al_credito',
                 'ventas_dias_buenos_mask', 'ventas_dias_malos_mask', 'numero_empleados', 'numero_dependientes', 'edad', 'tiempo_residir_anios','tiempo_residir_meses', 'tiempo_empleo_anios','tiempo_empleo_meses','ingreso_mensual_neto', 'tiempo_operacion_anios','tiempo_operacion_meses','ventas_buenos_amount','ventas_malos_amount','ventas_promedio_mensual','margen_comercial','otros_ingresos_1_amount','otros_ingresos_1_margin','otros_ingresos_2_amount','otros_ingresos_2_margin','otros_ingresos_3_amount','otros_ingresos_3_margin', 'cuentas_por_cobrar_amount', 'caja_amount',
                 'banco_amount', 'pago_alquiler', 'pago_trabajadores', 'energia', 'agua', 'internet', 'gastos_fijos', 'gastos_operativos'
             ));
@@ -1245,6 +1306,92 @@ class Solicitudes extends CI_Controller
                     $this->core_model->insert('tb_solicitudes_comments', $comment_data, TRUE);
                 }
             } catch (Exception $e) { /* ignore comment save errors */ }
+
+            // Process any requested photo/document deletions only when the form is saved
+            try {
+                $deletePayload = trim((string)$this->input->post('photos_to_delete'));
+                if ($deletePayload !== '') {
+                    $deletedItems = json_decode($deletePayload, true);
+                    if (!is_array($deletedItems)) {
+                        $deletedItems = array();
+                    }
+                    if (!empty($deletedItems)) {
+                        $u = $this->ion_auth->user()->row();
+                        $username = 'Sistema';
+                        if ($u) {
+                            $username = trim(($u->first_name ?? '') . ' ' . ($u->last_name ?? '')) ?: ($u->username ?? 'Usuario');
+                        }
+                        foreach ($deletedItems as $item) {
+                            $idphoto = null;
+                            $filename = '';
+                            if (is_array($item)) {
+                                if (isset($item['idphoto']) && $item['idphoto'] !== '') {
+                                    $idphoto = intval($item['idphoto']);
+                                }
+                                if (isset($item['filename'])) {
+                                    $filename = trim((string)$item['filename']);
+                                }
+                            } elseif (is_string($item) || is_numeric($item)) {
+                                $filename = trim((string)$item);
+                            }
+                            if (!$idphoto && $filename === '') {
+                                continue;
+                            }
+
+                            $photoRow = null;
+                            if ($idphoto) {
+                                try { $photoRow = $this->core_model->get_by_id('tb_solicitud_photos', array('idphoto' => $idphoto)); } catch (Exception $e) { $photoRow = null; }
+                            }
+                            if (!$photoRow && $filename !== '') {
+                                $safeFilename = trim(str_replace('\\', '/', $filename), '/');
+                                if (strpos($safeFilename, 'solicitudes/') !== 0) {
+                                    $safeFilename = ltrim($safeFilename, '/');
+                                }
+                                if ($safeFilename !== '') {
+                                    try { $photoRow = $this->core_model->get_by_id('tb_solicitud_photos', array('filename' => $safeFilename)); } catch (Exception $e) { $photoRow = null; }
+                                    if (!$photoRow) {
+                                        $photoRow = (object) array('filename' => $safeFilename, 'idsolicitud' => $cliente_id);
+                                    }
+                                }
+                            }
+                            if (!$photoRow) {
+                                continue;
+                            }
+
+                            $deleteFilename = trim((string)($photoRow->filename ?? $filename));
+                            if ($deleteFilename !== '') {
+                                $filePath = FCPATH . 'uploads/' . ltrim($deleteFilename, '/');
+                                if (is_file($filePath)) {
+                                    @unlink($filePath);
+                                }
+                            }
+
+                            if (!empty($photoRow->idphoto)) {
+                                try { $this->core_model->delete('tb_solicitud_photos', array('idphoto' => $photoRow->idphoto)); } catch (Exception $e) { }
+                            } elseif ($deleteFilename !== '') {
+                                try { $this->core_model->delete('tb_solicitud_photos', array('filename' => $deleteFilename)); } catch (Exception $e) { }
+                            }
+
+                            $basename = pathinfo($deleteFilename, PATHINFO_BASENAME);
+                            if ($basename !== '') {
+                                $historyComment = 'El archivo/foto de nombre \'' . $basename . '\' fue eliminado por \'' . $username . '\'';
+                                try {
+                                    $this->core_model->insert('tb_solicitudes_comments', array(
+                                        'idsolicitud' => $cliente_id,
+                                        'user_id' => ($u ? $u->id : 0),
+                                        'username' => $username,
+                                        'action' => 'delete_file',
+                                        'comment' => $historyComment
+                                    ), TRUE);
+                                } catch (Exception $e) { }
+                            }
+                        }
+                    }
+                }
+            } catch (Exception $e) {
+                log_message('error', '[SOLICITUDS] Error processing photo deletions: ' . $e->getMessage());
+            }
+
             if ($ok) {
                 $this->session->set_flashdata('success', 'Solicitud actualizada');
                 
@@ -1257,11 +1404,15 @@ class Solicitudes extends CI_Controller
                     if (isset($_FILES['cuentas_por_cobrar_evidencia']) && $_FILES['cuentas_por_cobrar_evidencia']['error'] === UPLOAD_ERR_OK) {
                         $file = $_FILES['cuentas_por_cobrar_evidencia'];
                         if ($file['size'] <= $max_bytes && in_array($file['type'], $allowed_types)) {
-                            $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-                            $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
-                            $filename = 'evidencia_' . time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
+                            $origName = isset($file['name']) ? basename($file['name']) : 'evidencia';
+                            $safeName = preg_replace('/[^A-Za-z0-9\.\_\- ]+/', '_', $origName);
+                            $safeName = mb_substr($safeName, 0, 200);
                             $destDir = FCPATH . 'uploads/solicitudes/' . intval($cliente_id) . '/evidencia/';
                             if (!is_dir($destDir)) @mkdir($destDir, 0755, true);
+                            $filename = $safeName;
+                            if (is_file($destDir . $filename)) {
+                                $filename = time() . '_' . $filename;
+                            }
                             $target = $destDir . $filename;
                             if (move_uploaded_file($file['tmp_name'], $target)) {
                                 // Update the solicitud record with the new filename
@@ -1553,6 +1704,14 @@ class Solicitudes extends CI_Controller
                 'titulo' => 'Formato de Uso de Crédito',
                 'subtitulo' => 'Registro del uso del crédito por solicitud',
                 'icono' => 'fas fa-file-alt',
+                'styles' => array(
+                    'plugins/datatables.net-bs4/css/dataTables.bootstrap4.min.css'
+                ),
+                'scripts' => array(
+                    'plugins/datatables.net/js/jquery.dataTables.min.js',
+                    'plugins/datatables.net-bs4/js/dataTables.bootstrap4.min.js',
+                    'plugins/datatables.net/js/activaDatatable.js'
+                ),
                 'solicitudes' => array()
             );
 
@@ -1560,6 +1719,8 @@ class Solicitudes extends CI_Controller
             $this->db->select('tb_solicitudes.*, CONCAT(IFNULL(tb_asesores.nombres, ""), "") as nombre_asesor');
             $this->db->from('tb_solicitudes');
             $this->db->join('tb_asesores', 'tb_solicitudes.idasesor = tb_asesores.idasesor', 'left');
+            // Default newest-first ordering by record id
+            $this->db->order_by('idsolicitud', 'DESC');
             $data['solicitudes'] = $this->db->get()->result();
 
             // Annotate each solicitud with approval status (pending|approved|rejected|annulled)
@@ -1829,6 +1990,14 @@ class Solicitudes extends CI_Controller
                 'titulo' => 'Formato de Verificación de Referencias - Solicitud de Crédito',
                 'subtitulo' => 'Registro de referencias personales (2 por solicitud)',
                 'icono' => 'fas fa-user-friends',
+                'styles' => array(
+                    'plugins/datatables.net-bs4/css/dataTables.bootstrap4.min.css'
+                ),
+                'scripts' => array(
+                    'plugins/datatables.net/js/jquery.dataTables.min.js',
+                    'plugins/datatables.net-bs4/js/dataTables.bootstrap4.min.js',
+                    'plugins/datatables.net/js/activaDatatable.js'
+                ),
                 'solicitudes' => array()
             );
 
@@ -1836,6 +2005,8 @@ class Solicitudes extends CI_Controller
             $this->db->select('tb_solicitudes.*, CONCAT(IFNULL(tb_asesores.nombres, ""), "") as nombre_asesor');
             $this->db->from('tb_solicitudes');
             $this->db->join('tb_asesores', 'tb_solicitudes.idasesor = tb_asesores.idasesor', 'left');
+            // Default newest-first ordering by record id
+            $this->db->order_by('idsolicitud', 'DESC');
             $data['solicitudes'] = $this->db->get()->result();
 
             // Annotate each solicitud with approval status (pending|approved|rejected|annulled)
@@ -1895,6 +2066,12 @@ class Solicitudes extends CI_Controller
             $solOut->ddc_investigacion_campo = isset($solicitud->ddc_investigacion_campo) ? $solicitud->ddc_investigacion_campo : (isset($solicitud->ddc_investigacion) ? $solicitud->ddc_investigacion : null);
             $solOut->es_nuevo = isset($solicitud->es_nuevo) ? (int)$solicitud->es_nuevo : 0;
             $solOut->es_renovacion = isset($solicitud->es_renovacion) ? (int)$solicitud->es_renovacion : 0;
+            $solOut->evaluador_credito = null;
+            if ($uso && isset($uso->evaluador_credito) && trim((string)$uso->evaluador_credito) !== '') {
+                $solOut->evaluador_credito = $uso->evaluador_credito;
+            } elseif (isset($solicitud->evaluador_credito) && trim((string)$solicitud->evaluador_credito) !== '') {
+                $solOut->evaluador_credito = $solicitud->evaluador_credito;
+            }
 
             // Helper normalized fields (explicit names for the front-end)
             $solOut->nombre_completo = trim((isset($solicitud->apellidos) ? $solicitud->apellidos : '') . ' ' . (isset($solicitud->nombres) ? $solicitud->nombres : ''));
@@ -1910,6 +2087,12 @@ class Solicitudes extends CI_Controller
             
             // Normalizar campo de plazo
             $solOut->plazo_solicitado = isset($solicitud->plazo_meses) ? $solicitud->plazo_meses : (isset($solicitud->plazo) ? $solicitud->plazo : null);
+            
+            // Agregar fecha_evaluacion como fallback desde uso si existe
+            $solOut->fecha_evaluacion = null;
+            if ($uso && isset($uso->fecha_evaluacion)) {
+                $solOut->fecha_evaluacion = $uso->fecha_evaluacion;
+            }
 
             $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => TRUE, 'uso' => $uso, 'solicitud' => $solOut)));
         }
@@ -2096,6 +2279,27 @@ class Solicitudes extends CI_Controller
                 $uso->monto_estimado_mes = isset($solicitud->ingreso_mensual_neto) ? $solicitud->ingreso_mensual_neto : (isset($solicitud->ventas_promedio_mensual) ? $solicitud->ventas_promedio_mensual : null);
                 $uso->monto_solicitado = isset($solicitud->monto_solicitado) ? $solicitud->monto_solicitado : null;
                 $uso->plazo_solicitado = isset($solicitud->plazo_meses) ? $solicitud->plazo_meses : (isset($solicitud->plazo) ? $solicitud->plazo : null);
+            }
+
+            // Normalize identification and contact fields so the PDF view receives a consistent property
+            if ($solicitud) {
+                $solicitud->numero_identificacion =
+                    (isset($solicitud->numero_doc) && $solicitud->numero_doc) ? $solicitud->numero_doc : (
+                    (isset($solicitud->numero_documento) && $solicitud->numero_documento) ? $solicitud->numero_documento : (
+                    (isset($solicitud->cedula) && $solicitud->cedula) ? $solicitud->cedula : (
+                    (isset($solicitud->identificacion) && $solicitud->identificacion) ? $solicitud->identificacion : null)));
+                if ((!isset($solicitud->cedula) || !$solicitud->cedula) && isset($solicitud->numero_identificacion) && $solicitud->numero_identificacion) {
+                    $solicitud->cedula = $solicitud->numero_identificacion;
+                }
+                if ((!isset($solicitud->telefono) || !$solicitud->telefono) && isset($solicitud->telefono_contacto) && $solicitud->telefono_contacto) {
+                    $solicitud->telefono = $solicitud->telefono_contacto;
+                }
+                if ((!isset($solicitud->email) || !$solicitud->email) && isset($solicitud->correo_electronico) && $solicitud->correo_electronico) {
+                    $solicitud->email = $solicitud->correo_electronico;
+                }
+                if ((!isset($solicitud->fecha_solicitud) || !$solicitud->fecha_solicitud) && isset($solicitud->fecha_recepcion) && $solicitud->fecha_recepcion) {
+                    $solicitud->fecha_solicitud = $solicitud->fecha_recepcion;
+                }
             }
 
             $data = array(
@@ -2616,7 +2820,7 @@ class Solicitudes extends CI_Controller
             $total_garantias = 0;
             try {
                 if ($this->db->table_exists('tb_garantias')) {
-                    $garantias = $this->db->get_where('tb_garantias', array('solicitud_id' => $id))->result();
+                    $garantias = $this->db->order_by('id','DESC')->get_where('tb_garantias', array('solicitud_id' => $id))->result();
                     if (is_array($garantias) && count($garantias) > 0) {
                         foreach ($garantias as $g) {
                             $garantias_info[] = array(
@@ -3526,7 +3730,7 @@ class Solicitudes extends CI_Controller
         // basic validation
         // Allow PDFs for docs_generales and docs_legales groups
         $allowed = array('image/jpeg', 'image/jpg', 'image/png');
-        if ($group && in_array($group, array('docs_generales', 'docs_legales'))) {
+        if ($group && in_array($group, array('docs_generales', 'docs_legales', 'consentimiento_filtrado'))) {
             $allowed[] = 'application/pdf';
         }
         $maxBytes = 5 * 1024 * 1024; // 5MB
@@ -3562,25 +3766,31 @@ class Solicitudes extends CI_Controller
             @mkdir($upload_dir, 0755, true);
         }
 
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $basename = time() . '_' . bin2hex(random_bytes(6));
-        $filename = $basename . '.' . $ext;
-        $dest = $upload_dir . $filename;
+        // Preserve original filename when saving; sanitize to avoid bad chars
+        $origName = isset($file['name']) ? basename($file['name']) : 'upload';
+        $safeName = preg_replace('/[^A-Za-z0-9\.\_\- ]+/', '_', $origName);
+        $safeName = mb_substr($safeName, 0, 200);
+        // Avoid overwriting existing files: if name exists, prefix with timestamp
+        $targetName = $safeName;
+        if (is_file($upload_dir . $targetName)) {
+            $targetName = time() . '_' . $targetName;
+        }
+        $dest = $upload_dir . $targetName;
 
         if (!move_uploaded_file($file['tmp_name'], $dest)) {
             $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'No se pudo guardar el archivo.')));
             return;
         }
 
-        // save metadata
+        // save metadata using the preserved filename
         $row = array(
             'idsolicitud' => $idsolicitud,
-            'filename' => $subpath . $filename,
+            'filename' => $subpath . $targetName,
             'grupo' => $group,
             'mime' => $file['type'],
             'size' => (int)$file['size']
         );
-        $this->core_model->insert('tb_solicitud_photos', $row, TRUE);
+        try { $this->core_model->insert('tb_solicitud_photos', $row, TRUE); } catch (Exception $e) { log_message('error','[SOLICITUDES] insert tb_solicitud_photos error: '.$e->getMessage()); }
         $last = $this->session->userdata('last_id');
 
         $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => (bool)$last, 'message' => ($last ? 'Subida correcta' : 'Error al registrar archivo'), 'file' => ($last ? $row : null))));
@@ -3637,6 +3847,7 @@ class Solicitudes extends CI_Controller
         try { $photos = $this->core_model->get_by_id_all('tb_solicitud_photos', array('idsolicitud' => $id)); } catch (Exception $e) { $photos = array(); }
         $unique = array();
         $seen = array();
+        $hidden_groups = array('docs_generales', 'docs_legales', 'consentimiento_filtrado', 'fotos_adicionales');
         foreach ($photos as $p) {
             if (!empty($p->filename)) {
                 $filename = ltrim(str_replace('\\', '/', $p->filename), '/');
@@ -3650,6 +3861,15 @@ class Solicitudes extends CI_Controller
                     $group = preg_replace('/[^a-z0-9_\-]/i', '_', $parts[2]);
                 }
                 $p->grupo = $group;
+            }
+            $lowerFilename = isset($filename) ? strtolower($filename) : '';
+            if (in_array($p->grupo, $hidden_groups, true)
+                || strpos($lowerFilename, '/docs_generales/') !== false
+                || strpos($lowerFilename, '/docs_legales/') !== false
+                || strpos($lowerFilename, '/consentimiento_filtrado/') !== false
+                || strpos($lowerFilename, '/fotos_adicionales/') !== false
+            ) {
+                continue;
             }
             $unique[] = $p;
         }
@@ -3668,6 +3888,46 @@ class Solicitudes extends CI_Controller
         );
         $this->load->view('layout/header', $data);
         $this->load->view('solicitudes/photos', $data);
+        $this->load->view('layout/footer');
+    }
+
+    /**
+     * Web: show documents page for a solicitud
+     */
+    public function documents($id = NULL)
+    {
+        if (!$id || !$this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $id))) {
+            $this->session->set_flashdata('error', 'Solicitud no encontrada');
+            redirect('solicitudes');
+            return;
+        }
+
+        $files = array();
+        try { $files = $this->core_model->get_by_id_all('tb_solicitud_photos', array('idsolicitud' => $id)); } catch (Exception $e) { $files = array(); }
+        if (!is_array($files)) $files = array();
+
+        $groups = array(
+            'docs_generales' => array(),
+            'docs_legales' => array(),
+            'fotos_adicionales' => array(),
+            'consentimiento_filtrado' => array()
+        );
+        foreach ($files as $file) {
+            $group = isset($file->grupo) && trim($file->grupo) !== '' ? strtolower(preg_replace('/[^a-z0-9_]/i', '_', $file->grupo)) : 'otros';
+            if (array_key_exists($group, $groups)) {
+                $groups[$group][] = $file;
+            }
+        }
+
+        $data = array(
+            'titulo' => 'Documentos de Solicitud',
+            'subtitulo' => 'Carga y consulta de documentos para la solicitud #' . intval($id),
+            'icono' => 'fas fa-folder-open',
+            'documents' => $groups,
+            'idsolicitud' => intval($id)
+        );
+        $this->load->view('layout/header', $data);
+        $this->load->view('solicitudes/documents', $data);
         $this->load->view('layout/footer');
     }
 
@@ -3697,18 +3957,22 @@ class Solicitudes extends CI_Controller
             $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'Archivo no subido')));
             return;
         }
-        $ext = pathinfo($file['name'], PATHINFO_EXTENSION);
-        $safeExt = preg_replace('/[^a-zA-Z0-9]/', '', $ext);
-        $name = time() . '_' . substr(md5(uniqid('', true)), 0, 8) . ($safeExt ? '.' . $safeExt : '');
+        // Preserve original filename when saving; sanitize and avoid collisions
+        $origName = isset($file['name']) ? basename($file['name']) : 'upload';
+        $safeName = preg_replace('/[^A-Za-z0-9\.\_\- ]+/', '_', $origName);
+        $safeName = mb_substr($safeName, 0, 200);
         $destDir = FCPATH . 'uploads/solicitudes/' . $ids . '/' . $group . '/';
         if (!is_dir($destDir)) @mkdir($destDir, 0755, true);
-        $target = $destDir . $name;
+        $target = $destDir . $safeName;
+        if (is_file($target)) { // avoid overwrite
+            $target = $destDir . time() . '_' . $safeName;
+        }
         if (!move_uploaded_file($file['tmp_name'], $target)) {
             $this->output->set_content_type('application/json')->set_output(json_encode(array('status' => FALSE, 'message' => 'No se pudo mover el archivo')));
             return;
         }
         // prepare DB record (store relative path under uploads/)
-        $relPath = 'solicitudes/' . $ids . '/' . $group . '/' . $name;
+        $relPath = 'solicitudes/' . $ids . '/' . $group . '/' . basename($target);
         try {
             $ins = array(
                 'idsolicitud' => $ids,
@@ -3732,7 +3996,7 @@ class Solicitudes extends CI_Controller
             log_message('error', '[SOLICITUDES] upload_photo_ajax DB insert error: ' . $e->getMessage());
         }
         $url = base_url('uploads/' . $relPath);
-        $resp = array('status' => TRUE, 'file' => $name, 'url' => $url, 'idphoto' => $idphoto);
+        $resp = array('status' => TRUE, 'file' => $safeName, 'url' => $url, 'idphoto' => $idphoto, 'filename' => $relPath, 'mime' => isset($file['type']) ? $file['type'] : 'application/octet-stream');
         $this->output->set_content_type('application/json')->set_output(json_encode($resp));
     }
 

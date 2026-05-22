@@ -20,21 +20,34 @@
             <div class="card">
                 <div class="card-body">
                     <style>
+                        #uso-table{ table-layout: auto; width:100%; max-width: 100%; margin: 0; box-sizing: border-box; }
+                        #uso-table{ max-width:100%; box-sizing:border-box; display: table; }
+                        #uso-table th:first-child, #uso-table td:first-child{
+                            width:auto; min-width:40px; max-width:80px; text-align:center;
+                            padding-left:.4rem; padding-right:.4rem;
+                            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+                        }
+                        #uso-table th:last-child, #uso-table td:last-child{
+                            width: 90px; min-width:70px; white-space: nowrap;
+                            vertical-align: middle; text-align:center;
+                        }
                         /* Match compact table styles used by solicitudes list so dimensions align */
                         #uso-table.table-compact td, #uso-table.table-compact th{
                             padding: .12rem .28rem;
                             vertical-align: middle;
                             font-size: .72rem;
                             line-height: 1.02;
-                            white-space: nowrap;
+                            white-space: normal;
+                            overflow-wrap: break-word;
+                            word-break: normal;
                         }
                         #uso-table.table-compact thead th{ font-size: .7rem; padding: .18rem .28rem; }
                         #uso-table.table-compact .btn{ padding: .12rem .28rem; font-size: .72rem; min-width: auto; }
-                        /* Match Cliente column width/truncation to solicitudes list */
+                        /* Keep Cliente column from stretching too far while allowing wrapping */
                         #uso-table th:nth-child(2), #uso-table td:nth-child(2){
                             max-width: 180px;
-                            overflow: hidden;
-                            text-overflow: ellipsis;
+                            overflow-wrap: break-word;
+                            word-break: normal;
                         }
                         /* Match action column width */
                         #uso-table th:last-child, #uso-table td:last-child{ width: 120px; white-space: nowrap; }
@@ -99,8 +112,11 @@
                                         <td class="d-none"><?php echo (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : (!empty($s->fecha_recepcion) ? $s->fecha_recepcion : '')); ?></td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <button class="btn btn-sm btn-primary btn-uso" data-id="<?php echo $s->idsolicitud; ?>">Formato Uso Crédito</button>
-                                                <button class="btn btn-sm btn-outline-secondary btn-download-uso" data-id="<?php echo $s->idsolicitud; ?>" title="Descargar formato"><i class="fa fa-download"></i></button>
+                                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Acciones</button>
+                                                <div class="dropdown-menu dropdown-menu-right">
+                                                    <a class="dropdown-item btn-uso" href="#" data-id="<?php echo $s->idsolicitud; ?>">Formato Uso Crédito</a>
+                                                    <a class="dropdown-item btn-download-uso" href="#" data-id="<?php echo $s->idsolicitud; ?>" title="Descargar formato">Descargar formato</a>
+                                                </div>
                                             </div>
                                         </td>
                                     </tr>
@@ -141,6 +157,35 @@
                             <?php endif; ?>
                         </div>
                     </div>
+
+                    <script>
+                        (function waitForUsoCreditoDataTable(){
+                            if(window.jQuery && window.jQuery.fn && window.jQuery.fn.DataTable){
+                                (function($){
+                                    try{
+                                        var table = $('#uso-table').DataTable({
+                                            "bSort": false,
+                                            "responsive": true,
+                                            "autoWidth": false,
+                                            "pageLength": 10,
+                                            "lengthMenu": [[10,25,50,100],[10,25,50,100]]
+                                        });
+                                        var wrapper = $(table.table().container());
+                                        wrapper.find('.dataTables_filter').hide();
+                                        $('#uso_search').off('input.dt').on('input', function(){ table.search(this.value).draw(); });
+                                        $.fn.dataTable.ext.search.push(function(settings, data, dataIndex){
+                                            if (!settings || !settings.nTable || settings.nTable.id !== 'uso-table') return true;
+                                            var status = $('#uso_filter_status').val();
+                                            if (!status || status === 'all') return true;
+                                            var row = table.row(dataIndex).node();
+                                            return ($(row).data('status') || 'pending') === status;
+                                        });
+                                        $('#uso_filter_status').off('change.dt').on('change', function(){ table.draw(); });
+                                    }catch(e){ console.error('Uso credito DataTable error', e); }
+                                })(jQuery);
+                            } else { setTimeout(waitForUsoCreditoDataTable, 100); }
+                        })();
+                    </script>
 
                     <style>
                         /* Force responsive sections to be mutually exclusive in case global CSS overrides exist */
