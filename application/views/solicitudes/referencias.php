@@ -68,12 +68,9 @@
                                         <td class="d-none"><?php echo isset($s->fecha_solicitud) ? $s->fecha_solicitud : ''; ?></td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                            <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Acciones</button>
-                                            <div class="dropdown-menu dropdown-menu-right">
-                                                <a class="dropdown-item btn-referencias" href="#" data-id="<?php echo $s->idsolicitud; ?>">Completar Referencias</a>
-                                                <a class="dropdown-item" href="<?php echo base_url('solicitudes/download_referencias/' . $s->idsolicitud); ?>" target="_blank">Descargar PDF</a>
+                                                <button class="btn btn-sm btn-primary btn-referencias" data-id="<?php echo $s->idsolicitud; ?>">Completar Referencias</button>
+                                                <a class="btn btn-sm btn-secondary" href="<?php echo base_url('solicitudes/download_referencias/' . $s->idsolicitud); ?>" target="_blank">Descargar PDF</a>
                                             </div>
-                                        </div>
                                         </td>
                                     </tr>
                                 <?php endforeach; else: ?>

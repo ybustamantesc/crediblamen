@@ -112,11 +112,8 @@
                                         <td class="d-none"><?php echo (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : (!empty($s->fecha_recepcion) ? $s->fecha_recepcion : '')); ?></td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Acciones</button>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item btn-uso" href="#" data-id="<?php echo $s->idsolicitud; ?>">Formato Uso Crédito</a>
-                                                    <a class="dropdown-item btn-download-uso" href="#" data-id="<?php echo $s->idsolicitud; ?>" title="Descargar formato">Descargar formato</a>
-                                                </div>
+                                                <button class="btn btn-sm btn-primary btn-uso" data-id="<?php echo $s->idsolicitud; ?>">Formato Uso Crédito</button>
+                                                <button class="btn btn-sm btn-outline-secondary btn-download-uso" data-id="<?php echo $s->idsolicitud; ?>" title="Descargar formato"><i class="fa fa-download"></i></button>
                                             </div>
                                         </td>
                                     </tr>
