@@ -101,6 +101,38 @@
 	}
 </script>
 
+<script>
+	// Only force navigation for server-side pagination links on small screens.
+	// This avoids interfering with client-side DataTables pagination.
+	document.addEventListener('click', function(ev){
+		try{
+			if (!ev || !ev.target) return;
+			// Only on small viewports (mobile)
+			if (window.innerWidth > 767) return;
+			var a = ev.target.closest && ev.target.closest('a');
+			if (!a) return;
+			var pag = a.closest && a.closest('.pagination');
+			if (!pag) return;
+			var href = a.getAttribute('href') || '';
+			// Only act on links that explicitly include a page query (server-side pagination)
+			if (href.indexOf('page=') === -1) return;
+			if (href.indexOf('javascript:') === 0) return;
+			// allow modifier keys and middle-click to keep native behavior
+			if (ev.ctrlKey || ev.metaKey || ev.shiftKey || ev.button === 1) return;
+			ev.preventDefault(); ev.stopImmediatePropagation();
+			// Normalize relative query like '?page=2' to full path
+			var url = href;
+			if (href.charAt(0) === '?') {
+				url = window.location.pathname + href;
+			} else if (!/^https?:\/\//i.test(href) && href.charAt(0) !== '/') {
+				// relative path without leading slash
+				url = window.location.pathname.replace(/\/$/, '') + '/' + href;
+			}
+			window.location.href = url;
+		}catch(e){ /* swallow errors */ }
+	}, true);
+</script>
+
 </body>
 
 </html>

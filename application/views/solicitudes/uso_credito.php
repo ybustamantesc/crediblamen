@@ -50,10 +50,29 @@
                             word-break: normal;
                         }
                         /* Match action column width */
-                        #uso-table th:last-child, #uso-table td:last-child{ width: 120px; white-space: nowrap; }
+                        #uso-table th:last-child, #uso-table td:last-child{ width: 90px; min-width: 90px; white-space: nowrap; }
+                        #uso-table td:last-child .btn-group { white-space: nowrap; }
+                        #uso-table td:last-child .btn { padding: .22rem .35rem; font-size: .78rem; }
                         /* Reduce search/filter input height similarly */
                         #uso_search, #uso_filter_status { height: calc(1.1em + 0.28rem); padding: 0.14rem 0.36rem; }
                         .table-responsive { overflow-x: auto; }
+                        /* Ensure only one of table or cards is visible */
+                        #uso-table-wrapper { display: block; }
+                        #uso-cards-wrap { display: none; }
+                        @media (max-width: 767.98px) {
+                            /* Keep table visible on small screens so DataTables pagination works
+                               and hide the card-based alternative to avoid duplicate lists. */
+                            #uso-table-wrap { display: block !important; }
+                            #uso-cards-wrap { display: none !important; }
+                            #uso-table td:last-child .btn-uso {
+                                padding: .22rem .35rem;
+                                font-size: .78rem;
+                                min-width: auto;
+                            }
+                        }
+                        @media (min-width: 768px) {
+                            #uso-cards-wrap { display: none !important; }
+                        }
                     </style>
                     <div class="row mb-2">
                         <div class="col-md-4">
@@ -72,7 +91,7 @@
                             <small class="text-muted">Filtrar por estado o buscar por cliente/código.</small>
                         </div>
                     </div>
-                    <div id="uso-table-wrapper" class="table-responsive d-none d-md-block">
+                    <div id="uso-table-wrapper" class="table-responsive d-block">
                         <table id="uso-table" class="table table-sm table-striped table-bordered table-compact">
                             <thead>
                                 <tr>
@@ -112,7 +131,10 @@
                                         <td class="d-none"><?php echo (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : (!empty($s->fecha_recepcion) ? $s->fecha_recepcion : '')); ?></td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <button class="btn btn-sm btn-primary btn-uso" data-id="<?php echo $s->idsolicitud; ?>">Formato Uso Crédito</button>
+                                                <button class="btn btn-sm btn-primary btn-uso" data-id="<?php echo $s->idsolicitud; ?>">
+                                                    <span class="d-none d-sm-inline">Formato Uso Crédito</span>
+                                                    <span class="d-inline d-sm-none">Uso</span>
+                                                </button>
                                                 <button class="btn btn-sm btn-outline-secondary btn-download-uso" data-id="<?php echo $s->idsolicitud; ?>" title="Descargar formato"><i class="fa fa-download"></i></button>
                                             </div>
                                         </td>
@@ -122,26 +144,35 @@
                                 <?php endif; ?>
                             </tbody>
                         </table>
-                    </div>
+                        </div>
 
-                    <!-- Mobile card list -->
-                    <div id="uso-cards-wrapper" class="d-block d-md-none">
+                    <!-- Mobile cards (hidden to allow DataTables pagination on mobile) -->
+                    <div id="uso-cards-wrap" style="display:none;" class="d-block d-md-none">
                         <div class="row">
                             <?php if(!empty($solicitudes)): foreach($solicitudes as $s): ?>
                                 <?php $status = isset($s->aprob_status) ? $s->aprob_status : 'pending'; ?>
-                                <?php $rowClass = ''; if(isset($s->aprob_status)){ if($s->aprob_status === 'approved') $rowClass = 'border-success'; elseif($s->aprob_status === 'rejected') $rowClass = 'border-danger'; elseif($s->aprob_status === 'annulled') $rowClass = 'border-secondary'; }
+                                <?php $cardClass = ''; if(isset($s->aprob_status)){ if($s->aprob_status === 'approved') $cardClass = 'border-success'; elseif($s->aprob_status === 'rejected') $cardClass = 'border-danger'; elseif($s->aprob_status === 'annulled') $cardClass = 'border-secondary'; }
                                 ?>
                                 <div class="col-12">
-                                    <div class="card mb-2 <?php echo $rowClass; ?>" data-id="<?php echo $s->idsolicitud; ?>" data-status="<?php echo $status; ?>">
+                                    <div class="card mb-2 <?php echo $cardClass; ?>" data-id="<?php echo $s->idsolicitud; ?>" data-status="<?php echo $status; ?>">
                                         <div class="card-body py-2">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <div>
-                                                    <div class="font-weight-bold"><?php echo htmlspecialchars(trim((isset($s->nombres)?$s->nombres:'') . ' ' . (isset($s->apellidos)?$s->apellidos:''))); ?></div>
+                                                    <div class="font-weight-bold">
+                                                        <?php
+                                                            $name = trim((isset($s->nombres)?$s->nombres:'') . ' ' . (isset($s->apellidos)?$s->apellidos:''));
+                                                            if(!$name){
+                                                                $name = isset($s->numero_doc) && $s->numero_doc ? $s->numero_doc : (isset($s->numero_documento) && $s->numero_documento ? $s->numero_documento : (isset($s->cedula) && $s->cedula ? $s->cedula : (isset($s->identificacion) && $s->identificacion ? $s->identificacion : '')));
+                                                            }
+                                                            echo htmlspecialchars($name);
+                                                        ?>
+                                                    </div>
                                                     <div class="text-muted small"><?php echo 'SOL-' . str_pad($s->idsolicitud, 4, '0', STR_PAD_LEFT); ?></div>
+                                                    <div class="text-muted small"><?php echo htmlspecialchars($s->rubro_credito ?? ''); ?></div>
                                                 </div>
                                                 <div class="text-right">
                                                     <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-primary btn-uso" data-id="<?php echo $s->idsolicitud; ?>">Uso</button>
+                                                        <button class="btn btn-sm btn-primary btn-uso" data-id="<?php echo $s->idsolicitud; ?>">Formato</button>
                                                         <button class="btn btn-sm btn-outline-secondary btn-download-uso" data-id="<?php echo $s->idsolicitud; ?>" title="Descargar"><i class="fa fa-download"></i></button>
                                                     </div>
                                                 </div>
@@ -184,17 +215,6 @@
                         })();
                     </script>
 
-                    <style>
-                        /* Force responsive sections to be mutually exclusive in case global CSS overrides exist */
-                        @media (max-width: 767.98px) {
-                            #uso-table-wrapper { display: none !important; }
-                            #uso-cards-wrapper { display: block !important; }
-                        }
-                        @media (min-width: 768px) {
-                            #uso-table-wrapper { display: block !important; }
-                            #uso-cards-wrapper { display: none !important; }
-                        }
-                    </style>
                 </div>
             </div>
 

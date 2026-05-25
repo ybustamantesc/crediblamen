@@ -110,52 +110,94 @@
                             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                         }
                         #perfil-table th:last-child, #perfil-table td:last-child{
-                            width: 90px; min-width:70px; white-space: nowrap;
+                            width: 110px; min-width:90px; white-space: nowrap;
                             vertical-align: middle; text-align:center;
                         }
-                        /* Aggressively compact table tweaks for perfil_integral */
-                        .table-compact td, .table-compact th{
+                        /* Match compact table styles used by solicitudes/uso_credito */
+                        #perfil-table.table-compact td, #perfil-table.table-compact th{
+                            padding: .12rem .28rem;
+                            vertical-align: middle;
+                            font-size: .72rem;
+                            line-height: 1.02;
+                            white-space: normal;
+                            overflow-wrap: break-word;
+                            word-break: normal;
+                        }
+                        #perfil-table.table-compact thead th{ font-size: .7rem; padding: .18rem .28rem; }
+                        #perfil-table.table-compact .btn{ padding: .12rem .28rem; font-size: .72rem; min-width: auto; }
+                        /* Keep columns readable while allowing wrapping */
+                        #perfil-table th:nth-child(2), #perfil-table td:nth-child(2){
+                            max-width: 80px;
+                            overflow-wrap: break-word;
+                        }
+                        #perfil-table th:nth-child(3), #perfil-table td:nth-child(3){
+                            max-width: 90px;
+                            overflow-wrap: break-word;
+                        }
+                        #perfil-table th:nth-child(4), #perfil-table td:nth-child(4){
+                            max-width: 200px;
+                            overflow-wrap: break-word;
+                            word-break: normal;
+                        }
+                        #perfil-table th:nth-child(5), #perfil-table td:nth-child(5){
+                            max-width: 150px;
+                            overflow-wrap: break-word;
+                        }
+                        #perfil-table th:nth-child(6), #perfil-table td:nth-child(6){
+                            max-width: 120px;
+                            overflow-wrap: break-word;
+                        }
+                        #perfil-table th:nth-child(7), #perfil-table td:nth-child(7){
+                            max-width: 130px;
+                            overflow-wrap: break-word;
+                        }
+                        #perfil-table th:nth-child(8), #perfil-table td:nth-child(8){
+                            max-width: 120px;
+                            overflow-wrap: break-word;
+                        }
+                        /* Action buttons group */
+                        .perfil-actions{
+                            display: flex;
+                            flex-wrap: nowrap;
+                            justify-content: center;
+                            gap: .08rem;
+                            align-items: center;
+                        }
+                        .perfil-actions .btn{
                             padding: .12rem .28rem !important;
                             font-size: .72rem !important;
                             line-height: 1.02 !important;
-                            vertical-align: middle !important;
-                            white-space: normal !important;
-                            overflow-wrap: break-word !important;
-                            word-break: normal !important;
-                        }
-                        .table-compact thead th{
-                            font-size: .68rem !important;
-                            padding: .14rem .28rem !important;
-                        }
-                        .table-compact .btn{
-                            padding: .10rem .24rem !important;
-                            font-size: .68rem !important;
-                            line-height: 1 !important;
                             min-width: auto !important;
+                            white-space: nowrap !important;
+                            flex: 1;
                         }
-                        .table-compact td img{ max-height:22px; max-width:36px; }
-                        /* Keep Nombre and Tel/Cel columns readable without forcing overflow */
-                        #perfil-table td:nth-child(4), #perfil-table th:nth-child(4),
-                        #perfil-table td:nth-child(5), #perfil-table th:nth-child(5){
-                            max-width: 160px;
-                            overflow-wrap: anywhere;
-                            word-break: break-word;
-                        }
-                        /* Narrow actions column */
-                        #perfil-table td:last-child, #perfil-table th:last-child{
-                            width: 110px;
-                        }
+                        .perfil-actions .btn:last-child{ margin-right:0 !important; }
+                        .table-responsive { overflow-x: auto; }
                     </style>
                     <style>
                         /* Ensure only one of table or cards is visible (avoid conflicts from other CSS) */
                         #perfil-table-wrap { display: block; }
                         #perfil-cards-wrap { display: none; }
                         @media (max-width: 767.98px) {
-                            #perfil-table-wrap { display: none !important; }
-                            #perfil-cards-wrap { display: block !important; }
+                            /* Keep table visible in mobile and hide cards so DataTables pagination works consistently */
+                            #perfil-table-wrap { display: block !important; }
+                            #perfil-cards-wrap { display: none !important; }
+                            /* Hide # column to save space for action buttons */
+                            #perfil-table th:first-child, #perfil-table td:first-child { display: none; }
+                            #perfil-table td:last-child {
+                                padding: .08rem .15rem !important;
+                            }
+                            #perfil-table td:last-child .btn {
+                                padding: .08rem .18rem !important;
+                                font-size: .65rem !important;
+                                min-width: auto !important;
+                                line-height: 1 !important;
+                            }
+                            .perfil-actions {
+                                gap: .04rem !important;
+                            }
                         }
                         @media (min-width: 768px) {
-                            #perfil-table-wrap { display: block !important; }
                             #perfil-cards-wrap { display: none !important; }
                         }
                         .perfil-card .btn {
@@ -169,7 +211,7 @@
                             margin-left: 0;
                         }
                     </style>
-                    <div id="perfil-table-wrap" class="table-responsive d-none d-md-block">
+                    <div id="perfil-table-wrap" class="table-responsive d-block">
                         <table id="perfil-table" class="table table-sm table-striped table-bordered table-compact">
                             <thead>
                                 <tr>
@@ -214,13 +256,10 @@
                                         <td><?php echo html_escape(pref($p,$sol,['rubro_credito'])); ?></td>
                                         <td><?php echo html_escape(pref($p,$sol,['nombre_asesor','nombre_promotor'])); ?></td>
                                         <td>
-                                            <div class="btn-group" role="group">
-                                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">Acciones</button>
-                                                <div class="dropdown-menu dropdown-menu-right">
-                                                    <a class="dropdown-item" href="<?php echo base_url('perfil_integral/create/'.$p->solicitud_id); ?>">Editar</a>
-                                                    <a class="dropdown-item" href="<?php echo base_url('perfil_integral/download/'.$p->id); ?>" target="_blank">Descargar</a>
-                                                    <a class="dropdown-item" href="<?php echo base_url('perfil_integral/download_matriz/'.$p->id); ?>" target="_blank">Matriz PDF</a>
-                                                </div>
+                                            <div class="perfil-actions">
+                                                <a class="btn btn-sm btn-info" href="<?php echo base_url('perfil_integral/create/'.$p->solicitud_id); ?>">Editar</a>
+                                                <a class="btn btn-sm btn-secondary" href="<?php echo base_url('perfil_integral/download/'.$p->id); ?>" target="_blank">Descargar</a>
+                                                <a class="btn btn-sm btn-primary" href="<?php echo base_url('perfil_integral/download_matriz/'.$p->id); ?>" target="_blank">Matriz</a>
                                             </div>
                                         </td>
                                     </tr>
@@ -266,23 +305,7 @@
                     </div>
                     </div>
 
-                    <?php if (!empty($pagination) && $pagination['pages'] > 1): ?>
-                        <nav aria-label="Page navigation">
-                            <ul class="pagination">
-                                <?php $prev = $pagination['page'] - 1; ?>
-                                <li class="page-item <?php echo ($pagination['page']<=1)?'disabled':''; ?>">
-                                    <a class="page-link" href="<?php echo base_url('perfil_integral?page='.max(1,$prev)); ?>">Anterior</a>
-                                </li>
-                                <?php for($i=1;$i<=$pagination['pages'];$i++): ?>
-                                    <li class="page-item <?php echo ($i==$pagination['page'])?'active':''; ?>"><a class="page-link" href="<?php echo base_url('perfil_integral?page='.$i); ?>"><?php echo $i; ?></a></li>
-                                <?php endfor; ?>
-                                <?php $next = $pagination['page'] + 1; ?>
-                                <li class="page-item <?php echo ($pagination['page']>=$pagination['pages'])?'disabled':''; ?>">
-                                    <a class="page-link" href="<?php echo base_url('perfil_integral?page='.min($pagination['pages'],$next)); ?>">Siguiente</a>
-                                </li>
-                            </ul>
-                        </nav>
-                    <?php endif; ?>
+                    <!-- Pagination handled client-side by DataTables (same logic as Solicitudes) -->
                 </div>
             </div>
 

@@ -47,14 +47,9 @@ class Perfil_integral extends CI_Controller {
 
     public function index()
     {
-        $per_page = 20;
-        $page = intval($this->input->get('page')) ?: 1;
-        $offset = ($page - 1) * $per_page;
-
-        $total = $this->db->count_all('tb_perfil_integral_cliente');
-        // Default newest-first by record id
+        // Load all perfiles and let DataTables handle pagination on the client (like Solicitudes)
         $this->db->order_by('id', 'DESC');
-        $perfiles = $this->db->limit($per_page, $offset)->get('tb_perfil_integral_cliente')->result();
+        $perfiles = $this->db->get('tb_perfil_integral_cliente')->result();
 
         $data = [
             'titulo' => 'Perfil Integral del Cliente',
@@ -68,13 +63,7 @@ class Perfil_integral extends CI_Controller {
                 'plugins/datatables.net-bs4/js/dataTables.bootstrap4.min.js',
                 'plugins/datatables.net/js/activaDatatable.js'
             ),
-            'perfiles' => $perfiles,
-            'pagination' => [
-                'total' => intval($total),
-                'per_page' => $per_page,
-                'page' => $page,
-                'pages' => ceil($total / $per_page)
-            ]
+            'perfiles' => $perfiles
         ];
         // Build map of solicitudes referenced by perfiles to allow fallback values in the view
         $solicitud_ids = array_filter(array_map(function($r){ return isset($r->solicitud_id)?intval($r->solicitud_id):null; }, $data['perfiles']));

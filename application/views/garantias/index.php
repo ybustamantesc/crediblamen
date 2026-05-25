@@ -28,7 +28,7 @@
                 <div class="card-body">
                     <div class="row mb-2">
                         <div class="col-md-4">
-                            <input id="garantias_search" class="form-control" placeholder="Buscar por código o garantía..." />
+                            <input id="garantias_search" class="form-control" placeholder="Buscar por código o cliente..." />
                         </div>
                         <div class="col-md-3">
                             <select id="garantias_filter_status" class="form-control">
@@ -40,7 +40,7 @@
                             </select>
                         </div>
                         <div class="col-md-5 text-right">
-                            <small class="text-muted">Filtrar por estado o buscar por código/garantía.</small>
+                            <small class="text-muted">Filtrar por estado o buscar por cliente/código.</small>
                         </div>
                     </div>
                     <style>
@@ -52,49 +52,48 @@
                             white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
                         }
                         #garantias-table th:last-child, #garantias-table td:last-child{
-                            width: 120px; min-width:90px; white-space: nowrap;
+                            width: 90px; min-width:70px; white-space: nowrap;
                             vertical-align: middle; text-align:center;
                         }
                         /* Match compact table styles used by solicitudes list so dimensions align */
                         #garantias-table.table-compact td, #garantias-table.table-compact th{
-                            padding: .18rem .4rem !important;
-                            vertical-align: middle !important;
-                            font-size: .82rem !important;
-                            line-height: 1.1 !important;
-                            white-space: normal !important;
-                            overflow-wrap: break-word !important;
-                            word-break: normal !important;
+                            padding: .12rem .28rem;
+                            vertical-align: middle;
+                            font-size: .72rem;
+                            line-height: 1.02;
+                            white-space: normal;
+                            overflow-wrap: break-word;
+                            word-break: normal;
                         }
-                        #garantias-table.table-compact thead th{ font-size: .82rem !important; padding: .22rem .38rem !important; }
-                        #garantias-table.table-compact .btn{ padding: .16rem .38rem !important; font-size: .82rem !important; min-width: auto !important; }
-                        #garantias-table th:nth-child(4), #garantias-table td:nth-child(4){
+                        #garantias-table.table-compact thead th{ font-size: .7rem; padding: .18rem .28rem; }
+                        #garantias-table.table-compact .btn{ padding: .12rem .28rem; font-size: .72rem; min-width: auto; }
+                        /* Keep Cliente column from stretching too far while allowing wrapping */
+                        #garantias-table th:nth-child(2), #garantias-table td:nth-child(2){
                             max-width: 180px;
                             overflow-wrap: break-word;
                             word-break: normal;
                         }
-                        #garantias-table td:last-child .btn-group{
-                            display: inline-flex;
-                            justify-content: center;
-                            width: 100%;
+                        /* Narrow action column */
+                        #garantias-table th:last-child, #garantias-table td:last-child{
+                            width: 85px;
+                            white-space: nowrap;
                         }
-                        #garantias-table td:last-child .btn{
-                            min-width: 110px;
-                        }
-                    </style>
-                    <style>
+                        #garantias-table td:last-child .btn-group { white-space: nowrap; }
+                        #garantias-table td:last-child .btn { padding: .16rem .28rem; font-size: .75rem; min-width: auto; }
                         /* Ensure only one of table or cards is visible (avoid conflicts from other CSS) */
                         #garantias-table-wrap { display: block; }
                         #garantias-cards-wrap { display: none; }
                         @media (max-width: 767.98px) {
-                            #garantias-table-wrap { display: none !important; }
-                            #garantias-cards-wrap { display: block !important; }
+                            /* Keep table visible on small screens so DataTables pagination works and hide cards */
+                            #garantias-table-wrap { display: block !important; }
+                            #garantias-cards-wrap { display: none !important; }
+                            #garantias-table td:last-child .btn { padding: .16rem .28rem; font-size: .72rem; }
                         }
                         @media (min-width: 768px) {
-                            #garantias-table-wrap { display: block !important; }
                             #garantias-cards-wrap { display: none !important; }
                         }
                     </style>
-                    <div id="garantias-table-wrap" class="table-responsive d-none d-md-block">
+                    <div id="garantias-table-wrap" class="table-responsive d-block">
                         <table id="garantias-table" class="table table-sm table-striped table-bordered table-compact">
                             <thead>
                                 <tr>
@@ -399,39 +398,6 @@
                         }
                     })();
 
-                    // Filters for garantias table (search + status)
-                    (function(){
-                        function applyGarantiasFilters(){
-                            var qEl = document.getElementById('garantias_search');
-                            var fEl = document.getElementById('garantias_filter_status');
-                            if (!qEl || !fEl) return;
-                            var q = qEl.value.toLowerCase().trim();
-                            var status = fEl.value;
-                            var rows = document.querySelectorAll('#garantias-table tbody tr');
-                            rows.forEach(function(r){
-                                var code = (r.querySelector('td:nth-child(2)') || {textContent:''}).textContent.toLowerCase();
-                                var name = (r.querySelector('td:nth-child(3)') || {textContent:''}).textContent.toLowerCase();
-                                var rowStatus = r.getAttribute('data-status') || 'pending';
-                                var matchQ = q === '' || code.indexOf(q) !== -1 || name.indexOf(q) !== -1;
-                                var matchStatus = status === 'all' || status === rowStatus;
-                                if (matchQ && matchStatus) r.style.display = ''; else r.style.display = 'none';
-                            });
-                            // apply to mobile cards
-                            var cards = document.querySelectorAll('.garantia-card');
-                            cards.forEach(function(c){
-                                var code = (c.querySelector('.text-muted small') || {textContent:''}).textContent.toLowerCase();
-                                var name = (c.querySelector('.font-weight-bold') || {textContent:''}).textContent.toLowerCase();
-                                var cardStatus = c.getAttribute('data-status') || 'pending';
-                                var matchQ = q === '' || code.indexOf(q) !== -1 || name.indexOf(q) !== -1;
-                                var matchStatus = status === 'all' || status === cardStatus;
-                                if (matchQ && matchStatus) c.style.display = ''; else c.style.display = 'none';
-                            });
-                        }
-                        var sq = document.getElementById('garantias_search');
-                        var sf = document.getElementById('garantias_filter_status');
-                        if (sq) sq.addEventListener('input', applyGarantiasFilters);
-                        if (sf) sf.addEventListener('change', applyGarantiasFilters);
-                    })();
                     </script>
 
             <footer class="footer">

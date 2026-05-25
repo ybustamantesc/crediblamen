@@ -36,7 +36,7 @@
                             <small class="text-muted">Filtrar por estado o buscar por cliente/código.</small>
                         </div>
                     </div>
-                    <div id="referencias-table-wrap" class="table-responsive d-none d-md-block">
+                    <div id="referencias-table-wrap" class="table-responsive d-block">
                         <table id="referencias-table" class="table table-sm table-striped table-bordered table-compact">
                             <thead>
                                 <tr>
@@ -68,8 +68,14 @@
                                         <td class="d-none"><?php echo isset($s->fecha_solicitud) ? $s->fecha_solicitud : ''; ?></td>
                                         <td>
                                             <div class="btn-group" role="group">
-                                                <button class="btn btn-sm btn-primary btn-referencias" data-id="<?php echo $s->idsolicitud; ?>">Completar Referencias</button>
-                                                <a class="btn btn-sm btn-secondary" href="<?php echo base_url('solicitudes/download_referencias/' . $s->idsolicitud); ?>" target="_blank">Descargar PDF</a>
+                                                <button class="btn btn-sm btn-primary btn-referencias" data-id="<?php echo $s->idsolicitud; ?>">
+                                                    <span class="d-none d-md-inline">Completar Referencias</span>
+                                                    <span class="d-inline d-md-none">Referencias</span>
+                                                </button>
+                                                <a class="btn btn-sm btn-secondary" href="<?php echo base_url('solicitudes/download_referencias/' . $s->idsolicitud); ?>" target="_blank">
+                                                    <span class="d-none d-md-inline">Descargar PDF</span>
+                                                    <span class="d-inline d-md-none">PDF</span>
+                                                </a>
                                             </div>
                                         </td>
                                     </tr>
@@ -300,15 +306,18 @@
                     width: 120px;
                     white-space: nowrap;
                 }
+                #referencias-table td:last-child .btn-group { white-space: nowrap; }
+                #referencias-table td:last-child .btn { padding: .22rem .35rem; font-size: .78rem; min-width: auto; }
                 /* Ensure only one of table or cards is visible (avoid conflicts from other CSS) */
                 #referencias-table-wrap { display: block; }
                 #referencias-cards-wrap { display: none; }
                 @media (max-width: 767.98px) {
-                    #referencias-table-wrap { display: none !important; }
-                    #referencias-cards-wrap { display: block !important; }
+                    /* Keep table visible on small screens so DataTables pagination works and hide cards */
+                    #referencias-table-wrap { display: block !important; }
+                    #referencias-cards-wrap { display: none !important; }
+                    #referencias-table td:last-child .btn { padding: .18rem .28rem; font-size: .72rem; }
                 }
                 @media (min-width: 768px) {
-                    #referencias-table-wrap { display: block !important; }
                     #referencias-cards-wrap { display: none !important; }
                 }
             </style>
