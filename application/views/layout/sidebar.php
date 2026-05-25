@@ -33,7 +33,7 @@
 		}
 		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item {
 			display: flex;
-			align-items: center;
+			align-items: flex-start;
 			justify-content: flex-start;
 			gap: 12px;
 			background: #ffffff;
@@ -57,11 +57,14 @@
 			font-size: 13px;
 		}
 		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item span {
-			display: inline-block;
+			display: block;
 			flex: 1 1 auto;
 			color: inherit !important;
 			font-size: 13px !important;
-			line-height: 1.25;
+			line-height: 1.35;
+			white-space: normal;
+			overflow-wrap: anywhere;
+			word-break: break-word;
 		}
 		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item.active {
 			background: linear-gradient(120deg, #2f5d87 0%, #3a6e97 100%);
@@ -111,7 +114,7 @@ try {
 <?php /* When inside the Administración module we render only the shortcuts (Atajos)
    server-side to avoid flicker and to keep the sidebar focused. */ ?>
 
-
+<div class="sidebar-content">
 	<div class="sidebar-profile px-3 py-2 d-flex align-items-center">
 		<div class="profile-img mr-2">
 			<img src="<?php echo base_url('public/img/logo.jpg'); ?>" alt="avatar" class="rounded-circle" width="44" height="44">
@@ -135,7 +138,6 @@ try {
 	</div>
 
 <?php if (isset($is_admin) && $is_admin): ?>
-	<div class="sidebar-content">
 		<div class="nav-container">
 			<nav id="main-menu-navigation" class="navigation-main">
 				<div class="nav-lavel">Atajos</div>
@@ -169,10 +171,8 @@ try {
 					<a href="<?php echo base_url('tasacambio'); ?>"><i class="fas fa-dollar-sign"></i><span>Tasa de Cambio</span></a>
 				</div>			</nav>
 		</div>
-	</div>
 <?php endif; ?>
 
-	<div class="sidebar-content">
 		<div class="nav-container">
 			<nav id="main-menu-navigation" class="navigation-main">
 				<div class="nav-lavel">MENÚ PRINCIPAL</div>
@@ -283,11 +283,11 @@ try {
 					</div>
 					<?php else: ?>
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'solicitudes' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('solicitudes'); ?>"><i class="fas fa-file-signature"></i><span>1.Solicitud Inicial</span></a>
+						<a href="<?php echo base_url('solicitudes'); ?>"><i class="fas fa-file-signature"></i><span>1. Solicitud Inicial</span></a>
 					</div>
 
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'solicitudes' && $this->router->fetch_method() == 'uso_credito' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('solicitudes/uso_credito'); ?>"><i class="fas fa-file-alt"></i><span>2.Uso Credito</span></a>
+						<a href="<?php echo base_url('solicitudes/uso_credito'); ?>"><i class="fas fa-file-alt"></i><span>2. Uso Crédito</span></a>
 					</div>
 
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'solicitudes' && $this->router->fetch_method() == 'referencias' ? 'active' : ''); ?>">
@@ -299,7 +299,7 @@ try {
 					</div>
 
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'garantias' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('garantias'); ?>"><i class="fas fa-shield-alt"></i><span>5. Garantias</span></a>
+						<a href="<?php echo base_url('garantias'); ?>"><i class="fas fa-shield-alt"></i><span>5. Garantías</span></a>
 					</div>
 
 					<!-- Acceso rápido: 6. Análisis Financiero -->

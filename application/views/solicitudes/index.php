@@ -112,7 +112,7 @@
                                         <td><?php echo (!empty($s->fecha_recepcion) ? $s->fecha_recepcion : (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : '')); ?></td>
                                         <td>
                                             <div class="btn-group">
-                                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" data-boundary="viewport" aria-haspopup="true" aria-expanded="false">Acciones</button>
+                                                <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" data-boundary="scrollParent" data-display="static" aria-haspopup="true" aria-expanded="false">Acciones</button>
                                                 <div class="dropdown-menu dropdown-menu-right">
                                                     <?php if ($status === 'annulled'): ?>
                                                         <span class="dropdown-item text-muted disabled" data-action="editar" style="pointer-events:none;">Editar (bloqueado por anulación)</span>
