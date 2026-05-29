@@ -57,6 +57,8 @@ if (!isset($er_lines) || !is_array($er_lines) || !isset($bs_lines) || !is_array(
                             <option value="patrimonio" <?php echo (isset($account) && $account->type=='patrimonio') ? 'selected' : ''; ?>>Patrimonio</option>
                             <option value="ingreso" <?php echo (isset($account) && $account->type=='ingreso') ? 'selected' : ''; ?>>Ingreso</option>
                             <option value="gasto" <?php echo (isset($account) && $account->type=='gasto') ? 'selected' : ''; ?>>Gasto</option>
+                            <option value="contingente" <?php echo (isset($account) && $account->type=='contingente') ? 'selected' : ''; ?>>Contingente</option>
+                            <option value="orden" <?php echo (isset($account) && $account->type=='orden') ? 'selected' : ''; ?>>Orden</option>
                         </select>
                     </div>
                     <div>
@@ -112,8 +114,8 @@ if (!isset($er_lines) || !is_array($er_lines) || !isset($bs_lines) || !is_array(
                 </div>
 
                 <div style="display:flex;justify-content:flex-end;gap:12px;">
-                    <button type="button" id="btnCancelAccountFooter" class="btn" style="background:#fff;border:1px solid rgba(2,6,23,0.06);color:#0b1220;padding:10px 18px;border-radius:8px;">Cancelar</button>
-                    <button type="submit" class="btn" style="background:linear-gradient(90deg,#06b6d4,#7c3aed);color:#fff;padding:10px 20px;border-radius:10px;border:none;font-weight:700;">Guardar</button>
+                    <button type="button" id="btnCancelAccountFooter" class="btn" style="background:#fff;border:1px solid rgba(2,6,23,0.06);color:#0b1220;padding:10px 18px;border-radius:8px;display:inline-flex;align-items:center;justify-content:center;line-height:1.2;">Cancelar</button>
+                    <button type="submit" class="btn" style="background:#1e40af;color:#fff;padding:10px 20px;border-radius:10px;border:none;font-weight:700;display:inline-flex;align-items:center;justify-content:center;line-height:1.2;">Guardar</button>
                 </div>
             </form>
         </div>
@@ -122,6 +124,6 @@ if (!isset($er_lines) || !is_array($er_lines) || !isset($bs_lines) || !is_array(
 
 <style>
     #modalAccount input:focus, #modalAccount select:focus { outline: none; box-shadow: 0 6px 20px rgba(99,102,241,0.08); border-color: #667eea; }
-    #modalAccount .btn { cursor: pointer; }
+    #modalAccount .btn { cursor: pointer; display:inline-flex; align-items:center; justify-content:center; line-height:1.2; }
     #modalAccount .btn:hover { transform: translateY(-2px); }
 </style>

@@ -2,7 +2,7 @@
 <div id="modalViewEntry" class="modal-view-overlay" onclick="if(event.target===this) document.getElementById('modalContainer').innerHTML=''" style="position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:10000;overflow-y:auto;padding:20px;">
     <div class="modal-view-content" style="width:95%;max-width:1000px;background:#fff;padding:0;border-radius:8px;box-shadow:0 4px 16px rgba(0,0,0,.2);max-height:90vh;display:flex;flex-direction:column;">
         <!-- Header -->
-        <div style="background:<?php echo (isset($header->voided) && $header->voided == 1) ? '#dc3545' : '#007bff'; ?>;padding:20px 24px;border-radius:8px 8px 0 0;color:#fff;">
+        <div style="background:<?php echo (isset($header->voided) && $header->voided == 1) ? '#dc3545' : '#0f3d91'; ?>;padding:20px 24px;border-radius:8px 8px 0 0;color:#fff;">
             <div style="display:flex;justify-content:space-between;align-items:center;">
                 <div>
                     <h3 style="margin:0;font-size:22px;font-weight:600;">Asiento N° <?php echo $header->id; ?></h3>
@@ -33,11 +33,11 @@
         <?php endif; ?>
         
         <!-- Body -->
-        <div style="padding:24px;overflow-y:auto;flex:1;">
+        <div style="padding:24px;overflow-x:auto;overflow-y:auto;flex:1;">
             <!-- Movimientos -->
-            <div style="background:#fff;border:1px solid #dee2e6;border-radius:4px;padding:0;margin-bottom:20px;">
+            <div style="background:#fff;border:1px solid #dee2e6;border-radius:4px;padding:0;margin-bottom:20px;overflow-x:auto;">
                 <!-- Headers -->
-                <div style="display:grid;grid-template-columns:2fr 0.8fr 0.8fr 0.8fr 0.8fr 1.2fr 2fr;gap:10px;padding:12px 16px;background:#f8f9fa;border-bottom:2px solid #dee2e6;font-weight:600;color:#495057;font-size:12px;">
+                <div class="modal-view-grid" style="display:grid;grid-template-columns:2fr 0.8fr 0.8fr 0.8fr 0.8fr 1.2fr 2fr;gap:10px;padding:12px 16px;background:#f8f9fa;border-bottom:2px solid #dee2e6;font-weight:600;color:#495057;font-size:12px;min-width:900px;">
                     <div>CUENTA</div>
                     <div style="text-align:right;">DEBE (NIO)</div>
                     <div style="text-align:right;">DEBE (USD)</div>
@@ -63,9 +63,9 @@
                     $debit_usd = $ln->debit > 0 ? $ln->debit / $exchange_rate : 0;
                     $credit_usd = $ln->credit > 0 ? $ln->credit / $exchange_rate : 0;
                 ?>
-                <div style="display:grid;grid-template-columns:2fr 0.8fr 0.8fr 0.8fr 0.8fr 1.2fr 2fr;gap:10px;padding:12px 16px;border-bottom:1px solid #e9ecef;align-items:center;">
+                <div class="modal-view-grid" style="display:grid;grid-template-columns:2fr 0.8fr 0.8fr 0.8fr 0.8fr 1.2fr 2fr;gap:10px;padding:12px 16px;border-bottom:1px solid #e9ecef;align-items:center;min-width:900px;">
                     <div style="font-size:13px;color:#212529;">
-                        <strong style="color:#007bff;"><?php echo $ln->code; ?></strong>
+                        <strong style="color:#0f3d91;"><?php echo $ln->code; ?></strong>
                         <span style="color:#6c757d;margin-left:6px;"><?php echo $ln->name; ?></span>
                     </div>
                     <div style="text-align:right;font-weight:600;color:<?php echo $ln->debit > 0 ? '#dc3545' : '#adb5bd'; ?>;font-size:13px;">
@@ -90,7 +90,7 @@
                         <?php endif; ?>
                     </div>
                     <div style="font-size:13px;color:#6c757d;">
-                        <?php echo htmlspecialchars($ln->line_description); ?>
+                        <?php echo htmlspecialchars($ln->line_description ?? $ln->description ?? ''); ?>
                     </div>
                 </div>
                 <?php endforeach; ?>
@@ -151,5 +151,18 @@
 <style>
 #modalViewEntry button:hover {
     transform: translateY(-2px);
+}
+#modalViewEntry .modal-view-grid {
+    min-width: 900px;
+}
+@media (max-width: 860px) {
+    #modalViewEntry .modal-view-content {
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+    }
+    #modalViewEntry .modal-view-grid {
+        min-width: 760px;
+    }
 }
 </style>

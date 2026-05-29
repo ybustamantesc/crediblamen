@@ -1,7 +1,7 @@
 <style>
     .servicont-mayor-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 30px 0;
+        padding: 30px 30px;
         margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -27,11 +27,11 @@
             <div class="servicont-mayor-header">
                 <div class="d-flex align-items-center">
                     <div class="servicont-header-icon" style="width: 50px; height: 50px; background: rgba(255, 255, 255, 0.2); border-radius: 10px; display: flex; align-items: center; justify-content: center; margin-right: 15px;">
-                        <i class="fas fa-file-text" style="font-size: 24px; color: #ffffff;"></i>
+                        <i class="ik ik-layers" style="font-size: 24px; color: #ffffff;"></i>
                     </div>
                     <div>
-                        <h1 class="servicont-catalogo-title">Libro Mayor</h1>
-                        <p class="servicont-catalogo-subtitle" style="color: #ffffff !important;">Reporte de saldos y movimientos por cuenta</p>
+                        <h1 class="servicont-header-title">Libro Mayor</h1>
+                        <p class="servicont-header-subtitle">Reporte de saldos y movimientos por cuenta</p>
                     </div>
                 </div>
             </div>
@@ -86,29 +86,14 @@
                                 </div>
                             </div>
 
-                            <div id="mayorContent">
-                                <div class="table-responsive">
-                                    <table id="mayorTable" class="table servicont-table">
-                                        <thead>
-                                            <tr>
-                                                <th>Fecha</th>
-                                                <th>Asiento</th>
-                                                <th>Descripción</th>
-                                                <th class="text-right">Debe</th>
-                                                <th class="text-right">Haber</th>
-                                                <th class="text-right">Saldo (Deudor)</th>
-                                                <th class="text-right">Saldo (Acreedor)</th>
-                                                <th>Acciones</th>
-                                            </div>
-                                        </thead>
-                                        <style>
-                                            /* If server provided entries (posted journals), hide the account-based controls and show a simple posted list */
-                                            <?php if (!empty($entries)): ?>
-                                                #mayorControls { display: none !important; }
-                                            <?php endif; ?>
-                                        </style>
+                            <style>
+                                /* If server provided entries (posted journals), hide the account-based controls and show a simple posted list */
+                                <?php if (!empty($entries)): ?>
+                                    #mayorControls { display: none !important; }
+                                <?php endif; ?>
+                            </style>
 
-                                        <div id="mayorContent">
+                            <div id="mayorContent">
                                             <?php if (!empty($entries)): ?>
                                                 <div class="row mb-3">
                                                     <div class="col-md-2">
@@ -130,10 +115,22 @@
                                                     <div class="col-md-3 d-flex align-items-end">
                                                         <button id="mayorFilterBtn" class="servicont-btn-primary" style="margin-right:10px;"><i class="fas fa-filter" style="margin-right:6px"></i>Filtrar</button>
                                                         <button id="mayorFilterReset" class="servicont-btn-secondary" style="margin-right:10px;"><i class="fas fa-eraser" style="margin-right:6px"></i>Reset</button>
-                                                        <button id="mayorExportPosted" class="servicont-btn-secondary"><i class="fas fa-file-excel" style="margin-right:6px"></i>Exportar a Excel</button>
+                                                        <button id="mayorExportPosted" class="servicont-btn-secondary" style="margin-right:10px;"><i class="fas fa-file-excel" style="margin-right:6px"></i>Exportar a Excel</button>
+                                                        <button id="mayorExportPostedPdf" class="servicont-btn-secondary"><i class="fas fa-file-pdf" style="margin-right:6px"></i>Exportar a PDF</button>
                                                     </div>
                                                 </div>
-                                                <div class="table-responsive">
+                                                <?php
+                                function format_amount_with_currency_block($amount, $currency_symbol = 'C$', $usd_amount = null, $usd_symbol = '$', $is_debit = true) {
+                                    $color = $is_debit ? '#ef4444' : '#10b981';
+                                    $local = $currency_symbol . number_format(floatval($amount), 2, '.', ',');
+                                    $usd_formatted = $usd_symbol . number_format(floatval($usd_amount), 2, '.', ',');
+                                    return '<div style="display:inline-block;text-align:right;min-width:120px;">'
+                                        . '<div style="color:' . $color . ';font-weight:700;">' . $local . '</div>'
+                                        . '<div style="color:#6b7280;font-size:0.85em;margin-top:2px;">' . $usd_formatted . '</div>'
+                                        . '</div>';
+                                }
+                            ?>
+                            <div class="table-responsive">
                                                     <table id="mayorTablePosted" class="table servicont-table">
                                                         <thead>
                                                             <tr>
@@ -152,12 +149,12 @@
                                                                     <td><?php echo htmlspecialchars(date('d/m/Y', strtotime($e->date))); ?></td>
                                                                     <td><?php echo intval($e->id); ?></td>
                                                                     <td><?php echo htmlspecialchars($e->description ?? ''); ?></td>
-                                                                    <td class="text-right"><?php echo number_format(floatval($e->total_debit ?? 0),2,',','.'); ?></td>
-                                                                    <td class="text-right"><?php echo number_format(floatval($e->total_credit ?? 0),2,',','.'); ?></td>
+                                                                    <td class="text-right"><?php echo format_amount_with_currency_block($e->total_debit ?? 0, isset($e->currency_symbol) ? $e->currency_symbol : 'C$', isset($e->debit_usd) ? $e->debit_usd : 0.0, isset($e->foreign_symbol) ? $e->foreign_symbol : '$', true); ?></td>
+                                                                    <td class="text-right"><?php echo format_amount_with_currency_block($e->total_credit ?? 0, isset($e->currency_symbol) ? $e->currency_symbol : 'C$', isset($e->credit_usd) ? $e->credit_usd : 0.0, isset($e->foreign_symbol) ? $e->foreign_symbol : '$', false); ?></td>
                                                                     <td class="text-center"><?php echo (isset($e->posted) && intval($e->posted) === 1) ? 'Mayorizado' : 'Pendiente'; ?></td>
                                                                     <td style="white-space:nowrap;">
-                                                                        <!-- 'Ver' ocultado por solicitud; sólo mostrar Imprimir -->
-                                                                        <button type="button" class="btn btn-sm btn-outline-secondary mayor-print-journal" data-id="<?php echo intval($e->id); ?>">Imprimir</button>
+                                                                        <button type="button" class="btn btn-sm btn-outline-danger mayor-download-pdf" data-id="<?php echo intval($e->id); ?>" title="Descargar como PDF"><i class="fas fa-file-pdf" style="margin-right:4px"></i>PDF</button>
+                                                                        <button type="button" class="btn btn-sm btn-outline-success mayor-download-xlsx" data-id="<?php echo intval($e->id); ?>" title="Descargar como Excel" style="margin-left:5px;"><i class="fas fa-file-excel" style="margin-right:4px"></i>XLSX</button>
                                                                     </td>
                                                                 </tr>
                                                             <?php endforeach; ?>
@@ -166,11 +163,26 @@
                                                 </div>
                                                 <script>
                                                     (function(){
-                                                        // Client-side filtering for posted table by date (dd/mm/YYYY in table)
+                                                        // Parse date strings in dd/mm/YYYY format
                                                         function parseDMY(dmy) {
                                                             if (!dmy) return null;
-                                                            var parts = dmy.split('/'); if (parts.length !== 3) return null;
-                                                            return new Date(parts[2], parseInt(parts[1],10)-1, parts[0]);
+                                                            var parts = dmy.split('/');
+                                                            if (parts.length !== 3) return null;
+                                                            var day = parseInt(parts[0], 10);
+                                                            var month = parseInt(parts[1], 10) - 1;
+                                                            var year = parseInt(parts[2], 10);
+                                                            return new Date(year, month, day);
+                                                        }
+                                                        
+                                                        // Parse ISO date format (YYYY-MM-DD) to local date at 00:00:00
+                                                        function parseISODate(isoString) {
+                                                            if (!isoString) return null;
+                                                            var parts = isoString.split('-');
+                                                            if (parts.length !== 3) return null;
+                                                            var year = parseInt(parts[0], 10);
+                                                            var month = parseInt(parts[1], 10) - 1;
+                                                            var day = parseInt(parts[2], 10);
+                                                            return new Date(year, month, day);
                                                         }
 
                                                         var filterBtn = document.getElementById('mayorFilterBtn');
@@ -182,8 +194,8 @@
                                                         var table = document.getElementById('mayorTablePosted');
                                                         if (filterBtn && table) {
                                                             filterBtn.addEventListener('click', function(){
-                                                                var s = startInput.value ? new Date(startInput.value) : null;
-                                                                var e = endInput.value ? new Date(endInput.value) : null;
+                                                                var s = parseISODate(startInput.value);
+                                                                var e = parseISODate(endInput.value);
                                                                 // normalize end to end of day
                                                                 if (e) e.setHours(23,59,59,999);
                                                                 var tbody = table.tBodies[0];
@@ -236,14 +248,38 @@
                                                             });
                                                         }
 
-                                                        // Ensure print buttons in server-rendered rows still work (delegated)
-                                                        document.addEventListener('click', function(ev){
-                                                            var printBtn = ev.target.closest && ev.target.closest('.mayor-print-journal');
-                                                            if (printBtn) {
+                                                        // Export the currently filtered posted rows to PDF
+                                                        var exportPostedPdfBtn = document.getElementById('mayorExportPostedPdf');
+                                                        if (exportPostedPdfBtn) {
+                                                            exportPostedPdfBtn.addEventListener('click', function(ev){
                                                                 ev.preventDefault();
-                                                                var pid = printBtn.getAttribute('data-id') || printBtn.dataset.id;
+                                                                var qs = '?';
+                                                                if (startInput.value) qs += 'start_date=' + encodeURIComponent(startInput.value) + '&';
+                                                                if (endInput.value) qs += 'end_date=' + encodeURIComponent(endInput.value) + '&';
+                                                                if (searchAsiento && searchAsiento.value.trim() !== '') qs += 'asiento=' + encodeURIComponent(searchAsiento.value.trim()) + '&';
+                                                                if (searchDesc && searchDesc.value.trim() !== '') qs += 'description=' + encodeURIComponent(searchDesc.value.trim()) + '&';
+                                                                qs = qs.replace(/[&?]+$/, '');
+                                                                window.location = base_url + 'contabilidad/mayor_export_posted_pdf' + qs;
+                                                            });
+                                                        }
+
+                                                        // Handle PDF and XLSX download buttons for each journal entry
+                                                        document.addEventListener('click', function(ev){
+                                                            var pdfBtn = ev.target.closest && ev.target.closest('.mayor-download-pdf');
+                                                            var xlsxBtn = ev.target.closest && ev.target.closest('.mayor-download-xlsx');
+                                                            
+                                                            if (pdfBtn) {
+                                                                ev.preventDefault();
+                                                                var pid = pdfBtn.getAttribute('data-id') || pdfBtn.dataset.id;
                                                                 if (!pid) return;
-                                                                window.open(base_url + 'contabilidad/diario_print?id=' + encodeURIComponent(pid), '_blank');
+                                                                window.location = base_url + 'contabilidad/diario_export_pdf?id=' + encodeURIComponent(pid);
+                                                            }
+                                                            
+                                                            if (xlsxBtn) {
+                                                                ev.preventDefault();
+                                                                var pid = xlsxBtn.getAttribute('data-id') || xlsxBtn.dataset.id;
+                                                                if (!pid) return;
+                                                                window.location = base_url + 'contabilidad/diario_export_xlsx?id=' + encodeURIComponent(pid);
                                                             }
                                                         });
                                                     })();
@@ -268,5 +304,11 @@
                                                 </div>
                                             <?php endif; ?>
                                             <div id="mayorFooter" class="mt-2 small text-muted"></div>
-    </footer>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 </div>

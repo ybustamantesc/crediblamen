@@ -168,6 +168,13 @@ class Garantias extends CI_Controller {
                 // verificado si existe alguna verificación para la solicitud
                 $verifs = $this->Garantia_verificacion_model->get_by_solicitud($g->solicitud_id);
                 $g->verified = !empty($verifs);
+                // If there is a verification record for this solicitud, record the garantia_id
+                if (!empty($verifs) && is_array($verifs)) {
+                    $first = $verifs[0];
+                    $g->ver_garantia_id = isset($first->garantia_id) ? intval($first->garantia_id) : null;
+                } else {
+                    $g->ver_garantia_id = null;
+                }
 
                 // approval status derived from committee approvals for the solicitud
                 $g->aprob_status = 'pending';
@@ -224,10 +231,27 @@ class Garantias extends CI_Controller {
 
         $garantias = $this->Garantia_model->get_all_by_solicitud($solicitud_id);
 
+        $photos_map = [];
+        if ($this->db->table_exists('tb_garantias_fotos')) {
+            $rows = $this->db->select('garantia_id, filename')
+                ->from('tb_garantias_fotos')
+                ->where('solicitud_id', $solicitud_id)
+                ->order_by('row_index, created_at')
+                ->get()
+                ->result();
+            if (! empty($rows)) {
+                foreach ($rows as $row) {
+                    if (empty($row->garantia_id)) continue;
+                    $photos_map[intval($row->garantia_id)][] = $row->filename;
+                }
+            }
+        }
+
         $data = [
             'titulo' => 'Formato de Garantía',
             'solicitud_id' => $solicitud_id,
-            'garantias' => $garantias
+            'garantias' => $garantias,
+            'photos_map' => $photos_map
         ];
 
         $this->load->view('layout/header', $data);
@@ -243,6 +267,42 @@ class Garantias extends CI_Controller {
             ini_set('display_errors', '1');
             
             $post = $this->input->post();
+            
+            // Handle photos marked for deletion
+            $fotos_eliminar = $this->input->post('fotos_eliminar');
+            if (!empty($fotos_eliminar)) {
+                if (!is_array($fotos_eliminar)) {
+                    $fotos_eliminar = [$fotos_eliminar];
+                }
+                foreach ($fotos_eliminar as $foto_path) {
+                    $foto_path = trim($foto_path);
+                    if (empty($foto_path)) continue;
+                    
+                    try {
+                        // Delete file from filesystem
+                        $file_path = FCPATH . $foto_path;
+                        if (file_exists($file_path)) {
+                            unlink($file_path);
+                            log_message('debug', '[GARANTIAS] Deleted photo file: ' . $foto_path);
+                        }
+                        
+                        // Delete from database - both table storage and column storage
+                        if ($this->db->table_exists('tb_garantias_fotos')) {
+                            $this->db->delete('tb_garantias_fotos', ['filename' => $foto_path]);
+                        }
+                        
+                        // Also check and clear from foto columns if needed
+                        $this->db->set('foto1', NULL)->where('foto1', $foto_path)->update('tb_garantias');
+                        $this->db->set('foto2', NULL)->where('foto2', $foto_path)->update('tb_garantias');
+                        $this->db->set('foto3', NULL)->where('foto3', $foto_path)->update('tb_garantias');
+                        $this->db->set('foto4', NULL)->where('foto4', $foto_path)->update('tb_garantias');
+                        $this->db->set('foto5', NULL)->where('foto5', $foto_path)->update('tb_garantias');
+                        
+                    } catch (Exception $e) {
+                        log_message('error', '[GARANTIAS] Error deleting photo ' . $foto_path . ': ' . $e->getMessage());
+                    }
+                }
+            }
             // Temporary debug: dump POST and FILES for AJAX requests to project logs
             if ($this->input->is_ajax_request()) {
                 try {
@@ -294,6 +354,9 @@ class Garantias extends CI_Controller {
             $n_series = $this->input->post('n_serie');
             $costos = $this->input->post('costo');
             $tiempos = $this->input->post('tiempo_vida');
+            // Posted garantia ids (one per row) - used to determine updates vs inserts
+            $post_garantia_ids = $this->input->post('garantia_id');
+            $post_garantia_ids = is_array($post_garantia_ids) ? $post_garantia_ids : array();
             
             @file_put_contents(APPPATH . 'logs/garantias_save_debug.log', "CHECKPOINT 2: Got POST data\n", FILE_APPEND);
 
@@ -316,20 +379,20 @@ class Garantias extends CI_Controller {
                 try {
                     $nombre = isset($nombres[$i]) ? trim($nombres[$i]) : '';
                     $cantidad = isset($cantidades[$i]) ? intval($cantidades[$i]) : 0;
-                    $marca = isset($marcas[$i]) ? trim($marcas[$i]) : null;
-                    $modelo = isset($modelos[$i]) ? trim($modelos[$i]) : null;
-                    $n_serie = isset($n_series[$i]) ? trim($n_series[$i]) : null;
+                    $marca = isset($marcas[$i]) ? trim($marcas[$i]) : '';
+                    $modelo = isset($modelos[$i]) ? trim($modelos[$i]) : '';
+                    $n_serie = isset($n_series[$i]) ? trim($n_series[$i]) : '';
                     $costo = isset($costos[$i]) && $costos[$i] !== '' ? $costos[$i] : null;
-                    $tiempo = isset($tiempos[$i]) ? trim($tiempos[$i]) : null;
+                    $tiempo = isset($tiempos[$i]) ? trim($tiempos[$i]) : '';
 
                     // Only process if there is at least one meaningful value
-                    if ($nombre === '' && $cantidad <= 0 && !$marca && !$modelo && !$n_serie && $costo === null && !$tiempo) {
+                    if ($nombre === '' && $cantidad <= 0 && $marca === '' && $modelo === '' && $n_serie === '' && $costo === null && $tiempo === '') {
                         continue;
                     }
 
                     $row = [
                         'solicitud_id' => $solicitud_id,
-                        'nombre' => $nombre !== '' ? $nombre : null,
+                        'nombre' => $nombre,
                         'cantidad' => $cantidad > 0 ? $cantidad : null,
                         'marca' => $marca,
                         'modelo' => $modelo,
@@ -339,14 +402,36 @@ class Garantias extends CI_Controller {
                     ];
                         // row data prepared
 
-                    // Update existing garantia if available at this index, otherwise insert new
-                    if (isset($existing_rows[$i]) && isset($existing_rows[$i]->id)) {
-                        $garantia_id = $existing_rows[$i]->id;
+                    // Decide update vs insert based on posted garantia_id for this row
+                    $posted_id = isset($post_garantia_ids[$i]) && $post_garantia_ids[$i] !== '' ? intval($post_garantia_ids[$i]) : null;
+                    if ($posted_id) {
+                        $garantia_id = $posted_id;
                         $this->Garantia_model->update($garantia_id, $row);
                         @file_put_contents(APPPATH . 'logs/garantias_save_debug.log', "CHECKPOINT 5: Updated garantia_id=$garantia_id\n", FILE_APPEND);
                     } else {
-                        $garantia_id = $this->Garantia_model->insert($row);
-                        @file_put_contents(APPPATH . 'logs/garantias_save_debug.log', "CHECKPOINT 6: Inserted garantia_id=$garantia_id\n", FILE_APPEND);
+                        // Prevent accidental duplicate inserts: try to find an existing similar row
+                        try {
+                            $possible = $this->db->from('tb_garantias')
+                                ->where('solicitud_id', $solicitud_id)
+                                ->where('nombre', $row['nombre'])
+                                ->where('n_serie', $row['n_serie'])
+                                ->where('marca', $row['marca'])
+                                ->where('modelo', $row['modelo'])
+                                ->where('tiempo_vida', $row['tiempo_vida'])
+                                ->limit(1)
+                                ->get()
+                                ->row();
+                        } catch (Exception $e) { $possible = null; }
+
+                        if ($possible && isset($possible->id)) {
+                            // Found similar existing record — update it instead of inserting to avoid duplicates
+                            $garantia_id = intval($possible->id);
+                            $this->Garantia_model->update($garantia_id, $row);
+                            @file_put_contents(APPPATH . 'logs/garantias_save_debug.log', "CHECKPOINT 6: Found similar garantia_id=$garantia_id, updated instead of insert\n", FILE_APPEND);
+                        } else {
+                            $garantia_id = $this->Garantia_model->insert($row);
+                            @file_put_contents(APPPATH . 'logs/garantias_save_debug.log', "CHECKPOINT 6: Inserted garantia_id=$garantia_id\n", FILE_APPEND);
+                        }
                     }
 
                     // process uploaded files for this row: structure from FormData is $_FILES['fotos'] with nested arrays
@@ -460,6 +545,43 @@ class Garantias extends CI_Controller {
                 header('Content-Type: application/json; charset=utf-8');
                 echo json_encode(array('success' => false, 'message' => 'Errores en subida de archivos', 'errors' => $upload_errors));
                 return;
+            }
+
+            // Delete any existing garantías that were not included in the posted garantia_id[] list
+            try {
+                $existing_ids_in_db = array();
+                foreach ($existing_rows as $er) {
+                    if (isset($er->id)) $existing_ids_in_db[] = intval($er->id);
+                }
+                $posted_nonempty = array();
+                foreach ($post_garantia_ids as $pid) {
+                    if ($pid !== '' && $pid !== null) $posted_nonempty[] = intval($pid);
+                }
+                $to_delete = array_diff($existing_ids_in_db, $posted_nonempty);
+                if (! empty($to_delete)) {
+                    foreach ($to_delete as $del_id) {
+                        // remove associated photos from disk and table
+                        if ($this->db->table_exists('tb_garantias_fotos')) {
+                            $rows = $this->db->select('filename')->from('tb_garantias_fotos')->where('garantia_id', $del_id)->get()->result();
+                            if (! empty($rows)) {
+                                foreach ($rows as $r) {
+                                    $fname = trim((string)$r->filename);
+                                    if ($fname !== '') {
+                                        $fpath = FCPATH . ltrim($fname, '/\\');
+                                        if (is_file($fpath)) @unlink($fpath);
+                                    }
+                                }
+                            }
+                            $this->db->delete('tb_garantias_fotos', array('garantia_id' => $del_id));
+                        }
+
+                        // finally delete garantia row
+                        $this->db->delete('tb_garantias', array('id' => $del_id));
+                        @file_put_contents(APPPATH . 'logs/garantias_save_debug.log', "DELETED garantia_id=$del_id because it was not present in posted data\n", FILE_APPEND);
+                    }
+                }
+            } catch (Exception $e) {
+                log_message('error', '[GARANTIAS] error deleting missing rows: ' . $e->getMessage());
             }
 
             $this->session->set_flashdata('message', 'Formato de garantía guardado.');
@@ -988,28 +1110,62 @@ class Garantias extends CI_Controller {
         if (isset($this->ion_auth) && $this->ion_auth->logged_in()) {
             try { $u = $this->ion_auth->user()->row(); $usuario = isset($u->username) ? $u->username : (isset($u->first_name) ? $u->first_name : null); } catch (Exception $e) { $usuario = null; }
         }
-        $comentario = isset($post['comentario']) ? trim($post['comentario']) : null;
 
-        // prevent multiple verifications for the same garantia
-        if (! $garantia_id) {
+        $comentario_input = isset($post['comentario']) ? $post['comentario'] : null;
+        $estado_input = isset($post['estado_aprobacion']) ? $post['estado_aprobacion'] : null;
+        $nombre_input = isset($post['nombre_garantia']) ? $post['nombre_garantia'] : null;
+        
+        $main_garantia_id = $garantia_id;
+        $comentarios = array();
+        $estados = array();
+        $nombres = array();
+        
+        if (is_array($comentario_input)) {
+            foreach ($comentario_input as $key => $value) {
+                $key = intval($key);
+                if ($key) {
+                    $comentarios[$key] = trim((string)$value);
+                }
+            }
+        } else {
+            if ($main_garantia_id) {
+                $comentarios[$main_garantia_id] = trim((string)$comentario_input);
+            }
+        }
+        
+        if (is_array($estado_input)) {
+            foreach ($estado_input as $key => $value) {
+                $key = intval($key);
+                if ($key) {
+                    $estados[$key] = trim((string)$value);
+                }
+            }
+        } else {
+            if ($main_garantia_id) {
+                $estados[$main_garantia_id] = trim((string)$estado_input);
+            }
+        }
+        
+        if (is_array($nombre_input)) {
+            foreach ($nombre_input as $key => $value) {
+                $key = intval($key);
+                if ($key) {
+                    $nombres[$key] = trim((string)$value);
+                }
+            }
+        } else {
+            if ($main_garantia_id) {
+                $nombres[$main_garantia_id] = trim((string)$nombre_input);
+            }
+        }
+
+        // prevent multiple verifications for the same garantia when no valid target is present
+        if (! $main_garantia_id && empty($comentarios)) {
             echo json_encode(['success' => false, 'message' => 'Falta el ID de la garantía.']);
             return;
         }
 
-        try {
-            $existing = $this->Garantia_verificacion_model->get_by_garantia($garantia_id);
-        } catch (Exception $e) {
-            http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error al comprobar verificación previa: ' . $e->getMessage()]);
-            return;
-        }
-
-        if (! empty($existing)) {
-            echo json_encode(['success' => false, 'message' => 'La garantía ya fue verificada. No se puede validar más de una vez.']);
-            return;
-        }
-
-        // upload directory
+        // prepare upload directory for possible photo uploads
         $base_dir = FCPATH . 'uploads/garantias/';
         if ($solicitud_id) {
             $base_dir .= 'solicitud_' . $solicitud_id . '/verificaciones/';
@@ -1020,19 +1176,12 @@ class Garantias extends CI_Controller {
             mkdir($base_dir, 0755, true);
         }
 
-        $record = [
-            'garantia_id' => $garantia_id,
-            'solicitud_id' => $solicitud_id,
-            'verificador_usuario' => $usuario,
-            'comentario' => $comentario,
-        ];
-
-        // handle up to 5 files ver_foto1..5
+        $uploadedPhotos = array();
         for ($i = 1; $i <= 5; $i++) {
             $field = 'ver_foto' . $i;
             if (! empty($_FILES[$field]) && $_FILES[$field]['error'] !== UPLOAD_ERR_NO_FILE) {
                 $_FILES['upload_file'] = $_FILES[$field];
-                $config = []; // fresh config
+                $config = [];
                 $config['upload_path'] = $base_dir;
                 $config['allowed_types'] = 'jpg|jpeg|png|gif';
                 $config['max_size'] = 4096;
@@ -1040,9 +1189,8 @@ class Garantias extends CI_Controller {
                 $this->upload->initialize($config);
                 if ($this->upload->do_upload('upload_file')) {
                     $info = $this->upload->data();
-                    $record['foto' . $i] = 'uploads/garantias/' . ($solicitud_id ? 'solicitud_' . $solicitud_id . '/verificaciones/' : 'verificaciones/') . $info['file_name'];
+                    $uploadedPhotos['foto' . $i] = 'uploads/garantias/' . ($solicitud_id ? 'solicitud_' . $solicitud_id . '/verificaciones/' : 'verificaciones/') . $info['file_name'];
                 } else {
-                    // ignore single file errors but capture
                     $error = $this->upload->display_errors('', '');
                     http_response_code(400);
                     echo json_encode(['success' => false, 'message' => 'Error al subir archivo: ' . strip_tags($error)]);
@@ -1051,17 +1199,359 @@ class Garantias extends CI_Controller {
             }
         }
 
-        try {
-            $insert_id = $this->Garantia_verificacion_model->insert($record);
-            if ($insert_id) {
-                echo json_encode(['success' => true, 'message' => 'Verificación guardada.','id'=>$insert_id]);
-            } else {
-                http_response_code(500);
-                echo json_encode(['success' => false, 'message' => 'No se pudo guardar la verificación.']);
+        $errors = array();
+        $lastId = null;
+        $baseVerificationId = null;
+
+        // PASO 1: Crear o actualizar registro base (sin garantia_id) para gestionar fotos
+        if (! empty($uploadedPhotos) || ! empty($comentarios)) {
+            try {
+                // Buscar registro base existente (garantia_id = NULL)
+                $baseRecords = $this->db->get_where('tb_garantias_verificaciones', [
+                    'garantia_id' => null,
+                    'solicitud_id' => $solicitud_id
+                ])->result();
+                $baseRecord = !empty($baseRecords) ? $baseRecords[0] : null;
+
+                $baseData = [
+                    'solicitud_id' => $solicitud_id,
+                    'verificador_usuario' => $usuario,
+                ];
+
+                // Agregar fotos al registro base
+                if (! empty($uploadedPhotos)) {
+                    $baseData = array_merge($baseData, $uploadedPhotos);
+                }
+
+                // Si existe registro base, actualizar; si no, crear
+                if ($baseRecord) {
+                    // Actualizar: mantener fotos antiguas si no se proporcionan nuevas
+                    for ($i = 1; $i <= 5; $i++) {
+                        $field = 'foto' . $i;
+                        if (empty($uploadedPhotos[$field]) && ! empty($baseRecord->$field)) {
+                            $baseData[$field] = $baseRecord->$field;
+                        }
+                    }
+                    $this->Garantia_verificacion_model->update($baseRecord->id, $baseData);
+                    $baseVerificationId = $baseRecord->id;
+                } else {
+                    // Crear nuevo registro base
+                    $baseVerificationId = $this->Garantia_verificacion_model->insert($baseData);
+                }
+
+                if (! $baseVerificationId) {
+                    $errors[] = 'No se pudo crear/actualizar el registro base de verificación.';
+                }
+            } catch (Exception $e) {
+                $errors[] = 'Error al crear registro base: ' . $e->getMessage();
             }
+        }
+
+        // PASO 2: Crear o actualizar registros por garantía (sin fotos)
+        foreach ($comentarios as $target_garantia_id => $comment) {
+            try {
+                $existing = $this->Garantia_verificacion_model->get_by_garantia($target_garantia_id);
+                $existing_record = !empty($existing) ? $existing[0] : null;
+            } catch (Exception $e) {
+                $errors[] = 'Error al comprobar verificación previa para la garantía ' . $target_garantia_id . '. ' . $e->getMessage();
+                continue;
+            }
+
+            $record = [
+                'garantia_id' => $target_garantia_id,
+                'solicitud_id' => $solicitud_id,
+                'verificador_usuario' => $usuario,
+                'comentario' => $comment,
+            ];
+            
+            // Agregar nombre de garantía (solo si la columna existe)
+            if (isset($nombres[$target_garantia_id]) && $this->db->field_exists('nombre_garantia', 'tb_garantias_verificaciones')) {
+                $record['nombre_garantia'] = $nombres[$target_garantia_id];
+            }
+
+            // Agregar estado de aprobación (solo si la columna existe)
+            if ($this->db->field_exists('estado_aprobacion', 'tb_garantias_verificaciones')) {
+                if (isset($estados[$target_garantia_id])) {
+                    $record['estado_aprobacion'] = $estados[$target_garantia_id];
+                } else {
+                    $record['estado_aprobacion'] = 'No aprobado';
+                }
+            }
+
+            try {
+                // Filtrar campos del record para evitar insertar columnas inexistentes en la tabla
+                $tableFields = array();
+                try {
+                    $tableFields = $this->db->list_fields('tb_garantias_verificaciones');
+                } catch (Exception $e) {
+                    $tableFields = array();
+                }
+                if (!empty($tableFields)) {
+                    $record = array_intersect_key($record, array_flip($tableFields));
+                }
+                
+                if ($existing_record) {
+                    // Actualizar: no incluir fotos en la actualización
+                    $success = $this->Garantia_verificacion_model->update($existing_record->id, $record);
+                    if ($success) {
+                        $lastId = $existing_record->id;
+                    } else {
+                        $errors[] = 'No se pudo actualizar la verificación de la garantía ' . $target_garantia_id . '.';
+                    }
+                } else {
+                    // Crear nuevo registro de garantía (sin fotos)
+                    $insert_id = $this->Garantia_verificacion_model->insert($record);
+                    if ($insert_id) {
+                        $lastId = $insert_id;
+                    } else {
+                        $errors[] = 'No se pudo guardar la verificación de la garantía ' . $target_garantia_id . '.';
+                    }
+                }
+            } catch (Exception $e) {
+                $errors[] = 'Error interno para la garantía ' . $target_garantia_id . ': ' . $e->getMessage();
+            }
+        }
+
+        if (! empty($errors)) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => implode(' ', $errors)]);
+            return;
+        }
+
+        echo json_encode(['success' => true, 'message' => 'Verificación guardada.', 'id' => $lastId ?: $baseVerificationId]);
+    }
+
+    /**
+     * Devuelve datos de verificación existentes para una garantía
+     * Retorna el registro de la garantía (comentario, estado, etc.) y las fotos desde el registro base
+     */
+    public function get_verificacion_ajax($garantia_id = null)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if (! $garantia_id) {
+            echo json_encode(['success' => false, 'message' => 'Falta el ID de la garantía.']);
+            return;
+        }
+        try {
+            // Obtener registro específico de la garantía (con comentario, estado, etc.)
+            $records = $this->Garantia_verificacion_model->get_by_garantia($garantia_id);
+            if (empty($records)) {
+                echo json_encode(['success' => false, 'message' => 'No existe verificación para esta garantía.']);
+                return;
+            }
+            $record = $records[0];
+
+            // Obtener fotos desde el registro base (garantia_id = NULL) de la misma solicitud
+            $photos = array();
+            if (isset($record->solicitud_id)) {
+                $baseRecords = $this->db->get_where('tb_garantias_verificaciones', [
+                    'garantia_id' => null,
+                    'solicitud_id' => $record->solicitud_id
+                ])->result();
+                
+                if (!empty($baseRecords)) {
+                    $baseRecord = $baseRecords[0];
+                    for ($i = 1; $i <= 5; $i++) {
+                        $field = 'foto' . $i;
+                        if (! empty($baseRecord->$field)) {
+                            $photos[] = array('field' => $field, 'url' => base_url($baseRecord->$field));
+                        }
+                    }
+                }
+            } else {
+                // Fallback: buscar fotos en el mismo registro (para compatibilidad retroactiva)
+                for ($i = 1; $i <= 5; $i++) {
+                    $field = 'foto' . $i;
+                    if (! empty($record->$field)) {
+                        $photos[] = array('field' => $field, 'url' => base_url($record->$field));
+                    }
+                }
+            }
+
+            echo json_encode(['success' => true, 'verification' => $record, 'photos' => $photos]);
         } catch (Exception $e) {
             http_response_code(500);
-            echo json_encode(['success' => false, 'message' => 'Error interno: ' . $e->getMessage()]);
+            echo json_encode(['success' => false, 'message' => 'Error al cargar verificación: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Devuelve las garantías completas asociadas a una solicitud
+     */
+    public function get_garantias_by_solicitud_ajax($solicitud_id = null)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if (! $solicitud_id) {
+            echo json_encode(['success' => false, 'message' => 'Falta el ID de la solicitud.']);
+            return;
+        }
+        try {
+            $records = $this->Garantia_model->get_all_by_solicitud($solicitud_id);
+            $garantias = array();
+            foreach ($records as $record) {
+                $garantias[] = array(
+                    'id' => isset($record->id) ? intval($record->id) : null,
+                    'nombre' => trim((string)($record->nombre ?? '')),
+                );
+            }
+            echo json_encode(['success' => true, 'garantias' => $garantias]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al cargar garantías: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * Devuelve todas las verificaciones asociadas a una solicitud
+     */
+    public function get_verificaciones_by_solicitud_ajax($solicitud_id = null)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if (! $solicitud_id) {
+            echo json_encode(['success' => false, 'message' => 'Falta el ID de la solicitud.']);
+            return;
+        }
+        try {
+            $records = $this->Garantia_verificacion_model->get_by_solicitud($solicitud_id);
+            $verifs = array();
+            foreach ($records as $r) {
+                $verifs[] = array(
+                    'id' => isset($r->id) ? intval($r->id) : null,
+                    'garantia_id' => isset($r->garantia_id) ? intval($r->garantia_id) : null,
+                    'comentario' => isset($r->comentario) ? $r->comentario : null,
+                    'estado_aprobacion' => isset($r->estado_aprobacion) ? $r->estado_aprobacion : null,
+                    'nombre_garantia' => isset($r->nombre_garantia) ? $r->nombre_garantia : null,
+                    'verificador_usuario' => isset($r->verificador_usuario) ? $r->verificador_usuario : null,
+                    'created_at' => isset($r->created_at) ? $r->created_at : null,
+                );
+            }
+            echo json_encode(['success' => true, 'verifications' => $verifs]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al cargar verificaciones: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * AJAX: eliminar foto de verificación de una garantía
+     */
+    public function delete_verificacion_photo_ajax()
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        $garantia_id = intval($this->input->post('garantia_id'));
+        $field = trim((string)$this->input->post('field'));
+        $allowed_fields = array('foto1', 'foto2', 'foto3', 'foto4', 'foto5');
+
+        if (! $garantia_id) {
+            echo json_encode(['success' => false, 'message' => 'Falta el ID de la garantía.']);
+            return;
+        }
+        if (! in_array($field, $allowed_fields, true)) {
+            echo json_encode(['success' => false, 'message' => 'Campo de foto inválido.']);
+            return;
+        }
+
+        try {
+            // Obtener el registro de la garantía para acceder al solicitud_id
+            $records = $this->Garantia_verificacion_model->get_by_garantia($garantia_id);
+            if (empty($records)) {
+                echo json_encode(['success' => false, 'message' => 'No existe verificación para esta garantía.']);
+                return;
+            }
+            $record = $records[0];
+
+            // Buscar el registro base (garantia_id = NULL) de la misma solicitud
+            $baseRecords = $this->db->get_where('tb_garantias_verificaciones', [
+                'garantia_id' => null,
+                'solicitud_id' => $record->solicitud_id
+            ])->result();
+
+            if (empty($baseRecords)) {
+                echo json_encode(['success' => false, 'message' => 'No se encontró el registro base de verificación.']);
+                return;
+            }
+
+            $baseRecord = $baseRecords[0];
+            if (empty($baseRecord->$field)) {
+                echo json_encode(['success' => false, 'message' => 'No se encontró la foto en el registro.']);
+                return;
+            }
+
+            $file_rel = $baseRecord->$field;
+            $filepath = FCPATH . ltrim($file_rel, '/\\');
+            $updated = $this->Garantia_verificacion_model->update($baseRecord->id, array($field => null));
+            if (! $updated) {
+                http_response_code(500);
+                echo json_encode(['success' => false, 'message' => 'No se pudo eliminar la foto de la verificación.']);
+                return;
+            }
+
+            if (file_exists($filepath)) {
+                @unlink($filepath);
+            }
+
+            echo json_encode(['success' => true, 'message' => 'Foto eliminada.']);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al eliminar la foto: ' . $e->getMessage()]);
+        }
+    }
+
+    /**
+     * AJAX: obtener información de la solicitud (código y cliente)
+     */
+    public function get_solicitud_info_ajax($solicitud_id = null)
+    {
+        header('Content-Type: application/json; charset=utf-8');
+        if (! $solicitud_id) {
+            echo json_encode(['success' => false, 'message' => 'Falta el ID de la solicitud.']);
+            return;
+        }
+
+        try {
+            $solicitud_id = intval($solicitud_id);
+            
+            // Buscar la solicitud (tabla tb_solicitudes o según la estructura del proyecto)
+            $query = $this->db->select('id, nombre_cliente, apellido_cliente, cedula, codigo, fecha_solicitud')
+                ->from('tb_solicitudes')
+                ->where('id', $solicitud_id)
+                ->limit(1)
+                ->get();
+            
+            if ($query->num_rows() == 0) {
+                echo json_encode(['success' => false, 'message' => 'No se encontró la solicitud.']);
+                return;
+            }
+
+            $solicitud = $query->row();
+            
+            // Construir el código de solicitud
+            $codigo_solicitud = '';
+            if (isset($solicitud->codigo) && !empty($solicitud->codigo)) {
+                $codigo_solicitud = $solicitud->codigo;
+            } else {
+                // Formato alternativo si no existe el campo codigo
+                $codigo_solicitud = 'SOL-' . str_pad($solicitud->id, 4, '0', STR_PAD_LEFT);
+            }
+            
+            // Construir el nombre del cliente
+            $nombre_cliente = '';
+            if (isset($solicitud->nombre_cliente) && !empty($solicitud->nombre_cliente)) {
+                $nombre_cliente = trim($solicitud->nombre_cliente);
+                if (isset($solicitud->apellido_cliente) && !empty($solicitud->apellido_cliente)) {
+                    $nombre_cliente .= ' ' . trim($solicitud->apellido_cliente);
+                }
+            }
+
+            echo json_encode([
+                'success' => true,
+                'codigo_solicitud' => $codigo_solicitud,
+                'nombre_cliente' => $nombre_cliente,
+                'cedula' => isset($solicitud->cedula) ? $solicitud->cedula : null
+            ]);
+        } catch (Exception $e) {
+            http_response_code(500);
+            echo json_encode(['success' => false, 'message' => 'Error al cargar información de la solicitud: ' . $e->getMessage()]);
         }
     }
 
@@ -1080,30 +1570,51 @@ class Garantias extends CI_Controller {
         // take the first (there should be only one)
         $v = $verificaciones[0];
 
-        // collect image data URIs for fotos stored in verificacion record (foto1..foto5)
+        // collect image data URIs from the base verification record for this solicitud (foto1..foto5)
         $imgs = [];
         $finfo = finfo_open(FILEINFO_MIME_TYPE);
-        for ($i = 1; $i <= 5; $i++) {
-            $col = 'foto' . $i;
-            if (empty($v->$col)) continue;
-            $rel = $v->$col;
-            $abs = FCPATH . ltrim($rel, '/\\');
-            if (file_exists($abs)) {
-                $mime = finfo_file($finfo, $abs) ?: 'image/jpeg';
-                $data = base64_encode(file_get_contents($abs));
-                $imgs[] = 'data:' . $mime . ';base64,' . $data;
-            } else {
-                $imgs[] = base_url($rel);
+        if (! empty($v->solicitud_id)) {
+            $baseRecords = $this->db->get_where('tb_garantias_verificaciones', [
+                'garantia_id' => null,
+                'solicitud_id' => $v->solicitud_id
+            ])->result();
+            if (! empty($baseRecords)) {
+                $base = $baseRecords[0];
+                for ($i = 1; $i <= 5; $i++) {
+                    $col = 'foto' . $i;
+                    if (empty($base->$col)) continue;
+                    $rel = $base->$col;
+                    $abs = FCPATH . ltrim($rel, '/\\');
+                    if (file_exists($abs)) {
+                        $mime = finfo_file($finfo, $abs) ?: 'image/jpeg';
+                        $data = base64_encode(file_get_contents($abs));
+                        $imgs[] = 'data:' . $mime . ';base64,' . $data;
+                    } else {
+                        $imgs[] = base_url($rel);
+                    }
+                }
             }
         }
         finfo_close($finfo);
 
         $solicitud = null;
+        $verificaciones = array();
         if (! empty($v->solicitud_id)) {
             $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $v->solicitud_id));
+            $all_verificaciones = $this->Garantia_verificacion_model->get_by_solicitud($v->solicitud_id);
+            foreach ($all_verificaciones as $record) {
+                if (! empty($record->garantia_id)) {
+                    $verificaciones[] = $record;
+                }
+            }
         }
 
-        $html = $this->load->view('garantias/verificacion_pdf', ['v' => $v, 'imgs' => $imgs, 'solicitud' => $solicitud], true);
+        $html = $this->load->view('garantias/verificacion_pdf', [
+            'v' => $v,
+            'imgs' => $imgs,
+            'solicitud' => $solicitud,
+            'verificaciones' => $verificaciones,
+        ], true);
 
         // Ensure Dompdf available
         if (file_exists(FCPATH . 'dompdf/autoload.inc.php')) {

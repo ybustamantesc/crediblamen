@@ -5,6 +5,7 @@ document.addEventListener('DOMContentLoaded', function(){
     var btnRun = document.getElementById('btnRunAux');
     var btnExport = document.getElementById('btnExportAux');
     var auxCount = document.getElementById('auxCount');
+    var auxCurrency = document.getElementById('auxCurrency');
 
     btnSelect.addEventListener('click', function(){
         // open modal via AJAX
@@ -37,6 +38,13 @@ document.addEventListener('DOMContentLoaded', function(){
                 selAll.addEventListener('click', function(e){
                     e.preventDefault();
                     modalDiv.querySelectorAll('#formAuxAccounts input[type=checkbox]').forEach(function(cb){ cb.checked = true; });
+                });
+            }
+            var deselect = modalDiv.querySelector('#auxDeselectAll');
+            if (deselect) {
+                deselect.addEventListener('click', function(e){
+                    e.preventDefault();
+                    modalDiv.querySelectorAll('#formAuxAccounts input[type=checkbox]').forEach(function(cb){ cb.checked = false; });
                 });
             }
             var applyBtn = modalDiv.querySelector('#auxApply');
@@ -114,14 +122,48 @@ document.addEventListener('DOMContentLoaded', function(){
         };
     }
 
+    // normalize date inputs to ISO YYYY-MM-DD
+    function normalizeDate(d){
+        if (!d) return '';
+        if (typeof d !== 'string') d = String(d);
+        d = d.trim();
+        if (!d) return '';
+        // dd/mm/yyyy -> yyyy-mm-dd
+        if (d.indexOf('/') !== -1) {
+            var p = d.split('/');
+            if (p.length === 3) {
+                var dd = p[0].padStart(2,'0');
+                var mm = p[1].padStart(2,'0');
+                var yyyy = p[2];
+                if (yyyy.length === 2) yyyy = '20' + yyyy;
+                return yyyy + '-' + mm + '-' + dd;
+            }
+        }
+        // already ISO
+        if (/^\d{4}-\d{2}-\d{2}$/.test(d)) return d;
+        // try Date parse fallback
+        var dt = new Date(d);
+        if (!isNaN(dt.getTime())){
+            var y = dt.getFullYear();
+            var m = String(dt.getMonth()+1).padStart(2,'0');
+            var day = String(dt.getDate()).padStart(2,'0');
+            return y + '-' + m + '-' + day;
+        }
+        return d;
+    }
+
     // (selection handled by the single listener attached when modal is loaded)
 
     btnRun.addEventListener('click', function(){
-        var start = document.getElementById('auxStart').value;
-        var end = document.getElementById('auxEnd').value;
+        var rawStart = document.getElementById('auxStart').value;
+        var rawEnd = document.getElementById('auxEnd').value;
+        var start = normalizeDate(rawStart);
+        var end = normalizeDate(rawEnd);
+        var currency = auxCurrency ? auxCurrency.value : 'local';
         var payload = new FormData();
-        payload.append('start', start);
-        payload.append('end', end);
+        if (start) payload.append('start', start);
+        if (end) payload.append('end', end);
+        payload.append('currency', currency);
         if (selectedAccounts.length === 0) {
             payload.append('all', '1');
         } else {
@@ -135,9 +177,25 @@ document.addEventListener('DOMContentLoaded', function(){
         }).catch(function(err){ console.error(err); alert('Error al obtener datos'); });
     });
 
+    var btnClearFilters = document.getElementById('btnClearFilters');
+    if (btnClearFilters) {
+        btnClearFilters.addEventListener('click', function(){
+            selectedAccounts = [];
+            auxCount.textContent = '0';
+            var startInput = document.getElementById('auxStart');
+            var endInput = document.getElementById('auxEnd');
+            if (startInput) startInput.value = '';
+            if (endInput) endInput.value = '';
+            var target = document.getElementById('auxResult');
+            if (target) target.innerHTML = '';
+        });
+    }
+
     btnExport.addEventListener('click', function(){
-        var start = document.getElementById('auxStart').value;
-        var end = document.getElementById('auxEnd').value;
+        var rawStart = document.getElementById('auxStart').value;
+        var rawEnd = document.getElementById('auxEnd').value;
+        var start = normalizeDate(rawStart);
+        var end = normalizeDate(rawEnd);
         var currency = (document.getElementById('auxCurrency') ? document.getElementById('auxCurrency').value : 'local');
         var base3 = (typeof base_url !== 'undefined') ? base_url : '/';
         var url = base3.replace(/\/$/, '') + '/contabilidad/auxiliares_export?start=' + encodeURIComponent(start) + '&end=' + encodeURIComponent(end);
@@ -154,8 +212,10 @@ document.addEventListener('DOMContentLoaded', function(){
     var btnExportPdf = document.getElementById('btnExportPdf');
     if (btnExportPdf) {
         btnExportPdf.addEventListener('click', function(){
-            var start = document.getElementById('auxStart').value;
-            var end = document.getElementById('auxEnd').value;
+            var rawStart = document.getElementById('auxStart').value;
+            var rawEnd = document.getElementById('auxEnd').value;
+            var start = normalizeDate(rawStart);
+            var end = normalizeDate(rawEnd);
             var base = (typeof base_url !== 'undefined') ? base_url : '/';
             var currency = (document.getElementById('auxCurrency') ? document.getElementById('auxCurrency').value : 'local');
             var url = base.replace(/\/$/, '') + '/contabilidad/auxiliares_export?format=pdf&start=' + encodeURIComponent(start) + '&end=' + encodeURIComponent(end) + '&currency=' + encodeURIComponent(currency);
@@ -173,8 +233,10 @@ document.addEventListener('DOMContentLoaded', function(){
     var btnExportXlsx = document.getElementById('btnExportXlsx');
     if (btnExportXlsx) {
         btnExportXlsx.addEventListener('click', function(){
-            var start = document.getElementById('auxStart').value;
-            var end = document.getElementById('auxEnd').value;
+            var rawStart = document.getElementById('auxStart').value;
+            var rawEnd = document.getElementById('auxEnd').value;
+            var start = normalizeDate(rawStart);
+            var end = normalizeDate(rawEnd);
             var base = (typeof base_url !== 'undefined') ? base_url : '/';
             var currency = (document.getElementById('auxCurrency') ? document.getElementById('auxCurrency').value : 'local');
             var url = base.replace(/\/$/, '') + '/contabilidad/auxiliares_export?format=xlsx&start=' + encodeURIComponent(start) + '&end=' + encodeURIComponent(end) + '&currency=' + encodeURIComponent(currency);
@@ -190,15 +252,18 @@ document.addEventListener('DOMContentLoaded', function(){
     function renderAux(payload){
         var target = document.getElementById('auxResult');
         if (!payload || !payload.data) { target.innerHTML = '<div class="alert alert-warning">Sin datos</div>'; return; }
+        var currency = payload.currency === 'usd' ? 'usd' : 'local';
+        var currencyLabel = payload.currency_label ? ' ' + payload.currency_label : '';
+        var currencyPrefix = currency === 'usd' ? '$' : 'C$';
         var html = '';
         payload.data.forEach(function(acc){
-            html += '<div style="border:1px solid #ddd;margin-bottom:12px;padding:8px;">';
+            html += '<div style="border:1px solid #ddd;margin-bottom:12px;padding:8px;overflow-x:auto;">';
             html += '<div style="font-weight:700;margin-bottom:6px;">' + (acc.code || '') + ' - ' + (acc.name || '') + '</div>';
                 html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-                html += '<thead><tr style="background:#f7f7f7;"><th style="padding:6px;border:1px solid #ddd;">fecha</th><th style="padding:6px;border:1px solid #ddd;">Tipo Documento</th><th style="padding:6px;border:1px solid #ddd;">No Documento</th><th style="padding:6px;border:1px solid #ddd;">Centro costo</th><th style="padding:6px;border:1px solid #ddd;">Descripcion</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Debito</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Credito</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Balance Final</th></tr></thead>';
+                html += '<thead><tr style="background:#f7f7f7;"><th style="padding:6px;border:1px solid #ddd;">Fecha</th><th style="padding:6px;border:1px solid #ddd;">Tipo Documento</th><th style="padding:6px;border:1px solid #ddd;">No Documento</th><th style="padding:6px;border:1px solid #ddd;">Centro Costo</th><th style="padding:6px;border:1px solid #ddd;">Descripción</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Débito' + currencyLabel + '</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Crédito' + currencyLabel + '</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Balance Final' + currencyLabel + '</th></tr></thead>';
             html += '<tbody>';
             // opening
-                html += '<tr><td colspan="7" style="font-style:italic;padding:6px;border:1px solid #eee;">Saldo anterior</td><td style="text-align:right;padding:6px;border:1px solid #eee;">' + formatNumber(acc.opening) + '</td></tr>';
+                html += '<tr><td colspan="7" style="font-style:italic;padding:6px;border:1px solid #eee;">Saldo anterior</td><td style="text-align:right;padding:6px;border:1px solid #eee;">' + formatCurrency(acc.opening, currencyPrefix) + '</td></tr>';
             acc.lines.forEach(function(l){
                 html += '<tr>';
                     html += '<td style="padding:6px;border:1px solid #eee;">' + (l.date || '') + '</td>';
@@ -206,19 +271,30 @@ document.addEventListener('DOMContentLoaded', function(){
                     html += '<td style="padding:6px;border:1px solid #eee;">' + (l.document_no || '') + '</td>';
                     html += '<td style="padding:6px;border:1px solid #eee;">' + (l.centro_costo || '') + '</td>';
                     html += '<td style="padding:6px;border:1px solid #eee;">' + (l.descripcion || '') + '</td>';
-                        html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + (l.debit ? formatNumber(l.debit) : '-') + '</td>';
-                        html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + (l.credit ? formatNumber(l.credit) : '-') + '</td>';
-                        html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + formatNumber(l.balance) + '</td>';
+                        html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + (l.debit ? formatCurrency(l.debit, currencyPrefix) : '-') + '</td>';
+                        html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + (l.credit ? formatCurrency(l.credit, currencyPrefix) : '-') + '</td>';
+                        html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + formatCurrency(l.balance, currencyPrefix) + '</td>';
                 html += '</tr>';
             });
-                html += '<tr style="font-weight:700;"><td colspan="7" style="text-align:right;padding:6px;border-top:2px solid #000;">Balance Final</td><td style="text-align:right;padding:6px;border-top:2px solid #000;">' + formatNumber(acc.final_balance) + '</td></tr>';
-            html += '</tbody></table></div>';
+                html += '<tr style="font-weight:700;"><td colspan="7" style="text-align:right;padding:6px;border-top:2px solid #000;">Balance Final</td><td style="text-align:right;padding:6px;border-top:2px solid #000;">' + formatCurrency(acc.final_balance, currencyPrefix) + '</td></tr>';
+            html += '</tbody></table>';
+            html += '</div>';
         });
+        html += '</div>';
         target.innerHTML = html;
     }
 
     function formatNumber(n){
-        if (!n && n !== 0) return '0,00';
-        return Number(n).toLocaleString('es-ES', {minimumFractionDigits:2, maximumFractionDigits:2});
+        var num = Number(n);
+        if (Number.isNaN(num)) { return '0.00'; }
+        var sign = num < 0 ? '-' : '';
+        num = Math.abs(num);
+        var parts = num.toFixed(2).split('.');
+        parts[0] = parts[0].replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+        return sign + parts[0] + '.' + parts[1];
+    }
+
+    function formatCurrency(n, prefix){
+        return prefix + formatNumber(n);
     }
 });

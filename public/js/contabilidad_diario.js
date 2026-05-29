@@ -8,9 +8,20 @@ document.addEventListener('DOMContentLoaded', function(){
     const entriesContainer = document.getElementById('diarioContent');
     const modalContainer = document.getElementById('modalContainer');
     
+    document.addEventListener('click', function(event) {
+        const clickedActionsMenu = event.target.closest('.actions-menu');
+        const openMenus = document.querySelectorAll('.actions-menu[open]');
+        openMenus.forEach(menu => {
+            if (menu !== clickedActionsMenu) {
+                menu.removeAttribute('open');
+            }
+        });
+    });
+    
     let currentPage = 1;
     const pageSize = 25;
     let allEntries = []; // Store all entries for client-side pagination
+    let filteredEntries = []; // Store currently filtered rows
 
     // Client-side filtering with pagination
     function applyFiltersAndPagination() {
@@ -19,10 +30,14 @@ document.addEventListener('DOMContentLoaded', function(){
         
         const filterDocType = document.getElementById('filterDocType');
         const searchInput = document.getElementById('searchAsientoId');
+        const filterStart = document.getElementById('filterStart');
+        const filterEnd = document.getElementById('filterEnd');
         const noResults = document.getElementById('noResultsMessage');
         
         const selectedType = filterDocType ? filterDocType.value : '';
         const searchTerm = searchInput ? searchInput.value.toLowerCase().trim() : '';
+        const startDate = filterStart ? filterStart.value : '';
+        const endDate = filterEnd ? filterEnd.value : '';
         
         // Filter entries
         let filtered = allEntries.filter(row => {
@@ -30,6 +45,7 @@ document.addEventListener('DOMContentLoaded', function(){
             const rowCentros = row.getAttribute('data-centro') || ''; // Can contain multiple IDs: "1,2,3"
             const rowDesc = row.getAttribute('data-description') || '';
             const rowId = row.getAttribute('data-id') || '';
+            const rowDate = row.getAttribute('data-date') || '';
             
             const typeMatch = !selectedType || rowType === selectedType;
             
@@ -37,10 +53,14 @@ document.addEventListener('DOMContentLoaded', function(){
             let centroMatch = true;
             
             const searchMatch = !searchTerm || rowDesc.includes(searchTerm) || rowId.includes(searchTerm);
+            const startMatch = !startDate || (rowDate && rowDate >= startDate);
+            const endMatch = !endDate || (rowDate && rowDate <= endDate);
             
-            return typeMatch && centroMatch && searchMatch;
+            return typeMatch && centroMatch && searchMatch && startMatch && endMatch;
         });
         
+        filteredEntries = filtered;
+        const filteredIds = new Set(filteredEntries.map(row => row.getAttribute('data-id')));
         const totalRecords = filtered.length;
         const totalPages = Math.ceil(totalRecords / pageSize);
         if (currentPage > totalPages && totalPages > 0) currentPage = totalPages;
@@ -50,7 +70,13 @@ document.addEventListener('DOMContentLoaded', function(){
         const endIdx = Math.min(startIdx + pageSize, totalRecords);
         
         // Hide all rows first
-        allEntries.forEach(row => row.style.display = 'none');
+        allEntries.forEach(row => {
+            row.style.display = 'none';
+            const checkbox = row.querySelector('.entry-checkbox');
+            if (checkbox && !filteredIds.has(row.getAttribute('data-id'))) {
+                checkbox.checked = false;
+            }
+        });
         
         // Show only paginated filtered rows
         for (let i = startIdx; i < endIdx; i++) {
@@ -74,7 +100,10 @@ document.addEventListener('DOMContentLoaded', function(){
         if (pagination) {
             pagination.innerHTML = '';
             
-            if (totalPages === 0) return;
+            if (totalPages === 0) {
+                updateMassPostButton();
+                return;
+            }
             
             // Previous button
             const prevLi = document.createElement('li');
@@ -121,6 +150,7 @@ document.addEventListener('DOMContentLoaded', function(){
                 });
             });
         }
+        updateMassPostButton();
     }
     
     // Initialize pagination on page load
@@ -132,7 +162,10 @@ document.addEventListener('DOMContentLoaded', function(){
     const selectedCountSpan = document.getElementById('selectedCount');
     
     function updateMassPostButton() {
-        const checkedBoxes = document.querySelectorAll('.entry-checkbox:checked');
+        const filteredCheckboxes = filteredEntries
+            .map(row => row.querySelector('.entry-checkbox'))
+            .filter(cb => cb instanceof HTMLInputElement);
+        const checkedBoxes = filteredCheckboxes.filter(cb => cb.checked);
         const count = checkedBoxes.length;
         
         if (selectedCountSpan) selectedCountSpan.textContent = count;
@@ -147,8 +180,7 @@ document.addEventListener('DOMContentLoaded', function(){
         
         // Update selectAll checkbox state
         if (selectAllCheckbox) {
-            const allCheckboxes = document.querySelectorAll('.entry-checkbox');
-            const allChecked = allCheckboxes.length > 0 && allCheckboxes.length === count;
+            const allChecked = filteredCheckboxes.length > 0 && filteredCheckboxes.every(cb => cb.checked);
             selectAllCheckbox.checked = allChecked;
         }
     }
@@ -156,7 +188,9 @@ document.addEventListener('DOMContentLoaded', function(){
     // Select All functionality
     if (selectAllCheckbox) {
         selectAllCheckbox.addEventListener('change', function() {
-            const checkboxes = document.querySelectorAll('.entry-checkbox');
+            const checkboxes = filteredEntries
+                .map(row => row.querySelector('.entry-checkbox'))
+                .filter(cb => cb instanceof HTMLInputElement);
             checkboxes.forEach(cb => {
                 cb.checked = this.checked;
             });
@@ -256,8 +290,18 @@ document.addEventListener('DOMContentLoaded', function(){
         clearFiltersBtn.addEventListener('click', function() {
             if (filterDocType) filterDocType.value = '';
             if (searchInput) searchInput.value = '';
+            const filterStart = document.getElementById('filterStart');
+            const filterEnd = document.getElementById('filterEnd');
+            if (filterStart) filterStart.value = '';
+            if (filterEnd) filterEnd.value = '';
+
+            document.querySelectorAll('.entry-checkbox:checked').forEach(checkbox => {
+                checkbox.checked = false;
+            });
+
             currentPage = 1;
             applyFiltersAndPagination();
+            updateMassPostButton();
         });
     }
 
@@ -266,204 +310,69 @@ document.addEventListener('DOMContentLoaded', function(){
     if (btnExportPDF) {
         btnExportPDF.addEventListener('click', function(e) {
             e.preventDefault();
-            
-            // Get visible filtered entries
-            const visibleRows = Array.from(document.querySelectorAll('.entry-row')).filter(row => {
-                return row.style.display !== 'none';
-            });
-            
-            if (visibleRows.length === 0) {
-                alert('No hay asientos para exportar');
+
+            const checkedBoxes = Array.from(document.querySelectorAll('.entry-checkbox:checked'));
+            if (checkedBoxes.length === 0) {
+                alert('Seleccione al menos un asiento para exportar');
                 return;
             }
-            
-            // Get company info
-            const empresaName = document.getElementById('empresa_razon_social') ? document.getElementById('empresa_razon_social').value : 'Empresa';
-            
-            // Get filter info
+
+            const entryIds = [...new Set(checkedBoxes.map(cb => cb.getAttribute('data-id')))].filter(Boolean);
+            if (entryIds.length === 0) {
+                alert('No hay asientos seleccionados para exportar');
+                return;
+            }
+
             const filterDocType = document.getElementById('filterDocType');
             const searchInput = document.getElementById('searchAsientoId');
             const selectedType = filterDocType ? filterDocType.value : '';
-            const searchTerm = searchInput ? searchInput.value : '';
+            const searchTerm = searchInput ? searchInput.value.trim() : '';
             
-            let filterInfo = '';
-            if (selectedType || searchTerm) {
-                filterInfo = '<div style="margin-bottom:15px;padding:10px;background:#f0f9ff;border-left:4px solid #0ea5e9;border-radius:4px;font-size:9pt;">';
-                filterInfo += '<strong style="color:#0369a1;">Filtros aplicados:</strong> ';
-                const filters = [];
-                if (selectedType) filters.push('Tipo: ' + selectedType);
-                if (searchTerm) filters.push('Búsqueda: "' + searchTerm + '"');
-                filterInfo += filters.join(' | ');
-                filterInfo += '</div>';
-            }
-            
-            // Collect all entry IDs to fetch details
-            const entryIds = visibleRows.map(row => row.getAttribute('data-id'));
-            
-            // Fetch detailed lines for all entries
-            fetch(base_url + 'contabilidad/get_entries_details', {
+            const payload = {
+                entry_ids: entryIds,
+                filter_type: selectedType,
+                search_term: searchTerm
+            };
+
+            btnExportPDF.disabled = true;
+            const originalText = btnExportPDF.innerHTML;
+            btnExportPDF.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando PDF...';
+
+            fetch(base_url + 'contabilidad/export_selected_entries_pdf', {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json'
                 },
-                body: JSON.stringify({ entry_ids: entryIds })
+                body: JSON.stringify(payload)
             })
-            .then(r => r.json())
-            .then(data => {
-                if (!data.success || !data.lines) {
-                    alert('Error al obtener detalles de los asientos');
-                    return;
+            .then(response => {
+                if (!response.ok) {
+                    return response.text().then(text => {
+                        throw new Error(text || 'Error al generar el PDF');
+                    });
                 }
-                
-                // Build HTML
-                const w = window.open('', '_blank');
-                let html = `
-<!DOCTYPE html>
-<html>
-<head>
-    <meta charset="UTF-8">
-    <title>Libro Diario - ${empresaName}</title>
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body {
-            font-family: Calibri, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            padding: 18mm 14mm;
-            color: #1a1a1a;
-            font-size: 10pt;
-        }
-        .header {
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 3px solid #1F4E78;
-        }
-        .company-name {
-            font-size: 18pt;
-            font-weight: 700;
-            color: #1F4E78;
-        }
-        .print-date {
-            text-align: right;
-            font-size: 9pt;
-            color: #666;
-        }
-        .report-title {
-            font-size: 20pt;
-            font-weight: 700;
-            color: #1F4E78;
-            margin: 20px 0 15px 0;
-            text-align: center;
-        }
-        .account-section { margin-bottom: 40px; page-break-inside: avoid; }
-        .account-info { background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%); padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #1F4E78; }
-        .account-name { font-size: 14pt; font-weight: 600; color: #1F4E78; }
-        table { width: 100%; border-collapse: collapse; margin-bottom: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
-        thead { background: linear-gradient(135deg, #1F4E78 0%, #2d5f8d 100%); color: white; }
-        th { padding: 12px 8px; text-align: left; font-weight: 600; font-size: 9pt; text-transform: uppercase; letter-spacing: 0.5px; }
-        th.text-right { text-align: right; }
-        tbody tr { border-bottom: 1px solid #e0e0e0; }
-        tbody tr:nth-child(even) { background-color: #f8f9fa; }
-        tbody tr:hover { background-color: #e3f2fd; }
-        td { padding: 10px 8px; font-size: 9pt; }
-        td.text-right { text-align: right; font-family: 'Courier New', monospace; font-weight: 500; }
-        td.opening-balance { font-weight: 700; background-color: #fff3cd; }
-        .sig-block { display:flex; gap:30px; margin-top:28px; }
-        .sig { flex:1; text-align:center; }
-        .sig-line { border-top:1px solid #222; margin:0 20px 6px 20px; height:2px; }
-        .sig-label { font-size:10pt; color:#333; margin-top:6px; }
-        @media print { body { padding: 10mm; } .account-section { page-break-inside: avoid; } @page { margin: 10mm; } }
-    </style>
-</head>
-<body>
-    <div class="header">
-        <div class="company-name">${empresaName}</div>
-        <div class="print-date">
-            ${new Date().toLocaleDateString('es-NI', {year: 'numeric', month: 'long', day: 'numeric'})}
-        </div>
-    </div>
-    
-    <div class="report-title">LIBRO DIARIO</div>
-    ${filterInfo}
-    
-    <table>
-        <thead>
-            <tr>
-                <th style="width: 12%;">Tipo Cuenta</th>
-                <th style="width: 10%;">Fecha</th>
-                <th class="text-center" style="width: 10%;">Asiento ID</th>
-                <th style="width: 35%;">Descripción</th>
-                <th class="text-right" style="width: 13%;">Débito</th>
-                <th class="text-right" style="width: 13%;">Crédito</th>
-                <th class="text-right" style="width: 7%;">Saldo</th>
-            </tr>
-        </thead>
-        <tbody>`;
-                
-                let runningBalance = 0;
-                
-                // Process each line
-                data.lines.forEach(line => {
-                    const debit = parseFloat(line.debit) || 0;
-                    const credit = parseFloat(line.credit) || 0;
-                    runningBalance += debit - credit;
-                    
-                    const accountType = line.account_type || 'activo';
-                    const accountCode = line.account_code || '';
-                    const accountName = line.account_name || '';
-                    const description = line.description || '';
-                    const entryType = line.entry_type || 'CD';
-                    const entryId = line.entry_id || '';
-                    const date = line.date || '';
-                    
-                    html += `
-            <tr>
-                <td>${accountType}</td>
-                <td>${date}</td>
-                <td class="text-center"><span class="account-code">${entryType}-${entryId}</span></td>
-                <td>${accountCode ? accountCode + ' - ' : ''}${accountName}<br><small style="color:#6b7280;">${description}</small></td>
-                <td class="text-right">${debit > 0 ? debit.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-'}</td>
-                <td class="text-right">${credit > 0 ? credit.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2}) : '-'}</td>
-                <td class="text-right">${runningBalance.toLocaleString('es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2})}</td>
-            </tr>`;
-                });
-                
-                html += `
-        </tbody>
-    </table>
-</table>
-
-    <div class="sig-block">
-        <div class="sig">
-            <div class="sig-line"></div>
-            <div class="sig-label">Contador General</div>
-        </div>
-        <div class="sig">
-            <div class="sig-line"></div>
-            <div class="sig-label">Gerente General</div>
-        </div>
-        <div class="sig">
-            <div class="sig-line"></div>
-            <div class="sig-label">Administrador</div>
-        </div>
-    </div>
-
-    <script>
-        window.onload = function() {
-            setTimeout(function() { window.print(); }, 500);
-        };
-    </script>
-</body>
-</html>`;
-                
-                w.document.open();
-                w.document.write(html);
-                w.document.close();
+                return response.blob();
+            })
+            .then(blob => {
+                const url = window.URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                const now = new Date();
+                a.download = 'libro_diario_' + now.toISOString().slice(0,10) + '.pdf';
+                document.body.appendChild(a);
+                a.click();
+                setTimeout(() => {
+                    window.URL.revokeObjectURL(url);
+                    a.remove();
+                }, 1000);
             })
             .catch(err => {
                 console.error('Error:', err);
-                alert('Error al generar el PDF');
+                alert(err.message || 'Error al generar el PDF');
+            })
+            .finally(() => {
+                btnExportPDF.disabled = false;
+                btnExportPDF.innerHTML = originalText;
             });
         });
     }
@@ -485,13 +394,11 @@ document.addEventListener('DOMContentLoaded', function(){
             var btnClose = e.target.closest ? e.target.closest('#btnCloseView') : null;
             if (btnClose) {
                 modalContainer.innerHTML = '';
-                try{ if (typeof fetchEntries === 'function') fetchEntries(); } catch(err){}
                 return;
             }
             // backdrop click: the modal wrapper has id 'modalViewEntry'
             if (e.target && e.target.id === 'modalViewEntry'){
                 modalContainer.innerHTML = '';
-                try{ if (typeof fetchEntries === 'function') fetchEntries(); } catch(err){}
                 return;
             }
         });
@@ -533,17 +440,89 @@ document.addEventListener('DOMContentLoaded', function(){
             <div><label>Desde</label><input id="filterStart" type="date" style="padding:6px" /></div>
             <div><label>Hasta</label><input id="filterEnd" type="date" style="padding:6px" /></div>
             <div style="align-self:end"><button id="btnFilter" class="btn">Filtrar</button></div>
-            <div style="align-self:end;margin-left:auto"><button id="btnExport" class="btn btn-outline-secondary">Exportar CSV</button></div>
         `;
         entriesContainer.parentNode.insertBefore(bar, entriesContainer);
-        document.getElementById('btnFilter').addEventListener('click', fetchEntries);
-        document.getElementById('btnExport').addEventListener('click', function(){
-            const s = document.getElementById('filterStart').value;
-            const e = document.getElementById('filterEnd').value;
-            let url = base_url + 'contabilidad/export_csv';
-            if (s || e) url += '?'+ new URLSearchParams({start_date: s, end_date: e}).toString();
-            window.location = url;
+        // Button click is handled after filters initialize; do not reload the full table HTML.
+        document.getElementById('btnFilter').addEventListener('click', function(e){
+            e.preventDefault();
+            currentPage = 1;
+            applyFiltersAndPagination();
         });
+
+        const filterStart = document.getElementById('filterStart');
+        const filterEnd = document.getElementById('filterEnd');
+        if (filterStart) {
+            filterStart.addEventListener('change', function() {
+                currentPage = 1;
+                applyFiltersAndPagination();
+            });
+        }
+        if (filterEnd) {
+            filterEnd.addEventListener('change', function() {
+                currentPage = 1;
+                applyFiltersAndPagination();
+            });
+        }
+        
+        const btnExportCSV = document.getElementById('btnExportCSV');
+        if (btnExportCSV) {
+            btnExportCSV.addEventListener('click', function(e) {
+                e.preventDefault();
+
+                const checkedBoxes = Array.from(document.querySelectorAll('.entry-checkbox:checked'));
+                if (checkedBoxes.length === 0) {
+                    alert('Seleccione al menos un asiento para exportar');
+                    return;
+                }
+
+                const entryIds = [...new Set(checkedBoxes.map(cb => cb.getAttribute('data-id')))].filter(Boolean);
+                if (entryIds.length === 0) {
+                    alert('No hay asientos seleccionados para exportar');
+                    return;
+                }
+
+                btnExportCSV.disabled = true;
+                const originalText = btnExportCSV.innerHTML;
+                btnExportCSV.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Generando CSV...';
+
+                fetch(base_url + 'contabilidad/export_selected_entries_csv', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ entry_ids: entryIds })
+                })
+                .then(response => {
+                    if (!response.ok) {
+                        return response.text().then(text => {
+                            throw new Error(text || 'Error al generar el CSV');
+                        });
+                    }
+                    return response.blob();
+                })
+                .then(blob => {
+                    const url = window.URL.createObjectURL(blob);
+                    const a = document.createElement('a');
+                    a.href = url;
+                    const now = new Date();
+                    a.download = 'libro_diario_' + now.toISOString().slice(0,10) + '.xlsx';
+                    document.body.appendChild(a);
+                    a.click();
+                    setTimeout(() => {
+                        window.URL.revokeObjectURL(url);
+                        a.remove();
+                    }, 1000);
+                })
+                .catch(err => {
+                    console.error('Error:', err);
+                    alert(err.message || 'Error al generar el CSV');
+                })
+                .finally(() => {
+                    btnExportCSV.disabled = false;
+                    btnExportCSV.innerHTML = originalText;
+                });
+            });
+        }
     }
 
     function buildTableHtml(data){
@@ -565,8 +544,11 @@ document.addEventListener('DOMContentLoaded', function(){
             <table class="table-diary" style="width:100%;border-collapse:separate;border-spacing:0;min-width:760px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);">
                 <thead>
                     <tr style="background:linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
+                        <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;width:50px;"><input type="checkbox" id="selectAll" style="width:18px;height:18px;cursor:pointer;" /></th>
+                        <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Estado</th>
                         <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Código</th>
                         <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Tipo</th>
+                        <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Centro Costo</th>
                         <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Fecha</th>
                         <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;">Descripción / Montos</th>
                         <th class="col-actions" style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;text-align:center;white-space:nowrap;">Acciones</th>
@@ -579,19 +561,29 @@ document.addEventListener('DOMContentLoaded', function(){
             const color = typeColors[entryType] || '#6b7280';
             const isVoided = d.voided && parseInt(d.voided) === 1;
             const isPosted = d.posted && parseInt(d.posted) === 1;
+            const centroName = (d.centro_costo_nombres && d.centro_costo_nombres.trim()) ? d.centro_costo_nombres : '-';
             const safeDesc = (d.description || '').toString().replace(/</g,'&lt;').replace(/>/g,'&gt;');
             const dateFormatted = d.date ? new Date(d.date).toLocaleDateString('es-NI', {day:'2-digit', month:'2-digit', year:'numeric'}) : '';
             
-            html += `<tr class="entry-row" data-id="${d.id}" data-type="${entryType}" data-description="${safeDesc.toLowerCase()}" data-posted="${isPosted ? '1' : '0'}" data-voided="${isVoided ? '1' : '0'}" style="border-bottom:1px solid #f3f4f6;transition:all 0.2s;${isVoided ? 'opacity:0.5;' : ''}" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+            html += `<tr class="entry-row" data-id="${d.id}" data-type="${entryType}" data-centro="${d.centro_costo_ids || ''}" data-description="${safeDesc.toLowerCase()}" data-posted="${isPosted ? '1' : '0'}" data-voided="${isVoided ? '1' : '0'}" style="border-bottom:1px solid #f3f4f6;transition:all 0.2s;${isVoided ? 'opacity:0.5;' : ''}" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+                <td style="padding:14px 12px;text-align:center;">
+                    ${(!isVoided && !isPosted) ? `<input type="checkbox" class="entry-checkbox" data-id="${d.id}" style="width:18px;height:18px;cursor:pointer;" />` : ''}
+                </td>
+                <td style="padding:14px 12px;text-align:center;">
+                    ${isVoided ? `<span style="background:#64748b;color:#fff;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;white-space:nowrap;border:2px solid #475569;"><i class="fas fa-ban" style="color:#ef4444;"></i> ANULADO</span>` : isPosted ? `<span style="background:#64748b;color:#fff;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;white-space:nowrap;border:2px solid #475569;"><i class="fas fa-check-double" style="color:#10b981;"></i> MAYORIZADO</span>` : `<span style="background:#64748b;color:#fff;padding:4px 10px;border-radius:12px;font-size:10px;font-weight:600;white-space:nowrap;border:2px solid #475569;animation:pulse 2s infinite;"><i class="fas fa-clock" style="color:#f59e0b;"></i> PENDIENTE</span>`}
+                </td>
                 <td style="padding:14px 12px;font-weight:700;color:${color};font-size:15px;">
                     ${entryType}-${d.id}
-                    ${isPosted ? '<i class="fas fa-lock" style="color:#10b981;font-size:11px;margin-left:6px;" title="Mayorizado"></i>' : ''}
                 </td>
                 <td style="padding:14px 12px;">
-                    <span style="background:${color};color:#fff;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;">
+                    <span style="background:#64748b;color:#fff;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;border:2px solid #475569;">
                         ${entryType}
                     </span>
-                    ${isPosted ? '<span style="background:#10b981;color:#fff;padding:4px 8px;border-radius:12px;font-size:10px;font-weight:600;margin-left:4px;white-space:nowrap;">✓ MAYOR</span>' : ''}
+                </td>
+                <td style="padding:14px 12px;color:#6b7280;font-size:13px;white-space:nowrap;">
+                    <span style="display:inline-block;background:#f3f4f6;color:#4b5563;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;">
+                        ${centroName}
+                    </span>
                 </td>
                 <td style="padding:14px 12px;color:#6b7280;font-size:14px;white-space:nowrap;">
                     ${dateFormatted}
@@ -610,24 +602,24 @@ document.addEventListener('DOMContentLoaded', function(){
                         </span>
                     </div>
                 </td>
-                <td style="padding:14px 12px;text-align:center;white-space:nowrap;">
-                    <button class="cc-btn cc-btn-view btn btn-sm btn-primary" data-id="${d.id}">
-                        <i class="fas fa-eye"></i> Ver
+                <td style="padding:14px 12px;text-align:center;white-space:nowrap;position:relative;z-index:1;">
+                    <button class="cc-btn cc-btn-view btn btn-sm" data-id="${d.id}" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
+                        <i class="fas fa-eye" style="color:#3b82f6;"></i> Ver
                     </button>
                     ${(!isVoided && !isPosted) ? `
-                        <button class="cc-btn cc-btn-edit btn btn-sm btn-warning" data-id="${d.id}">
-                            <i class="fas fa-edit"></i> Editar
+                        <button class="cc-btn cc-btn-edit btn btn-sm" data-id="${d.id}" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
+                            <i class="fas fa-edit" style="color:#f59e0b;"></i> Editar
                         </button>
-                        <button class="cc-btn cc-btn-void btn btn-sm btn-danger" data-id="${d.id}">
-                            <i class="fas fa-ban"></i> Anular
+                        <button class="cc-btn cc-btn-void btn btn-sm" data-id="${d.id}" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
+                            <i class="fas fa-ban" style="color:#ef4444;"></i> Anular
                         </button>
-                        <button class="cc-btn cc-btn-post btn btn-sm btn-success" data-id="${d.id}">
-                            <i class="fas fa-check-double"></i> Mayorizar
+                        <button class="cc-btn cc-btn-post btn btn-sm" data-id="${d.id}" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
+                            <i class="fas fa-check-double" style="color:#10b981;"></i> Mayorizar
                         </button>
                     ` : ''}
                     ${(isPosted && !isVoided) ? `
-                        <button class="cc-btn cc-btn-unpost btn btn-sm btn-info" data-id="${d.id}">
-                            <i class="fas fa-unlock"></i> Desmayorizar
+                        <button class="cc-btn cc-btn-unpost btn btn-sm" data-id="${d.id}" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
+                            <i class="fas fa-unlock" style="color:#06b6d4;"></i> Desmayorizar
                         </button>
                     ` : ''}
                 </td>
@@ -794,18 +786,34 @@ document.addEventListener('DOMContentLoaded', function(){
                             const form = document.getElementById('formNewEntry');
                             if (!form) return;
                             
-                            const docTypeSelect = form.querySelector('select[name="document_type"]');
+                            const docTypeSelect = form.querySelector('select[name="document_type"], select[name="entry_type"]');
                             const dateInput = form.querySelector('input[name="date"]');
-                            const descInput = form.querySelector('input[name="description"]');
-                            
-                            if (docTypeSelect && data.header.entry_type) {
-                                docTypeSelect.value = data.header.entry_type;
+                            const descInput = form.querySelector('textarea[name="description"], input[name="description"]');
+
+                            // Helper to set value and trigger change/input events (supports Select2)
+                            function setSelectValue(selectEl, val) {
+                                if (!selectEl) return;
+                                try {
+                                    if (typeof $ !== 'undefined' && $.fn.select2 && $(selectEl).data('select2')) {
+                                        $(selectEl).val(val).trigger('change');
+                                    } else {
+                                        selectEl.value = val;
+                                        selectEl.dispatchEvent(new Event('change', { bubbles: true }));
+                                    }
+                                } catch (e) { try { selectEl.value = val; } catch(_){} }
+                            }
+
+                            const documentTypeValue = data.header.document_type || data.header.entry_type || '';
+                            if (docTypeSelect && documentTypeValue) {
+                                setSelectValue(docTypeSelect, documentTypeValue);
                             }
                             if (dateInput && data.header.date) {
                                 dateInput.value = data.header.date.split(' ')[0];
+                                dateInput.dispatchEvent(new Event('change', { bubbles: true }));
                             }
                             if (descInput && data.header.description) {
                                 descInput.value = data.header.description;
+                                descInput.dispatchEvent(new Event('input', { bubbles: true }));
                             }
                             
                             // Agregar campo oculto con el ID para actualización
@@ -819,6 +827,12 @@ document.addEventListener('DOMContentLoaded', function(){
                             const wrapper = document.getElementById('linesWrapper');
                             if (!wrapper) return;
                             
+                            // Preserve centro_costo options from the template before removing lines
+                            const firstCentro = wrapper.querySelector('.line-centro-costo');
+                            if (firstCentro) {
+                                window.centroCostoOptionsHtml = firstCentro.innerHTML || '';
+                            }
+
                             // Remover todas las líneas excepto los headers
                             const existingLines = wrapper.querySelectorAll('.entry-line');
                             existingLines.forEach(line => line.remove());
@@ -856,6 +870,31 @@ document.addEventListener('DOMContentLoaded', function(){
                                                 accountSelect.appendChild(option);
                                             }
                                         }
+                                            // Establecer centro de costo si viene en la línea
+                                            const centroSelect = currentLine.querySelector('.line-centro-costo');
+                                            if (centroSelect) {
+                                                const centroId = ln.centro_costo_id || ln.centro_costo_id === 0 ? ln.centro_costo_id : (ln.centro_costo_id || '');
+                                                // If options missing but we preserved template, fill them
+                                                if (centroSelect.options.length <= 1 && window.centroCostoOptionsHtml) {
+                                                    centroSelect.innerHTML = window.centroCostoOptionsHtml;
+                                                }
+                                                if (centroId) {
+                                                    // Try to set value; if option not present, add it
+                                                    try {
+                                                        centroSelect.value = centroId;
+                                                        centroSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                                                    } catch(e) {
+                                                        // create option using available centro info
+                                                        const opt = document.createElement('option');
+                                                        opt.value = centroId;
+                                                        const txt = (ln.centro_costo_codigo ? ln.centro_costo_codigo + ' - ' : '') + (ln.centro_costo_nombre || '');
+                                                        opt.text = txt || centroId;
+                                                        opt.selected = true;
+                                                        centroSelect.appendChild(opt);
+                                                        centroSelect.dispatchEvent(new Event('change', { bubbles: true }));
+                                                    }
+                                                }
+                                            }
                                         
                                         // Establecer montos (solo NIO, USD se calculará automáticamente)
                                         const debitInput = currentLine.querySelector('.line-debit-mxn');
@@ -904,10 +943,12 @@ document.addEventListener('DOMContentLoaded', function(){
     function initFilters(){
         const filterDocType = document.getElementById('filterDocType');
         const searchInput = document.getElementById('searchAsientoId');
+        const filterStart = document.getElementById('filterStart');
+        const filterEnd = document.getElementById('filterEnd');
+        const btnFilter = document.getElementById('btnFilter');
         const btnClear = document.getElementById('btnClearFilters');
-        const noResults = document.getElementById('noResultsMessage');
 
-        if (!filterDocType || !searchInput || !btnClear) {
+        if (!filterDocType || !searchInput || !btnClear || !filterStart || !filterEnd || !btnFilter) {
             console.warn('Filter elements not found');
             return;
         }
@@ -917,12 +958,20 @@ document.addEventListener('DOMContentLoaded', function(){
         filterDocType.parentNode.replaceChild(newFilterDocType, filterDocType);
         const newSearchInput = searchInput.cloneNode(true);
         searchInput.parentNode.replaceChild(newSearchInput, searchInput);
+        const newFilterStart = filterStart.cloneNode(true);
+        filterStart.parentNode.replaceChild(newFilterStart, filterStart);
+        const newFilterEnd = filterEnd.cloneNode(true);
+        filterEnd.parentNode.replaceChild(newFilterEnd, filterEnd);
+        const newBtnFilter = btnFilter.cloneNode(true);
+        btnFilter.parentNode.replaceChild(newBtnFilter, btnFilter);
         const newBtnClear = btnClear.cloneNode(true);
         btnClear.parentNode.replaceChild(newBtnClear, btnClear);
 
         function applyFilters(){
             const selectedType = newFilterDocType.value;
             const searchTerm = newSearchInput.value.trim().toLowerCase();
+            const startDate = newFilterStart.value;
+            const endDate = newFilterEnd.value;
             
             const rows = document.querySelectorAll('.entry-row');
             let visibleCount = 0;
@@ -931,11 +980,14 @@ document.addEventListener('DOMContentLoaded', function(){
                 const rowType = row.getAttribute('data-type') || '';
                 const rowId = row.getAttribute('data-id') || '';
                 const rowDesc = row.getAttribute('data-description') || '';
+                const rowDate = row.getAttribute('data-date') || '';
                 
                 let typeMatch = !selectedType || selectedType === '' || rowType === selectedType;
                 let searchMatch = !searchTerm || rowId.includes(searchTerm) || rowDesc.includes(searchTerm);
+                let startMatch = !startDate || (rowDate && rowDate >= startDate);
+                let endMatch = !endDate || (rowDate && rowDate <= endDate);
                 
-                if (typeMatch && searchMatch) {
+                if (typeMatch && searchMatch && startMatch && endMatch) {
                     row.style.display = '';
                     visibleCount++;
                 } else {
@@ -951,21 +1003,24 @@ document.addEventListener('DOMContentLoaded', function(){
 
         newFilterDocType.addEventListener('change', applyFilters);
         newSearchInput.addEventListener('input', applyFilters);
-        newBtnClear.addEventListener('click', function(){
+        newFilterStart.addEventListener('change', applyFilters);
+        newFilterEnd.addEventListener('change', applyFilters);
+        newBtnFilter.addEventListener('click', function(e){
+            e.preventDefault();
+            applyFilters();
+        });
+        newBtnClear.addEventListener('click', function(e){
+            e.preventDefault();
             newFilterDocType.value = '';
             newSearchInput.value = '';
+            newFilterStart.value = '';
+            newFilterEnd.value = '';
             applyFilters();
         });
     }
     
-    // Initialize filters on page load
+    // Date filtering is now handled through applyFiltersAndPagination.
     let filtersInitialized = false;
-    setTimeout(function() {
-        if (!filtersInitialized) {
-            initFilters();
-            filtersInitialized = true;
-        }
-    }, 500);
     
     // Reinitialize only when table content actually changes (via AJAX)
     if (window.MutationObserver && entriesContainer) {

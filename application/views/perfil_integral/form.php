@@ -241,7 +241,7 @@ $this->load->view('layout/navbar'); ?>
                                 container.innerHTML = html.join('');
                             };
 
-                            function computeMatrizScore(){
+                            function computeMatrizScore(overrideNivelRiesgo = true){
                                 var checks = container.querySelectorAll('input[type="checkbox"]');
                                 var total = 0;
                                 var answers = [];
@@ -277,7 +277,7 @@ $this->load->view('layout/navbar'); ?>
                                 // Set the Nivel de Riesgo select if present
                                 try{
                                     var nivelSel = document.querySelector('select[name="nivel_riesgo"]');
-                                    if(nivelSel){
+                                    if(nivelSel && overrideNivelRiesgo){
                                         // match option values used in the form (Alto/Medio/Bajo/Simplificada)
                                         if(risk === 'Alto') nivelSel.value = 'Alto';
                                         else if(risk === 'Medio') nivelSel.value = 'Medio';
@@ -400,8 +400,8 @@ $this->load->view('layout/navbar'); ?>
                                 if(container) setMatrizQuestions(defaultMatrizQuestions);
                                 // Hide visible point labels to keep scores private
                                 try{ var style = document.createElement('style'); style.innerHTML = '#matriz_questions_container small{ display:none !important; }'; document.head.appendChild(style); }catch(e){}
-                                // compute initial score/risk (safe if inputs not yet in DOM)
-                                try{ computeMatrizScore(); }catch(e){ console.warn('computeMatrizScore initial call failed (might be before inputs exist)'); }
+                                // compute initial score/risk without overriding a saved Nivel de Riesgo
+                                try{ computeMatrizScore(false); }catch(e){ console.warn('computeMatrizScore initial call failed (might be before inputs exist)'); }
                             }catch(e){}
 
                             // open modal: bind after DOM is ready (btnOpen is rendered after this script)
@@ -520,7 +520,7 @@ $this->load->view('layout/navbar'); ?>
                                         var arr = JSON.parse(raw);
                                         // if questions are already present, pre-check (best-effort)
                                         var chks = container.querySelectorAll('input[type="checkbox"]');
-                                        if(chks && chks.length>0){ chks.forEach(function(c){ if(arr.indexOf(c.getAttribute('data-qid'))!==-1) c.checked = true; }); computeMatrizScore(); }
+                                        if(chks && chks.length>0){ chks.forEach(function(c){ if(arr.indexOf(c.getAttribute('data-qid'))!==-1) c.checked = true; }); computeMatrizScore(false); }
                                     }
                                 }catch(e){}
                             });
@@ -544,12 +544,13 @@ $this->load->view('layout/navbar'); ?>
                         </div>
                         <div class="form-group col-md-3">
                             <label>Nivel de Riesgo</label>
+                            <?php $nivel_riesgo_value = strtolower(trim(pv($perfil,$solicitud,['nivel_riesgo']))); ?>
                             <select name="nivel_riesgo" class="form-control">
                                 <option value="">--</option>
-                                <option value="Alto" <?php echo (pv($perfil,$solicitud,['nivel_riesgo'])=='Alto')?'selected':''; ?>>Alto</option>
-                                <option value="Medio" <?php echo (pv($perfil,$solicitud,['nivel_riesgo'])=='Medio')?'selected':''; ?>>Medio</option>
-                                <option value="Bajo" <?php echo (pv($perfil,$solicitud,['nivel_riesgo'])=='Bajo')?'selected':''; ?>>Bajo</option>
-                                <option value="Simplificada" <?php echo (pv($perfil,$solicitud,['nivel_riesgo'])=='Simplificada')?'selected':''; ?>>Simplificada</option>
+                                <option value="Alto" <?php echo ($nivel_riesgo_value === 'alto') ? 'selected' : ''; ?>>Alto</option>
+                                <option value="Medio" <?php echo ($nivel_riesgo_value === 'medio') ? 'selected' : ''; ?>>Medio</option>
+                                <option value="Bajo" <?php echo ($nivel_riesgo_value === 'bajo') ? 'selected' : ''; ?>>Bajo</option>
+                                <option value="Simplificada" <?php echo ($nivel_riesgo_value === 'simplificada') ? 'selected' : ''; ?>>Simplificada</option>
                             </select>
                         </div>
                         <div class="form-group col-md-3">

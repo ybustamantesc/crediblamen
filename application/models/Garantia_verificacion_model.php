@@ -17,11 +17,28 @@ class Garantia_verificacion_model extends CI_Model {
 
     public function get_by_garantia($garantia_id)
     {
-        return $this->db->get_where($this->table, array('garantia_id' => $garantia_id))->result();
+        $this->db->from($this->table);
+        $this->db->where('garantia_id', $garantia_id);
+        if ($this->db->field_exists('created_at', $this->table)) {
+            $this->db->order_by('created_at', 'DESC');
+        }
+        $this->db->order_by('id', 'DESC');
+        return $this->db->get()->result();
     }
 
     public function get_by_solicitud($solicitud_id)
     {
-        return $this->db->get_where($this->table, array('solicitud_id' => $solicitud_id))->result();
+        $this->db->from($this->table);
+        $this->db->where('solicitud_id', $solicitud_id);
+        if ($this->db->field_exists('created_at', $this->table)) {
+            $this->db->order_by('created_at', 'DESC');
+        }
+        $this->db->order_by('id', 'DESC');
+        return $this->db->get()->result();
+    }
+
+    public function update($id, $data)
+    {
+        return $this->db->where('id', $id)->update($this->table, $data);
     }
 }

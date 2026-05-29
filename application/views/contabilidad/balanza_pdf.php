@@ -24,7 +24,7 @@
 </head>
 <body>
     <div class="header">
-            <div class="title" style="font-size:16px;font-weight:700;">Balanza de comprobacion</div>
+            <div class="title" style="font-size:16px;font-weight:700;">Balanza de Comprobación</div>
         <div class="period">
             Período: <?php echo ($start ? date('d/m/Y', strtotime($start)) : 'Inicio'); ?> 
             al <?php echo ($end ? date('d/m/Y', strtotime($end)) : 'Final'); ?>
@@ -76,23 +76,65 @@
         </tfoot>
     </table>
 
-    <div class="sign-block no-break" style="margin-top:18px;">
-        <table style="width:100%; border-collapse:collapse; margin-top:12px; border:0;">
-            <tr>
-                <td style="width:33%; text-align:center; border:0; vertical-align:bottom; padding-top:14px;">
-                    <div style="border-top:1px solid #000; width:70%; margin:0 auto 6px;"></div>
-                    <div style="font-weight:700;">Contador General</div>
-                </td>
-                <td style="width:33%; text-align:center; border:0; vertical-align:bottom; padding-top:14px;">
-                    <div style="border-top:1px solid #000; width:70%; margin:0 auto 6px;"></div>
-                    <div style="font-weight:700;">Gerente Financiero</div>
-                </td>
-                <td style="width:33%; text-align:center; border:0; vertical-align:bottom; padding-top:14px;">
-                    <div style="border-top:1px solid #000; width:70%; margin:0 auto 6px;"></div>
-                    <div style="font-weight:700;">Gerente General</div>
-                </td>
-            </tr>
-        </table>
+    <?php
+        $contadorSignature = isset($signatures['contador']) ? $signatures['contador'] : '';
+        $financieroSignature = isset($signatures['financiero']) ? $signatures['financiero'] : '';
+        $gerenteSignature = isset($signatures['gerente']) ? $signatures['gerente'] : '';
+    ?>
+    <div style="margin-top:18px; width:100%; page-break-inside: avoid;">
+        <div style="width:100%; text-align:center;">
+            <div style="display:inline-block; width:33.333%; vertical-align:top; padding:0 8px; box-sizing:border-box; text-align:center;">
+                <table style="width:100%; border-collapse:collapse; border:0;">
+                    <tr>
+                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0;">
+                            <?php if ($contadorSignature): ?>
+                                <img src="<?php echo $contadorSignature; ?>" style="max-width:160px; max-height:150px; display:inline-block;" alt="Firma Contador General" />
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center; padding-top:4px; border:0;">
+                            <div style="border-top:1px solid #000; width:75%; margin:0 auto 2px;"></div>
+                            <div style="font-weight:700; font-size:9px; margin-top:2px;">Contador General</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div style="display:inline-block; width:33.333%; vertical-align:top; padding:0 8px; box-sizing:border-box; text-align:center;">
+                <table style="width:100%; border-collapse:collapse; border:0;">
+                    <tr>
+                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0;">
+                            <?php if ($financieroSignature): ?>
+                                <img src="<?php echo $financieroSignature; ?>" style="max-width:160px; max-height:150px; display:inline-block;" alt="Firma Gerente Financiero" />
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center; padding-top:4px; border:0;">
+                            <div style="border-top:1px solid #000; width:75%; margin:0 auto 2px;"></div>
+                            <div style="font-weight:700; font-size:9px; margin-top:2px;">Gerente Financiero</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+            <div style="display:inline-block; width:33.333%; vertical-align:top; padding:0 8px; box-sizing:border-box; text-align:center;">
+                <table style="width:100%; border-collapse:collapse; border:0;">
+                    <tr>
+                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0;">
+                            <?php if ($gerenteSignature): ?>
+                                <img src="<?php echo $gerenteSignature; ?>" style="max-width:160px; max-height:150px; display:inline-block;" alt="Firma Gerente General" />
+                            <?php endif; ?>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td style="text-align:center; padding-top:4px; border:0;">
+                            <div style="border-top:1px solid #000; width:75%; margin:0 auto 2px;"></div>
+                            <div style="font-weight:700; font-size:9px; margin-top:2px;">Gerente General</div>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+        </div>
     </div>
 
 <?php /** Add page numbers and watermark */ ?>

@@ -158,22 +158,67 @@
             }).catch(function(e){ console.error(e); alert('Error iniciando job'); });
         });
 
-        // Upload signature handler
-        var uploadBtn = document.getElementById('uploadFirma');
-        if (uploadBtn) uploadBtn.addEventListener('click', function(ev){
-            ev.preventDefault();
-            var fileInput = document.getElementById('firmaFile');
+        function updateSignaturePreview(role, url) {
+            var preview = document.getElementById('firmaPreview_' + role);
+            if (!preview) return;
+            if (url) {
+                preview.innerHTML = '<div style="display:flex; align-items:center; gap:10px;"><img src="' + url + '" style="max-height:60px; max-width:100%; border:1px solid #dee2e6; padding:2px;" /><span class="text-success">Cargada</span></div>';
+            } else {
+                preview.innerHTML = 'No hay firma cargada.';
+            }
+        }
+
+        function handleUpload(role) {
+            var fileInput = document.getElementById('firmaFile_' + role);
             if (!fileInput || !fileInput.files || fileInput.files.length === 0) { alert('Seleccione un archivo'); return; }
             var f = fileInput.files[0];
-            var fd = new FormData(); fd.append('firma', f);
+            var fd = new FormData();
+            fd.append('firma', f);
+            fd.append('role', role);
             fetch(base_url + 'contabilidad/upload_signature', { method: 'POST', body: fd })
-            .then(function(r){ return r.json(); }).then(function(j){
+            .then(function(r){ return r.json(); })
+            .then(function(j){
                 if (j.status === 'success') {
-                    document.getElementById('firmaPreview').innerHTML = '<img src="' + j.path + '" style="max-height:40px;" /> Subido';
+                    updateSignaturePreview(role, j.path);
+                    fileInput.value = '';
                 } else {
                     alert('Error: ' + (j.error || 'upload failed'));
                 }
             }).catch(function(e){ console.error(e); alert('Error subiendo firma'); });
+        }
+
+        function handleDelete(role) {
+            var labels = {
+                'contador': 'Contador General',
+                'financiero': 'Gerente Financiero',
+                'gerente': 'Gerente General'
+            };
+            if (!confirm('¿Eliminar la firma de ' + labels[role] + '?')) return;
+            var body = 'role=' + encodeURIComponent(role);
+            fetch(base_url + 'contabilidad/delete_signature', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                body: body
+            })
+            .then(function(r){ return r.json(); })
+            .then(function(j){
+                if (j.status === 'success') {
+                    updateSignaturePreview(role, '');
+                } else {
+                    alert('Error: ' + (j.error || 'no se pudo eliminar')); 
+                }
+            }).catch(function(e){ console.error(e); alert('Error eliminando firma'); });
+        }
+
+        ['contador', 'financiero', 'gerente'].forEach(function(role){
+            var uploadBtnRole = document.getElementById('uploadFirma_' + role);
+            if (uploadBtnRole) {
+                uploadBtnRole.addEventListener('click', function(ev){ ev.preventDefault(); handleUpload(role); });
+            }
+            var deleteBtnRole = document.getElementById('deleteFirma_' + role);
+            if (deleteBtnRole) {
+                deleteBtnRole.addEventListener('click', function(ev){ ev.preventDefault(); handleDelete(role); });
+            }
         });
 
         // set default month (current)

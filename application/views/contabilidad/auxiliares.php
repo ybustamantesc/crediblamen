@@ -5,14 +5,14 @@
     <?php $this->load->view('contabilidad/sidebar_contabilidad'); ?>
     <div class="main-content">
         <div class="container-fluid">
-            <div class="servicont-balanza-header" style="margin-bottom:18px;">
+            <div class="servicont-balanza-header" style="margin-bottom:18px; padding: 30px 30px;">
                 <div class="d-flex align-items-center">
-                    <div style="width:40px;height:40px;background:rgba(0,0,0,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-right:12px;">
-                        <i class="fas fa-file-alt" style="color:#1e3c72;font-size:18px;"></i>
+                    <div class="servicont-header-icon" style="margin-right:12px; width:40px; height:40px; background: rgba(255, 255, 255, 0.16); border-radius: 10px; display:flex; align-items:center; justify-content:center;">
+                        <i class="fas fa-file-alt" style="color:#ffffff; font-size:18px"></i>
                     </div>
                     <div>
-                        <h1 style="margin:0;font-size:18px;font-weight:700;">Reporte: Auxiliares</h1>
-                        <div style="color:#6b7280;font-size:13px;">Lista de movimientos por cuenta</div>
+                        <h1 class="servicont-header-title">Reporte: Auxiliares</h1>
+                        <div class="servicont-header-subtitle">Lista de movimientos por cuenta</div>
                     </div>
                 </div>
             </div>
@@ -26,6 +26,7 @@
                                 <label class="mb-0">Inicio: <input type="date" id="auxStart" class="form-control form-control-sm" /></label>
                                 <label class="mb-0">Fin: <input type="date" id="auxEnd" class="form-control form-control-sm" /></label>
                                 <button id="btnRunAux" class="btn btn-sm btn-primary">Generar</button>
+                                <button id="btnClearFilters" class="btn btn-sm btn-outline-secondary">Limpiar</button>
                                 <button id="btnExportAux" class="btn btn-sm btn-secondary">Exportar CSV</button>
                                 <button id="btnExportXlsx" class="btn btn-sm btn-success">Exportar XLSX</button>
                                 <button id="btnExportPdf" class="btn btn-sm btn-danger">Exportar PDF</button>

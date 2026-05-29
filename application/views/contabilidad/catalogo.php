@@ -1,7 +1,7 @@
 <style>
     .servicont-catalogo-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 30px 0;
+        padding: 30px 30px;
         margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -98,12 +98,64 @@
         border-radius: 8px;
         padding: 10px 15px;
         transition: all 0.3s ease;
+        box-sizing: border-box;
+        min-width: 0;
     }
     
     .servicont-input:focus {
         outline: none;
         border-color: #2a5298;
         box-shadow: 0 0 0 4px rgba(42, 82, 152, 0.1);
+    }
+
+    .servicont-input.select-full {
+        padding-right: 2.8rem;
+        width: 100%;
+        min-width: 0;
+        min-height: 44px;
+        height: 44px;
+        line-height: 1.4;
+    }
+
+    .servicont-toolbar {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+    }
+
+    .servicont-toolbar .servicont-btn-primary,
+    .servicont-toolbar .servicont-btn-secondary,
+    .servicont-toolbar .servicont-btn-success,
+    .servicont-toolbar .btn-group {
+        margin: 0;
+        flex: 0 1 auto;
+    }
+
+    .servicont-toolbar .btn-group {
+        display: inline-flex;
+    }
+
+    .servicont-toolbar .servicont-btn-primary,
+    .servicont-toolbar .servicont-btn-secondary,
+    .servicont-toolbar .servicont-btn-success {
+        min-width: 140px;
+    }
+
+    @media (max-width: 768px) {
+        .servicont-toolbar {
+            justify-content: flex-start;
+        }
+        .servicont-toolbar .servicont-btn-primary,
+        .servicont-toolbar .servicont-btn-secondary,
+        .servicont-toolbar .servicont-btn-success,
+        .servicont-toolbar .btn-group {
+            flex: 1 1 45%;
+            min-width: 140px;
+        }
+        .servicont-toolbar .btn-group {
+            width: auto;
+        }
     }
     
     .servicont-table {
@@ -144,8 +196,8 @@
                         <i class="fas fa-book" style="font-size: 24px; color: #ffffff;"></i>
                     </div>
                     <div>
-                        <h1 class="servicont-catalogo-title">Catálogo de Cuentas</h1>
-                        <p class="servicont-catalogo-subtitle" style="color: #ffffff !important;">Gestión del Plan de Cuentas Contable</p>
+                        <h1 class="servicont-header-title">Catálogo de Cuentas</h1>
+                        <p class="servicont-header-subtitle">Gestión del Plan de Cuentas Contable</p>
                     </div>
                 </div>
             </div>
@@ -157,32 +209,35 @@
             <div class="mb-4">
                 <div class="row mb-3">
                     <div class="col-md-12">
-                        <button id="btnNewAccount" class="servicont-btn-primary"><i class="fas fa-plus mr-2"></i>Nueva Cuenta</button>
-                        <button id="btnRefreshAccounts" class="servicont-btn-secondary" style="margin-left: 10px;"><i class="fas fa-sync-alt mr-2"></i>Actualizar</button>
-                        <div class="btn-group" role="group" style="margin-left: 10px;">
-                            <button id="btnExportExcel" type="button" class="servicont-btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fas fa-file-excel mr-2"></i>Exportar Excel
-                            </button>
-                            <div class="dropdown-menu">
-                                <a class="dropdown-item" href="#" id="exportBasic"><i class="fas fa-file-alt mr-2"></i>Catálogo Básico</a>
-                                <a class="dropdown-item" href="#" id="exportBimoneda"><i class="fas fa-dollar-sign mr-2"></i>Balance Bimoneda</a>
+                        <div class="servicont-toolbar">
+                            <button id="btnNewAccount" class="servicont-btn-primary"><i class="fas fa-plus mr-2"></i>Nueva Cuenta</button>
+                            <button id="btnRefreshAccounts" class="servicont-btn-secondary"><i class="fas fa-sync-alt mr-2"></i>Actualizar</button>
+                            <div class="btn-group" role="group">
+                                <button id="btnExportExcel" type="button" class="servicont-btn-success dropdown-toggle" data-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
+                                    <i class="fas fa-file-excel mr-2"></i>Exportar Excel
+                                </button>
+                                <div class="dropdown-menu">
+                                    <a class="dropdown-item" href="#" id="exportBasic"><i class="fas fa-file-alt mr-2"></i>Catálogo Básico</a>
+                                    <a class="dropdown-item" href="#" id="exportBimoneda"><i class="fas fa-dollar-sign mr-2"></i>Balance Bimoneda</a>
+                                </div>
                             </div>
                         </div>
-                        
                     </div>
                 </div>
                 <div class="row">
                     <div class="col-md-4">
                         <input id="filterAccount" class="form-control servicont-input" placeholder="🔍 Buscar por código o nombre..." />
                     </div>
-                    <div class="col-md-3">
-                        <select id="filterType" class="form-control servicont-input">
+                    <div class="col-md-4">
+                        <select id="filterType" class="form-control servicont-input select-full">
                             <option value="">📋 Todos los tipos</option>
                             <option value="activo">Activo</option>
                             <option value="pasivo">Pasivo</option>
                             <option value="patrimonio">Patrimonio</option>
                             <option value="ingreso">Ingreso</option>
                             <option value="gasto">Gasto</option>
+                            <option value="contingente">Contingente</option>
+                            <option value="orden">Orden</option>
                         </select>
                     </div>
                     <div class="col-md-2">

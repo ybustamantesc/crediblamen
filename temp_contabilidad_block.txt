@@ -1,0 +1,180 @@
+        $html .= '.print-date{text-align:right;font-size:8.5pt;color:#666;margin-bottom:8px;}';
+        $html .= '.filter-info{margin-bottom:10px;padding:8px;background:#f0f9ff;border-left:4px solid #0ea5e9;border-radius:4px;font-size:8.5pt;color:#0f172a;}';
+        $html .= 'table{width:100%;border-collapse:collapse;margin-bottom:18px;font-size:9pt;table-layout:fixed;}';
+        $html .= '.pdf-header, .pdf-header td{border:none !important;}
+';
+        $html .= 'th,td{border:1px solid #d1d5db;padding:6px 6px;vertical-align:top;word-wrap:break-word;}';
+        $html .= 'thead th{background:#1F4E78;color:#fff;font-weight:700;text-align:left;}';
+        $html .= '.text-right{text-align:right;white-space:nowrap;word-break:normal;}';
+        $html .= '.subtotal-row{font-weight:700;background:#f3f4f6;}';
+        $html .= '.entry-header{background:#0f172a;color:#fff;font-weight:700;}';
+        $html .= '</style></head><body>';
+        $html .= '<table class="pdf-header" width="100%" cellpadding="0" cellspacing="0" style="border-collapse:collapse;margin-bottom:18px;">';
+        $html .= '<tr><td bgcolor="#0b3d91" style="padding:16px 16px;color:#fff;">';
+        $html .= '<table width="100%" cellpadding="0" cellspacing="0" class="pdf-header" style="border-collapse:collapse;">';
+        $html .= '<tr>';
+        $html .= '<td style="vertical-align:middle;padding-right:16px;">';
+        $html .= '<div style="font-size:18pt;font-weight:700;text-transform:uppercase;letter-spacing:1px;margin-bottom:4px;color:#ffffff;">Libro Diario</div>';
+        $html .= '<div style="font-size:10pt;color:#d1d5db;">Registro de asientos contables del sistema</div>';
+        $html .= '</td>';
+        $html .= '<td style="vertical-align:middle;text-align:right;white-space:nowrap;width:1%;">';
+        if ($logoImage) {
+            $html .= '<img src="' . $logoImage . '" alt="Logo" style="max-height:56px;width:auto;display:inline-block;">';
+        }
+        $html .= '</td>';
+        $html .= '</tr>';
+        $html .= '</table>';
+        $html .= '</td></tr></table>';
+        $html .= '<div class="print-date">' . date('d/m/Y H:i') . '</div>';
+        $html .= $filterInfo;
+
+        $overallDebit = 0;
+        $overallCredit = 0;
+        $overallDebitUsd = 0;
+        $overallCreditUsd = 0;
+
+        foreach ($grouped as $journal) {
+            $header = $journal['header'];
+            $html .= '<table><thead><tr><th colspan="6" class="entry-header">Asiento: ' . htmlspecialchars($header['entry_type'] . '-' . $header['entry_id']) . ' | Fecha: ' . htmlspecialchars(date('d/m/Y', strtotime($header['date']))) . '</th></tr></thead><tbody>';
+            $html .= '<tr><td colspan="6" style="padding:8px;background:#f8fafc;">' . htmlspecialchars($header['journal_description']) . '</td></tr>';
+            $html .= '<tr><th style="width:25%;">Cuenta</th><th style="width:25%;">Descripción</th><th style="width:12.5%;" class="text-right">Débito NIO</th><th style="width:12.5%;" class="text-right">Débito USD</th><th style="width:12.5%;" class="text-right">Crédito NIO</th><th style="width:12.5%;" class="text-right">Crédito USD</th></tr>';
+
+            $entryDebit = 0;
+            $entryCredit = 0;
+            $entryDebitUsd = 0;
+            $entryCreditUsd = 0;
+            $runningBalance = 0;
+            foreach ($journal['lines'] as $line) {
+                $debit = floatval($line->debit);
+                $credit = floatval($line->credit);
+                $debitUsd = isset($line->debit_usd) ? floatval($line->debit_usd) : ($exchange_rate > 0 ? $debit / $exchange_rate : 0);
+                $creditUsd = isset($line->credit_usd) ? floatval($line->credit_usd) : ($exchange_rate > 0 ? $credit / $exchange_rate : 0);
+                $entryDebit += $debit;
+                $entryCredit += $credit;
+                $entryDebitUsd += $debitUsd;
+                $entryCreditUsd += $creditUsd;
+                $runningBalance += $debit - $credit;
+                $overallDebit += $debit;
+                $overallCredit += $credit;
+                $overallDebitUsd += $debitUsd;
+                $overallCreditUsd += $creditUsd;
+
+                $accountName = trim(($line->account_code ? $line->account_code . ' - ' : '') . ($line->account_name ?: ''));
+                $description = trim($line->line_description ?: $header['journal_description']);
+
+                $html .= '<tr>';
+                $html .= '<td>' . htmlspecialchars($accountName) . '</td>';
+                $html .= '<td>' . htmlspecialchars($description) . '</td>';
+                $html .= '<td class="text-right">C$ ' . number_format($debit, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">$ ' . number_format($debitUsd, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">C$ ' . number_format($credit, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">$ ' . number_format($creditUsd, 2, '.', ',') . '</td>';
+                $html .= '</tr>';
+            }
+
+            $html .= '<tr class="subtotal-row">';
+            $html .= '<td colspan="2" class="text-right">Subtotal Asiento</td>';
+            $html .= '<td class="text-right">C$ ' . number_format($entryDebit, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">$ ' . number_format($entryDebitUsd, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">C$ ' . number_format($entryCredit, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">$ ' . number_format($entryCreditUsd, 2, '.', ',') . '</td>';
+            $html .= '</tr>';
+            $html .= '</tbody></table>';
+        }
+
+        $html .= '<table><thead><tr><th colspan="2">Totales generales</th><th class="text-right">Débito NIO</th><th class="text-right">Débito USD</th><th class="text-right">Crédito NIO</th><th class="text-right">Crédito USD</th></tr></thead><tbody>';
+        $html .= '<tr class="subtotal-row">';
+        $html .= '<td colspan="2" class="text-right">Total seleccionado</td>';
+        $html .= '<td class="text-right">C$ ' . number_format($overallDebit, 2, '.', ',') . '</td>';
+        $html .= '<td class="text-right">$ ' . number_format($overallDebitUsd, 2, '.', ',') . '</td>';
+        $html .= '<td class="text-right">C$ ' . number_format($overallCredit, 2, '.', ',') . '</td>';
+        $html .= '<td class="text-right">$ ' . number_format($overallCreditUsd, 2, '.', ',') . '</td>';
+        $html .= '</tr>';
+        $html = '<!DOCTYPE html><html><head><meta charset="UTF-8"><title>Libro Diario - ' . htmlspecialchars($empresaName) . '</title>';
+        $html .= '<style>@page{margin:8mm 6mm;}body{font-family:Calibri,Segoe UI,Tahoma,Arial,sans-serif;color:#1a1a1a;padding:8mm 6mm;font-size:9.5pt;}';
+        $html .= '.wrap{max-width:100%;margin:0 auto;}';
+        $html .= '.title-bar{width:100%;margin-bottom:12px;border-collapse:collapse;}';
+        $html .= '.title-bar td{border:none;padding:0;vertical-align:middle;}';
+        $html .= '.title-main{font-size:18pt;font-weight:700;color:#fff;padding:14px 16px;background:#0b3d91;display:inline-block;}';
+        $html .= '.title-sub{font-size:10pt;color:#d1d5db;margin-top:4px;}';
+        $html .= '.meta{display:flex;justify-content:space-between;gap:12px;margin-top:10px;font-size:9pt;color:#333;}';
+        $html .= '.meta div{line-height:1.5;}';
+        $html .= '.filter-info{margin-bottom:12px;padding:8px;background:#f0f9ff;border-left:4px solid #0ea5e9;border-radius:4px;font-size:8.5pt;color:#0f172a;}';
+        $html .= '.print-date{text-align:right;font-size:8.5pt;color:#666;margin-top:8px;}';
+        $html .= '.journal-block{page-break-after:always;page-break-inside:avoid;margin-bottom:20px;}';
+        $html .= 'table{width:100%;border-collapse:collapse;margin-top:12px;margin-bottom:18px;font-size:9pt;table-layout:fixed;}';
+        $html .= 'th,td{border:1px solid #d1d5db;padding:6px 6px;vertical-align:top;word-wrap:break-word;}';
+        $html .= 'thead th{background:#1F4E78;color:#fff;font-weight:700;text-align:left;}';
+        $html .= '.text-right{text-align:right;white-space:nowrap;word-break:normal;}';
+        $html .= '.entry-header{background:#0f172a;color:#fff;font-weight:700;}';
+        $html .= '.subtotal-row{font-weight:700;background:#f3f4f6;}';
+        $html .= '.no-border{border:none;}';
+        $html .= '</style></head><body><div class="wrap">';
+        $html .= '<table class="title-bar"><tr><td><div class="title-main">Libro Diario</div><div class="title-sub">Registro de asientos contables del sistema</div></td><td style="text-align:right;width:1%;">';
+        if ($logoImage) {
+            $html .= '<img src="' . $logoImage . '" alt="Logo" style="max-height:56px;width:auto;display:inline-block;">';
+        }
+        $html .= '</td></tr></table>';
+        $html .= '<div class="print-date">' . date('d/m/Y H:i') . '</div>';
+        $html .= $filterInfo;
+
+        $overallDebit = 0;
+        $overallCredit = 0;
+        $overallDebitUsd = 0;
+        $overallCreditUsd = 0;
+
+        foreach ($grouped as $journal) {
+            $header = $journal['header'];
+            $html .= '<div class="journal-block">';
+            $html .= '<table><thead><tr><th colspan="6" class="entry-header">Asiento: ' . htmlspecialchars($header['entry_type'] . '-' . $header['entry_id']) . ' | Fecha: ' . htmlspecialchars(date('d/m/Y', strtotime($header['date']))) . '</th></tr></thead><tbody>';
+            $html .= '<tr><td colspan="6" style="padding:8px;background:#f8fafc;">' . htmlspecialchars($header['journal_description']) . '</td></tr>';
+            $html .= '<tr><th style="width:25%;">Cuenta</th><th style="width:25%;">Descripción</th><th style="width:12.5%;" class="text-right">Débito NIO</th><th style="width:12.5%;" class="text-right">Débito USD</th><th style="width:12.5%;" class="text-right">Crédito NIO</th><th style="width:12.5%;" class="text-right">Crédito USD</th></tr>';
+
+            $entryDebit = 0;
+            $entryCredit = 0;
+            $entryDebitUsd = 0;
+            $entryCreditUsd = 0;
+            foreach ($journal['lines'] as $line) {
+                $debit = floatval($line->debit);
+                $credit = floatval($line->credit);
+                $debitUsd = isset($line->debit_usd) ? floatval($line->debit_usd) : ($exchange_rate > 0 ? $debit / $exchange_rate : 0);
+                $creditUsd = isset($line->credit_usd) ? floatval($line->credit_usd) : ($exchange_rate > 0 ? $credit / $exchange_rate : 0);
+                $entryDebit += $debit;
+                $entryCredit += $credit;
+                $entryDebitUsd += $debitUsd;
+                $entryCreditUsd += $creditUsd;
+                $overallDebit += $debit;
+                $overallCredit += $credit;
+                $overallDebitUsd += $debitUsd;
+                $overallCreditUsd += $creditUsd;
+
+                $accountName = trim(($line->account_code ? $line->account_code . ' - ' : '') . ($line->account_name ?: ''));
+                $description = trim($line->line_description ?: $header['journal_description']);
+
+                $html .= '<tr>';
+                $html .= '<td>' . htmlspecialchars($accountName) . '</td>';
+                $html .= '<td>' . htmlspecialchars($description) . '</td>';
+                $html .= '<td class="text-right">C$ ' . number_format($debit, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">$ ' . number_format($debitUsd, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">C$ ' . number_format($credit, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">$ ' . number_format($creditUsd, 2, '.', ',') . '</td>';
+                $html .= '</tr>';
+            }
+
+            $html .= '<tr class="subtotal-row">';
+            $html .= '<td colspan="2" class="text-right">Subtotal Asiento</td>';
+            $html .= '<td class="text-right">C$ ' . number_format($entryDebit, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">$ ' . number_format($entryDebitUsd, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">C$ ' . number_format($entryCredit, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">$ ' . number_format($entryCreditUsd, 2, '.', ',') . '</td>';
+            $html .= '</tr>';
+            $html .= '</tbody></table>';
+            $html .= '</div>';
+        }
+
+        $html .= '<table><thead><tr><th colspan="2">Totales generales</th><th class="text-right">Débito NIO</th><th class="text-right">Débito USD</th><th class="text-right">Crédito NIO</th><th class="text-right">Crédito USD</th></tr></thead><tbody>';
+        $html .= '<tr class="subtotal-row">';
+        $html .= '<td colspan="2" class="text-right">Total seleccionado</td>';
+        $html .= '<td class="text-right">C$ ' . number_format($overallDebit, 2, '.', ',') . '</td>';
+        $html .= '<td class="text-right">$ ' . number_format($overallDebitUsd, 2, '.', ',') . '</td>';
+        $html .= '<td class="text-right">C$ ' . number_format($overallCredit, 2, '.', ',') . '</td>';

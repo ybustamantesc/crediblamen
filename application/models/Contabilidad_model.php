@@ -260,7 +260,7 @@ class Contabilidad_model extends CI_Model {
     }
 
     // Obtener journals (simplificado)
-    public function get_journals()
+    public function get_journals($start_date = null, $end_date = null)
     {
         // Build select dynamically based on existing columns
         $select = 'j.id, j.date, j.description, j.total_debit, j.total_credit';
@@ -272,11 +272,18 @@ class Contabilidad_model extends CI_Model {
             $select .= ', 0 as voided, NULL as voided_by, NULL as voided_at';
         }
         
-        // Add entry_type if exists
-        if ($this->safe_field_exists('entry_type', 'tb_journal')) {
-            $select .= ', j.entry_type';
+        // Add document_type or entry_type if exists, and keep compatibility
+        if ($this->safe_field_exists('document_type', 'tb_journal')) {
+            $select .= ', j.document_type as document_type';
+            if ($this->safe_field_exists('entry_type', 'tb_journal')) {
+                $select .= ', j.entry_type';
+            } else {
+                $select .= ', j.document_type as entry_type';
+            }
+        } elseif ($this->safe_field_exists('entry_type', 'tb_journal')) {
+            $select .= ', j.entry_type, j.entry_type as document_type';
         } else {
-            $select .= ', "CD" as entry_type';
+            $select .= ', "CD" as entry_type, "CD" as document_type';
         }
         
         // Add posted (mayorizado) columns if they exist
@@ -300,12 +307,70 @@ class Contabilidad_model extends CI_Model {
         if ($this->db->field_exists('centro_costo_id', 'tb_journal_entry')) {
             $this->db->join('tb_centro_costo as cc', 'cc.id = je.centro_costo_id', 'left');
         }
+
+        if ($start_date) {
+            $this->db->where('DATE(j.date) >=', $start_date);
+        }
+        if ($end_date) {
+            $this->db->where('DATE(j.date) <=', $end_date);
+        }
         
         $this->db->group_by('j.id');
         $this->db->order_by('j.date', 'desc');
         $this->db->order_by('j.id', 'desc');
         $q = $this->db->get();
         return $q->result();
+    }
+
+    /**
+     * Return journal lines for the given journal IDs, including account metadata.
+     *
+     * @param array $entry_ids
+     * @return array
+     */
+    public function get_journal_lines_by_entry_ids(array $entry_ids)
+    {
+        $entry_ids = array_filter(array_map('intval', $entry_ids));
+        if (empty($entry_ids)) {
+            return [];
+        }
+
+        $acct = $this->account_table_name();
+        $nameCol = $this->db->field_exists('name', $acct) ? 'name' : 'ame';
+        $accountTypeCol = $this->db->field_exists('type', $acct) ? 'a.type as account_type,' : '';
+
+        $select = 'j.id as journal_id, j.date, j.description as journal_description, ';
+        if ($this->db->field_exists('entry_type', 'tb_journal')) {
+            $select .= 'j.entry_type, ';
+        } elseif ($this->db->field_exists('document_type', 'tb_journal')) {
+            $select .= 'j.document_type as entry_type, ';
+        } else {
+            $select .= '"CD" as entry_type, ';
+        }
+        $select .= 'e.id as line_id, e.debit, e.credit, ';
+        if ($this->db->field_exists('debit_usd', 'tb_journal_entry') && $this->db->field_exists('credit_usd', 'tb_journal_entry')) {
+            $select .= 'e.debit_usd, e.credit_usd, ';
+        }
+        $select .= 'COALESCE(NULLIF(e.description, ""), j.description) as line_description, a.code as account_code, a.' . $nameCol . ' as account_name, ' . $accountTypeCol;
+        if ($this->db->field_exists('centro_costo_id', 'tb_journal_entry')) {
+            $select .= 'e.centro_costo_id, cc.codigo as centro_costo_codigo, cc.nombre as centro_costo_nombre, ';
+        }
+        $select = rtrim($select, ', ');
+
+        $this->db->select($select);
+        $this->db->from('tb_journal_entry e');
+        $this->db->join('tb_journal j', 'j.id = e.journal_id', 'left');
+        $this->db->join($acct . ' a', 'a.id = e.account_id', 'left');
+        if ($this->db->field_exists('centro_costo_id', 'tb_journal_entry')) {
+            $this->db->join('tb_centro_costo cc', 'cc.id = e.centro_costo_id', 'left');
+        }
+        $this->db->where_in('e.journal_id', $entry_ids);
+        $this->db->order_by('j.date', 'asc');
+        $this->db->order_by('j.id', 'asc');
+        $this->db->order_by('e.id', 'asc');
+
+        $query = $this->db->get();
+        return $query->result();
     }
 
     /**
@@ -929,7 +994,7 @@ class Contabilidad_model extends CI_Model {
             }
 
             // get lines within the period
-            $sql2 = "SELECT j.date as date, IFNULL(j.entry_type, '') as serie, j.id as document_no, e.description as descripcion, e.debit as debit, e.credit as credit, e.centro_costo_id as centro_id FROM tb_journal_entry e JOIN tb_journal j ON j.id = e.journal_id WHERE e.account_id = ? AND j.posted = 1 AND (j.voided IS NULL OR j.voided = 0)";
+            $sql2 = "SELECT j.date as date, IFNULL(j.entry_type, '') as serie, j.id as document_no, e.description as descripcion, e.debit as debit, e.credit as credit, e.centro_costo_id as centro_id FROM tb_journal_entry e JOIN tb_journal j ON j.id = e.journal_id WHERE e.account_id = ? AND j.posted = 1 AND (j.voided IS NULL OR j.voided = 0) AND (j.date IS NOT NULL AND j.date <> '' AND j.date <> '0000-00-00')";
             $params = array($aid);
             if ($start) { $sql2 .= " AND j.date >= ?"; $params[] = $start; }
             if ($end) { $sql2 .= " AND j.date <= ?"; $params[] = $end; }
@@ -1864,8 +1929,13 @@ class Contabilidad_model extends CI_Model {
             'created_by' => isset($data['created_by']) ? intval($data['created_by']) : null,
             'source_type' => isset($data['source_type']) ? $data['source_type'] : null,
             'source_id' => isset($data['source_id']) ? intval($data['source_id']) : null,
-            'entry_type' => isset($data['entry_type']) ? $data['entry_type'] : null,
         ];
+        if ($this->db->field_exists('document_type', 'tb_journal')) {
+            $journal['document_type'] = isset($data['document_type']) ? $data['document_type'] : (isset($data['entry_type']) ? $data['entry_type'] : null);
+        }
+        if ($this->db->field_exists('entry_type', 'tb_journal')) {
+            $journal['entry_type'] = isset($data['entry_type']) ? $data['entry_type'] : (isset($data['document_type']) ? $data['document_type'] : null);
+        }
 
         $this->db->insert('tb_journal', $journal);
         $journal_id = $this->db->insert_id();
@@ -1979,7 +2049,7 @@ class Contabilidad_model extends CI_Model {
         $acct = $this->account_table_name();
         $nameCol = $this->db->field_exists('name', $acct) ? 'name' : 'ame';
         
-        $select = 'e.id, e.journal_id, e.account_id, e.debit, e.credit, e.description as line_description, a.code, a.' . $nameCol . ' as name';
+        $select = 'e.id, e.journal_id, e.account_id, e.debit, e.credit, e.description as line_description, e.description as description, a.code, a.' . $nameCol . ' as name';
         
         // Add centro_costo fields if column exists
         if ($this->db->field_exists('centro_costo_id', 'tb_journal_entry')) {
@@ -2129,8 +2199,11 @@ class Contabilidad_model extends CI_Model {
             'description' => isset($data['description']) ? $data['description'] : '',
         ];
         
-        // Add entry_type if provided
-        if (isset($data['entry_type'])) {
+        // Add document_type if provided and keep entry_type compatibility
+        if (isset($data['document_type']) && $this->db->field_exists('document_type', 'tb_journal')) {
+            $headerUpdate['document_type'] = $data['document_type'];
+        }
+        if (isset($data['entry_type']) && $this->db->field_exists('entry_type', 'tb_journal')) {
             $headerUpdate['entry_type'] = $data['entry_type'];
         }
         

@@ -6,7 +6,7 @@
     
     .servicont-header-modern {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 30px 0;
+        padding: 30px 30px;
         margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -27,6 +27,7 @@
     .servicont-header-content {
         position: relative;
         z-index: 1;
+        padding-left: 6px; /* small offset to match other headers */
     }
     
     .servicont-header-icon {
@@ -92,12 +93,12 @@
     }
     
     .servicont-welcome-card {
-        background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+        background: linear-gradient(135deg, #163a70 0%, #0d284f 100%);
         border-radius: 15px;
         padding: 35px;
         color: #ffffff;
         margin-bottom: 30px;
-        box-shadow: 0 8px 25px rgba(102, 126, 234, 0.3);
+        box-shadow: 0 8px 25px rgba(13, 40, 79, 0.28);
     }
     
     .servicont-welcome-title {
@@ -203,16 +204,6 @@
     <?php $this->load->view('contabilidad/sidebar_contabilidad'); ?>
     <div class="main-content">
         <div class="container-fluid">
-            <div class="servicont-header-modern">
-                <div class="servicont-header-content">
-                    <div class="servicont-header-icon">
-                        <i class="fas fa-calculator"></i>
-                    </div>
-                    <h1 class="servicont-header-title">Contabilidad</h1>
-                    <p class="servicont-header-subtitle" style="color: #ffffff !important;">Sistema de Contabilidad Integral</p>
-                </div>
-            </div>
-
             <div class="mb-3 d-flex justify-content-end">
                 <a href="<?php echo site_url('menu'); ?>" class="btn btn-outline-primary"><i class="fa fa-home mr-1"></i> Regresar al menú</a>
             </div>

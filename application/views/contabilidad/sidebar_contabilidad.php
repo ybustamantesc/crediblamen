@@ -1,5 +1,7 @@
 <?php // Menú lateral para módulo de contabilidad (estilo moderno) ?>
 <style>
+    /* Sidebar content sizing is handled by the global theme CSS to keep behavior consistent */
+
     .app-sidebar.servicont-sidebar {
         background: linear-gradient(180deg, #1e3c72 0%, #2a5298 100%);
         box-shadow: 2px 0 15px rgba(0, 0, 0, 0.1);
@@ -8,7 +10,10 @@
     .servicont-sidebar .sidebar-header {
         background: rgba(255, 255, 255, 0.1);
         border-bottom: 1px solid rgba(255, 255, 255, 0.15);
-        padding: 20px;
+        /* Match global theme header height to keep calc(100vh - 60px) accurate */
+        padding: 13px 15px;
+        height: 60px;
+        box-sizing: border-box;
     }
     
     .servicont-sidebar .header-brand {
@@ -32,11 +37,22 @@
         color: #2a5298;
     }
     
-    .servicont-sidebar .sidebar-profile {
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 10px;
-        margin: 15px;
-        padding: 15px !important;
+    /* Profile header placed inside the sidebar header to keep header height = 60px
+       so that .sidebar-content height = calc(100vh - 60px) remains correct. */
+    .servicont-sidebar .sidebar-profile-header {
+        color: #ffffff;
+        padding-left: 12px;
+        padding-right: 12px;
+    }
+
+    /* Use the same readable text colors as the main sidebar */
+    .servicont-sidebar .sidebar-profile-header .profile-name {
+        color: #222 !important;
+        font-size: 13px;
+    }
+    .servicont-sidebar .sidebar-profile-header .profile-role {
+        color: #666 !important;
+        font-size: 11px;
     }
     
     .servicont-sidebar .profile-img {
@@ -106,19 +122,13 @@
                 <i class="ik ik-briefcase servicont-logo-icon"></i>
             </div>
         </a>
-        <button type="button" class="nav-toggle"><i data-toggle="expanded" class="ik ik-toggle-right toggle-icon"></i></button>
-        <button id="sidebarClose" class="nav-close"><i class="ik ik-x"></i></button>
-    </div>
-
-    <?php $user = $this->ion_auth->user()->row(); $perfil = isset($user->perfil) ? $user->perfil : NULL; ?>
-    <div class="sidebar-profile px-3 py-2 d-flex align-items-center">
-        <div class="profile-img mr-2">
-            <i class="ik ik-user"></i>
-        </div>
-        <div class="profile-info">
+        <?php $user = $this->ion_auth->user()->row(); $perfil = isset($user->perfil) ? $user->perfil : NULL; ?>
+        <div class="sidebar-profile-header px-3 py-2" style="flex: 1;">
             <div class="profile-name font-weight-bold"><?php echo isset($user) ? ($user->first_name ?: ($user->username ?: $user->email)) : 'Usuario'; ?></div>
             <div class="profile-role small text-muted"><?php echo (isset($perfil) ? ($perfil == 1 ? 'Administrador' : ($perfil == 2 ? 'Supervisor' : 'Asesor')) : 'Usuario'); ?></div>
         </div>
+        <!-- nav-toggle removed for full-view layout -->
+        <button id="sidebarClose" class="nav-close"><i class="ik ik-x"></i></button>
     </div>
 
     <div class="sidebar-content">

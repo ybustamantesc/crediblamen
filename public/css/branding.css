@@ -136,6 +136,137 @@
 	letter-spacing:0.6px;
 }
 
+.servicont-header-title {
+    color: #ffffff;
+    font-size: 28px;
+    font-weight: 700;
+    margin: 0;
+    position: relative;
+    z-index: 1;
+}
+
+.servicont-header-subtitle {
+    color: rgba(255, 255, 255, 0.9);
+    font-size: 15px;
+    margin: 5px 0 0 0;
+    position: relative;
+    z-index: 1;
+}
+
+.servicont-header-icon {
+    width: 50px;
+    height: 50px;
+    background: rgba(255, 255, 255, 0.2);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+}
+
+.servicont-catalogo-header,
+.servicont-diario-header,
+.servicont-mayor-header,
+.servicont-balanza-header,
+.servicont-centros-header,
+.servicont-tasa-header {
+    background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+    padding: 30px 30px;
+    margin-bottom: 30px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+    position: relative;
+    overflow: hidden;
+}
+
+[class*="servicont-"][class$="-header"]::before {
+    content: '';
+    position: absolute;
+    top: -50%;
+    right: -10%;
+    width: 300px;
+    height: 300px;
+    background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+    border-radius: 50%;
+}
+
+.servicont-header-icon i {
+    font-size: 24px;
+    color: #ffffff;
+}
+
+.servicont-catalogo-card {
+    background: #ffffff;
+    border-radius: 15px;
+    box-shadow: 0 5px 20px rgba(0, 0, 0, 0.08);
+    border: none;
+    overflow: hidden;
+}
+
+.servicont-toolbar {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    align-items: center;
+    justify-content: flex-start;
+    margin-bottom: 25px;
+}
+
+.servicont-toolbar > * {
+    flex: 0 1 auto;
+    min-width: 0;
+}
+
+.servicont-toolbar .form-control,
+.servicont-toolbar .btn,
+.servicont-toolbar select {
+    min-width: 0;
+    max-width: 100%;
+}
+
+.servicont-diario-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    min-width: 0;
+    white-space: nowrap;
+}
+
+@media (max-width: 767.98px) {
+    .servicont-toolbar {
+        justify-content: flex-start;
+    }
+
+    .servicont-toolbar > .servicont-diario-btn {
+        flex: 1 1 calc(33.333% - 8px);
+        min-width: calc(33.333% - 8px);
+        max-width: calc(33.333% - 8px);
+    }
+
+    .servicont-toolbar > .servicont-diario-btn svg,
+    .servicont-toolbar > .servicont-diario-btn i {
+        font-size: 14px;
+    }
+}
+
+.diario-wrapper {
+    width: 100%;
+    overflow-x: auto;
+    position: relative;
+}
+
+.table-diary {
+    width: 100%;
+    min-width: 760px;
+    border-collapse: separate;
+    border-spacing: 0;
+    background: #fff;
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    font-size: 15px;
+}
+
 /* Upcoming / loading state styles used by reportes/* views */
 .upcoming-title{ font-size:1.75rem; color:var(--logo-dark); font-weight:800; margin-bottom:.25rem; }
 .upcoming-sub{ color:rgba(7,48,72,0.7); margin-bottom:1rem; font-size:1rem; }
@@ -267,6 +398,39 @@ header.header-top #userDropdown > i.ik.ik-user,
 header.header-top .dropdown-toggle .ik.ik-user.ik-2x {
 	color: #ffffff !important;
 	text-shadow: 0 1px 0 rgba(0,0,0,0.25);
+}
+
+/* User dropdown button styling - properly sized and padded */
+header.header-top .user-dropdown-toggle {
+	display: inline-flex !important;
+	align-items: center !important;
+	justify-content: center !important;
+	padding: 6px 10px !important;
+	min-width: 40px !important;
+	min-height: 40px !important;
+	border-radius: 8px;
+	transition: all 0.3s ease;
+}
+
+header.header-top .user-dropdown-toggle:hover {
+	background: rgba(255, 255, 255, 0.15);
+}
+
+header.header-top .user-dropdown-toggle .ik.ik-user {
+	font-size: 1rem !important;
+	line-height: 1 !important;
+}
+
+/* Responsive adjustments for mobile */
+@media (max-width: 768px) {
+	header.header-top .user-dropdown-toggle {
+		padding: 8px 12px;
+		min-width: 44px;
+		min-height: 44px;
+	}
+	header.header-top .user-dropdown-toggle .ik.ik-user {
+		font-size: 1.5rem;
+	}
 }
 
 /* keep the dropdown menu icons darker inside the opened dropdown (no visual conflict) */

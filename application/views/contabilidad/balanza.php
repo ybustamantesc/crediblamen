@@ -3,7 +3,7 @@
     .negative { color: #ef4444; font-weight: 600; }
     .servicont-balanza-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 30px 0;
+        padding: 30px 30px;
         margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -30,8 +30,8 @@
                         <i class="fas fa-balance-scale" style="font-size: 24px; color: #ffffff;"></i>
                     </div>
                     <div>
-                        <h1 class="servicont-catalogo-title">Balanza de Comprobación</h1>
-                        <p class="servicont-catalogo-subtitle" style="color: #ffffff !important;">Saldos y verificación de cuentas contables</p>
+                        <h1 class="servicont-header-title">Balanza de Comprobación</h1>
+                        <p class="servicont-header-subtitle">Saldos y verificación de cuentas contables</p>
                     </div>
                 </div>
             </div>
@@ -70,16 +70,35 @@
                                     <!-- Botones eliminados: Exportar todo (Excel) y PDF BG - ocultados por solicitud -->
                                 </div>
                                 <div class="form-row">
-                                    <div class="col-md-4">
-                                        <label class="small" style="font-weight: 600; color: #2a5298;">Firma autorizada (imagen)</label>
-                                        <div class="input-group">
-                                            <input type="file" id="firmaFile" accept="image/*" class="form-control form-control-sm servicont-input" />
-                                            <div class="input-group-append">
-                                                <button id="uploadFirma" class="servicont-btn-secondary btn-sm">Subir</button>
+                                    <?php $signatures = [
+                                        'contador' => 'Contador General',
+                                        'financiero' => 'Gerente Financiero',
+                                        'gerente' => 'Gerente General'
+                                    ]; ?>
+                                    <?php foreach ($signatures as $role => $label): ?>
+                                        <div class="col-md-4 mb-3">
+                                            <div class="card p-3" style="border:1px solid #d1d5db; border-radius: 10px; background: #ffffff;">
+                                                <label class="small" style="font-weight: 600; color: #2a5298; display:block; margin-bottom: 10px;">Firma de <?php echo $label; ?></label>
+                                                <input type="file" id="firmaFile_<?php echo $role; ?>" accept="image/*" class="form-control form-control-sm servicont-input mb-2" />
+                                                <div class="d-flex align-items-center mb-2">
+                                                    <button id="uploadFirma_<?php echo $role; ?>" class="servicont-btn-secondary btn-sm mr-2">Subir</button>
+                                                    <button id="deleteFirma_<?php echo $role; ?>" class="servicont-btn-danger btn-sm">Eliminar</button>
+                                                </div>
+                                                <div id="firmaPreview_<?php echo $role; ?>" class="small text-muted mt-1">
+                                                    <?php $field = 'firma_' . $role; ?>
+                                                    <?php $url = isset($empresa->{$field}) && !empty($empresa->{$field}) ? base_url('uploads/'.$empresa->{$field}) : ''; ?>
+                                                    <?php if ($url): ?>
+                                                        <div style="display:flex; align-items:center; gap:10px;">
+                                                            <img src="<?php echo $url; ?>" style="max-height:60px; max-width:100%; border:1px solid #dee2e6; padding:2px;" />
+                                                            <span class="text-success">Cargada</span>
+                                                        </div>
+                                                    <?php else: ?>
+                                                        No hay firma cargada.
+                                                    <?php endif; ?>
+                                                </div>
                                             </div>
                                         </div>
-                                        <div id="firmaPreview" class="small text-muted mt-1"></div>
-                                    </div>
+                                    <?php endforeach; ?>
                                 </div>
                             </div>
 
@@ -115,20 +134,6 @@
                                     </table>
                                 </div>
                                 <div id="balanzaFooter" class="mt-2 small text-muted"></div>
-                            </div>
-                            <div class="row mt-4" style="margin-top:24px;">
-                                <div class="col-4 text-center">
-                                    <div style="border-top:1px solid #000; width:70%; margin:0 auto 6px;"></div>
-                                    <div style="font-weight:700;">Contador General</div>
-                                </div>
-                                <div class="col-4 text-center">
-                                    <div style="border-top:1px solid #000; width:70%; margin:0 auto 6px;"></div>
-                                    <div style="font-weight:700;">Gerente Financiero</div>
-                                </div>
-                                <div class="col-4 text-center">
-                                    <div style="border-top:1px solid #000; width:70%; margin:0 auto 6px;"></div>
-                                    <div style="font-weight:700;">Gerente General</div>
-                                </div>
                             </div>
                             <div id="modalContainer"></div>
                             <input type="hidden" id="empresa_razon_social" value="<?php echo htmlspecialchars($empresa ? $empresa->razon_social : ''); ?>" />

@@ -22,6 +22,7 @@
 </div>
 <div class="modal-footer">
     <button id="auxSelectAll" class="btn btn-sm btn-link">Seleccionar todo</button>
+    <button id="auxDeselectAll" class="btn btn-sm btn-link">Deseleccionar todo</button>
     <button id="auxApply" class="btn btn-sm btn-primary">Aplicar</button>
     <button class="btn btn-sm btn-secondary" data-dismiss="modal">Cerrar</button>
 </div>

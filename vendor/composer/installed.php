@@ -3,7 +3,7 @@
         'name' => 'codeigniter/framework',
         'pretty_version' => 'dev-yolanda',
         'version' => 'dev-yolanda',
-        'reference' => '4c51fd52b8d3bda07acfbd1248dea79edb36b97a',
+        'reference' => 'ff2916546c742c6e49d0c32c1d78c702172edb23',
         'type' => 'project',
         'install_path' => __DIR__ . '/../../',
         'aliases' => array(),
@@ -13,7 +13,7 @@
         'codeigniter/framework' => array(
             'pretty_version' => 'dev-yolanda',
             'version' => 'dev-yolanda',
-            'reference' => '4c51fd52b8d3bda07acfbd1248dea79edb36b97a',
+            'reference' => 'ff2916546c742c6e49d0c32c1d78c702172edb23',
             'type' => 'project',
             'install_path' => __DIR__ . '/../../',
             'aliases' => array(),

@@ -2,7 +2,7 @@
 <style>
     .servicont-tasa-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 30px 0;
+        padding: 30px 30px;
         margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -32,8 +32,8 @@
                             <i class="fas fa-dollar-sign" style="font-size: 24px; color: #ffffff;"></i>
                         </div>
                         <div>
-                            <h1 class="servicont-catalogo-title"><?php echo $titulo; ?></h1>
-                            <p class="servicont-catalogo-subtitle" style="color: #ffffff !important;"><?php echo $subtitulo; ?></p>
+                            <h1 class="servicont-header-title"><?php echo $titulo; ?></h1>
+                            <p class="servicont-header-subtitle"><?php echo $subtitulo; ?></p>
                         </div>
                     </div>
                     <a class="servicont-btn-primary" href="<?php echo base_url('tasacambio/core'); ?>" style="text-decoration: none;">

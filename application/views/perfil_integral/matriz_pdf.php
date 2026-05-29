@@ -53,6 +53,22 @@ function _show_field($val) {
     return $val;
 }
 
+function _show_full_name($perfil, $sol = null) {
+    if (!empty($sol) && !empty($sol->nombre_completo)) {
+        return $sol->nombre_completo;
+    }
+    $parts = [];
+    if (!empty($perfil->nombre)) $parts[] = $perfil->nombre;
+    if (!empty($perfil->segundo_nombre)) $parts[] = $perfil->segundo_nombre;
+    if (!empty($perfil->primer_apellido)) $parts[] = $perfil->primer_apellido;
+    if (!empty($perfil->segundo_apellido)) $parts[] = $perfil->segundo_apellido;
+    if (!empty($sol) && empty($perfil->nombre) && !empty($sol->nombre)) $parts[] = $sol->nombre;
+    if (!empty($sol) && empty($perfil->segundo_nombre) && !empty($sol->segundo_nombre)) $parts[] = $sol->segundo_nombre;
+    if (!empty($sol) && empty($perfil->primer_apellido) && !empty($sol->primer_apellido)) $parts[] = $sol->primer_apellido;
+    if (!empty($sol) && empty($perfil->segundo_apellido) && !empty($sol->segundo_apellido)) $parts[] = $sol->segundo_apellido;
+    return count($parts) ? implode(' ', $parts) : '';
+}
+
 ?>
 
 <div class="report">
@@ -61,7 +77,7 @@ function _show_field($val) {
 
     <h2>Datos Generales</h2>
     <table class="qa">
-        <tr><td class="label">Nombre/Razón social</td><td class="value"><?php echo _show_field(isset($sol->nombre_completo)?$sol->nombre_completo:(isset($perfil->nombre)?$perfil->nombre:'')); ?></td></tr>
+        <tr><td class="label">Nombre/Razón social</td><td class="value"><?php echo _show_field(_show_full_name($perfil, isset($sol) ? $sol : null)); ?></td></tr>
         <tr><td class="label">Número identificación</td><td class="value"><?php echo _show_field(isset($sol->numero_documento)?$sol->numero_documento:(isset($perfil->numero_documento)?$perfil->numero_documento:'')); ?></td></tr>
         <tr><td class="label">Fecha inicio relación</td><td class="value"><?php echo _show_field(isset($sol->fecha_solicitud)?$sol->fecha_solicitud:''); ?></td></tr>
         <tr><td class="label">Fecha de Evaluación</td><td class="value"><?php echo _show_field(isset($fecha_evaluacion)?$fecha_evaluacion:date('d/m/Y H:i')); ?></td></tr>

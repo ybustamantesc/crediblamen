@@ -23,12 +23,12 @@
 				<div class="col-12 mb-3">
 					<div class="card">
 						<div class="card-body">
-							<div class="d-flex justify-content-between align-items-center">
+							<div class="d-flex justify-content-between align-items-center flex-wrap">
 									<h4 class="mb-1">Bienvenido, <?php echo isset($display_name) ? $display_name : ''; ?></h4>
-									<div class="d-flex align-items-center">
-										<a href="<?php echo site_url('menu'); ?>" class="btn btn-sm btn-outline-secondary mr-2" id="btnVolverMenu"><i class="fa fa-arrow-left mr-1"></i> Volver al Menú</a>
-										<button id="refreshCharts" class="btn btn-sm btn-outline-primary mr-2">Refrescar gráficas</button>
-										<div class="form-check form-switch mr-3">
+									<div class="d-flex align-items-center flex-wrap justify-content-end">
+										<a href="<?php echo site_url('menu'); ?>" class="btn btn-sm btn-outline-secondary mr-2 mb-2 mb-sm-0" id="btnVolverMenu"><i class="fa fa-arrow-left mr-1"></i> Volver al Menú</a>
+										<button id="refreshCharts" class="btn btn-sm btn-outline-primary mr-2 mb-2 mb-sm-0">Refrescar gráficas</button>
+										<div class="form-check form-switch mr-3 mb-2 mb-sm-0">
 											<input class="form-check-input" type="checkbox" id="autoRefreshToggle">
 											<label class="form-check-label small text-muted" for="autoRefreshToggle">Auto-refresh (5m)</label>
 										</div>

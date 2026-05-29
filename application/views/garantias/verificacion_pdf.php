@@ -68,8 +68,17 @@
         }
         .field-row { margin-bottom:8px; }
         .field-row strong { display:inline-block; min-width:160px; color:#0b3d91; }
-        .photos { display:flex; flex-wrap:wrap; gap:10px; margin-top:8px; }
-        .photos img { width:100%; max-width:240px; border:1px solid #dcdcdc; padding:2px; background:#fff; }
+        .photos { display:block; margin-top:8px; }
+        .photos::after { content: ""; display: table; clear: both; }
+        .photos .photo-item {
+            display: inline-block;
+            width: 48%;
+            margin-right: 4%;
+            margin-bottom: 10px;
+            vertical-align: top;
+        }
+        .photos .photo-item:nth-child(2n) { margin-right: 0; }
+        .photos img { width: 100%; max-width: 100%; border: 1px solid #dcdcdc; padding: 2px; background: #fff; display: block; }
         footer {
             display:block;
             position:static;
@@ -87,11 +96,19 @@
 <body>
     <?php
         $cliente_nombre = 'N/A';
+        $codigo_solicitud = '';
         if (! empty($solicitud)) {
             if (! empty($solicitud->nombre_completo)) {
                 $cliente_nombre = $solicitud->nombre_completo;
             } else {
                 $cliente_nombre = trim((string)($solicitud->nombres ?? '') . ' ' . ($solicitud->apellidos ?? '')) ?: 'N/A';
+            }
+            if (! empty($solicitud->codigo)) {
+                $codigo_solicitud = $solicitud->codigo;
+            } elseif (! empty($solicitud->idsolicitud)) {
+                $codigo_solicitud = 'SOL-' . str_pad($solicitud->idsolicitud, 4, '0', STR_PAD_LEFT);
+            } elseif (! empty($solicitud->id)) {
+                $codigo_solicitud = 'SOL-' . str_pad($solicitud->id, 4, '0', STR_PAD_LEFT);
             }
         }
     ?>
@@ -114,20 +131,36 @@
         <div class="field-row"><strong>Fecha de verificación:</strong> <?php echo isset($v->created_at) ? htmlspecialchars($v->created_at) : 'N/A'; ?></div>
         <div class="field-row"><strong>Estado de la garantía:</strong> <?php echo htmlspecialchars(isset($v->estado) ? $v->estado : 'Pendiente'); ?></div>
         <div class="field-row"><strong>Código de garantía:</strong> <?php echo htmlspecialchars(isset($v->garantia_id) ? $v->garantia_id : ''); ?></div>
-        <div class="field-row"><strong>Código de solicitud:</strong> <?php echo htmlspecialchars(isset($v->solicitud_id) ? $v->solicitud_id : ''); ?></div>
+        <div class="field-row"><strong>Código de solicitud:</strong> <?php echo htmlspecialchars($codigo_solicitud ?: (isset($v->solicitud_id) ? $v->solicitud_id : '')); ?></div>
     </div>
 
-    <div class="section-title">Comentario</div>
-    <div class="section-box">
-        <div><?php echo isset($v->comentario) ? nl2br(htmlspecialchars($v->comentario)) : '<em>No se registró comentario.</em>'; ?></div>
-    </div>
+    <?php if (!empty($verificaciones)): ?>
+        <table width="100%" cellspacing="0" cellpadding="6" style="border-collapse:collapse; margin-top:16px;">
+            <thead>
+                <tr style="background:#0b3d91;color:#fff;">
+                    <th align="left" style="border:1px solid #dcdcdc;">Garantía</th>
+                    <th align="left" style="border:1px solid #dcdcdc;">Comentario</th>
+                    <th align="left" style="border:1px solid #dcdcdc;">Estado</th>
+                </tr>
+            </thead>
+            <tbody>
+                <?php foreach ($verificaciones as $row): ?>
+                    <tr>
+                        <td style="border:1px solid #dcdcdc; vertical-align:top;"><?php echo htmlspecialchars(isset($row->nombre_garantia) ? $row->nombre_garantia : ('Garantía ' . (isset($row->garantia_id) ? $row->garantia_id : ''))); ?></td>
+                        <td style="border:1px solid #dcdcdc; vertical-align:top;"><?php echo nl2br(htmlspecialchars(isset($row->comentario) ? $row->comentario : '')); ?></td>
+                        <td style="border:1px solid #dcdcdc; vertical-align:top;"><?php echo htmlspecialchars(isset($row->estado_aprobacion) ? $row->estado_aprobacion : 'Pendiente'); ?></td>
+                    </tr>
+                <?php endforeach; ?>
+            </tbody>
+        </table>
+    <?php endif; ?>
 
     <div class="section-title">Fotos evidenciales</div>
     <div class="section-box">
         <?php if (!empty($imgs)): ?>
             <div class="photos">
                 <?php foreach ($imgs as $img): ?>
-                    <div><img src="<?php echo $img; ?>" alt="Foto evidencia"></div>
+                    <div class="photo-item"><img src="<?php echo $img; ?>" alt="Foto evidencia"></div>
                 <?php endforeach; ?>
             </div>
         <?php else: ?>

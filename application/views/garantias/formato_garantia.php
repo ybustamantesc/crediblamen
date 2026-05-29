@@ -34,6 +34,15 @@ $this->load->view('layout/navbar'); ?>
                             <?php echo form_open_multipart('garantias/save'); ?>
                                 <input type="hidden" name="solicitud_id" value="<?php echo html_escape($solicitud_id); ?>">
 
+                                <div class="row mb-3">
+                                    <div class="col-md-6">
+                                        <strong>Cliente:</strong> <?php echo htmlspecialchars(isset($cliente_nombre) ? $cliente_nombre : ''); ?>
+                                    </div>
+                                    <div class="col-md-6 text-md-right">
+                                        <strong>Código de solicitud:</strong> <?php echo htmlspecialchars(isset($codigo_solicitud) ? $codigo_solicitud : ''); ?>
+                                    </div>
+                                </div>
+
                                 <p class="text-muted">Complete el cuadro siguiente. Agregue filas según necesite.</p>
 
                                 <!-- Indicador de Tasa de Cambio -->
@@ -54,24 +63,25 @@ $this->load->view('layout/navbar'); ?>
                                                     <th style="width:6%">Cant.</th>
                                                     <th>Descripción del Artículo</th>
                                                     <th class="d-none d-md-table-cell" style="width:12%">Modelo</th>
-                                                    <th class="d-none d-md-table-cell" style="width:12%">Marca / Color</th>
-                                                    <th class="d-none d-md-table-cell" style="width:12%">Nº Serie</th>
-                                                    <th class="d-none d-md-table-cell" style="width:12%">Avalúo C$</th>
-                                                    <th class="d-none d-md-table-cell" style="width:12%">Avalúo US$</th>
-                                                    <th class="d-none d-md-table-cell" style="width:12%">Estado</th>
+                                                    <th class="d-none d-md-table-cell" style="width:10%">Marca / Color</th>
+                                                    <th class="d-none d-md-table-cell" style="width:8%">Nº Serie</th>
+                                                    <th class="d-none d-md-table-cell" style="width:14%">Avalúo C$</th>
+                                                    <th class="d-none d-md-table-cell" style="width:14%">Avalúo US$</th>
+                                                    <th class="d-none d-md-table-cell" style="width:10%">Estado</th>
                                                     <th style="width:6%">&nbsp;</th>
                                                 </tr>
                                         </thead>
                                         <tbody>
                                             <?php
-                                                // prepare existing rows
+                                                // prepare existing rows - only render if there are existing garantias
                                                 $existing = isset($garantias) && is_array($garantias) ? $garantias : array();
-                                                $initial_rows = max(1, count($existing));
+                                                $initial_rows = count($existing); // Do not add empty row if no existing guarantees
                                                 for ($row=0;$row<$initial_rows;$row++):
                                                     $eg = isset($existing[$row]) ? $existing[$row] : null;
                                                     $uid = $row; // unique id per rendered row
                                             ?>
-                                            <tr data-uid="<?php echo $uid; ?>">
+                                            <tr data-uid="<?php echo $uid; ?>" data-garantia-id="<?php echo $eg && isset($eg->id) ? $eg->id : ''; ?>">
+                                                <input type="hidden" name="garantia_id[]" value="<?php echo $eg && isset($eg->id) ? $eg->id : ''; ?>">
                                                 <td class="text-center align-middle">
                                                     <input type="number" name="cantidad[]" min="0" step="1" class="form-control form-control-sm text-center qty" value="<?php echo $eg ? (int)$eg->cantidad : ''; ?>">
                                                 </td>
@@ -81,6 +91,46 @@ $this->load->view('layout/navbar'); ?>
                                                         <input type="file" accept="image/*" class="form-control-file foto-input" data-uid="<?php echo $uid; ?>" multiple>
                                                         <small class="text-muted fotos-filename" data-uid="<?php echo $uid; ?>"></small>
                                                         <div class="fotos-list mt-1" data-uid="<?php echo $uid; ?>"></div>
+                                                        <?php if ($eg && isset($eg->id)): ?>
+                                                            <?php
+                                                                $existingPhotos = array();
+                                                                if (isset($photos_map) && isset($photos_map[$eg->id]) && is_array($photos_map[$eg->id]) && ! empty($photos_map[$eg->id])) {
+                                                                    $existingPhotos = $photos_map[$eg->id];
+                                                                } else {
+                                                                    for ($pi = 1; $pi <= 5; $pi++) {
+                                                                        $col = 'foto' . $pi;
+                                                                        if (! empty($eg->$col)) {
+                                                                            $existingPhotos[] = $eg->$col;
+                                                                        }
+                                                                    }
+                                                                }
+                                                            ?>
+                                                            <?php if (! empty($existingPhotos)): ?>
+                                                                <div class="existing-fotos-list mt-2" data-uid="<?php echo $uid; ?>">
+                                                                    <div class="text-muted small mb-1">Fotos guardadas:</div>
+                                                                    <div class="d-flex flex-wrap" style="gap:.4rem;">
+                                                                        <?php foreach ($existingPhotos as $photo_idx => $photo):
+                                                                            $rel = trim($photo);
+                                                                            if ($rel === '') continue;
+                                                                            if (strpos($rel, 'data:') === 0) {
+                                                                                $src = $rel;
+                                                                            } elseif (preg_match('#^https?://#i', $rel)) {
+                                                                                $src = $rel;
+                                                                            } else {
+                                                                                $src = base_url(ltrim($rel, '/\\'));
+                                                                            }
+                                                        ?>
+                                                                            <div class="photo-wrapper position-relative" data-uid="<?php echo $uid; ?>" data-photo-idx="<?php echo $photo_idx; ?>" data-photo="<?php echo htmlspecialchars($rel); ?>">
+                                                                                <a href="<?php echo htmlspecialchars($src); ?>" target="_blank" class="d-inline-block existing-photo" style="width:68px; height:68px; overflow:hidden; border:1px solid #dee2e6; border-radius:4px; display:flex; align-items:center; justify-content:center;">
+                                                                                    <img src="<?php echo htmlspecialchars($src); ?>" class="img-fluid" style="width:100%; height:100%; object-fit:cover;">
+                                                                                </a>
+                                                                                <button type="button" class="btn btn-xs btn-danger delete-photo-btn" style="position:absolute; top:-8px; right:-8px; width:24px; height:24px; padding:0; border-radius:50%; font-size:12px; line-height:1; display:flex; align-items:center; justify-content:center;" title="Eliminar foto">×</button>
+                                                                            </div>
+                                                                        <?php endforeach; ?>
+                                                                    </div>
+                                                                </div>
+                                                            <?php endif; ?>
+                                                        <?php endif; ?>
                                                     </div>
                                                 </td>
                                                 <td class="d-none d-md-table-cell">
@@ -128,6 +178,24 @@ $this->load->view('layout/navbar'); ?>
 
                                 <!-- Mobile: stacked card view for small screens -->
                                 <div id="garantias-cards" class="d-block d-md-none mb-3"></div>
+                                <!-- Mobile totals: visible only on small screens -->
+                                <div id="garantias-mobile-total" class="d-block d-md-none mb-3">
+                                    <div class="card">
+                                        <div class="card-body d-flex justify-content-between align-items-center">
+                                            <div class="font-weight-bold">TOTAL</div>
+                                            <div style="min-width:260px; display:flex; gap:.75rem; align-items:center;">
+                                                <div class="input-group input-group-sm">
+                                                    <div class="input-group-prepend"><span class="input-group-text">C$</span></div>
+                                                    <input type="text" id="garantias_total_mobile" class="form-control form-control-sm" value="0.00" readonly>
+                                                </div>
+                                                <div class="input-group input-group-sm">
+                                                    <div class="input-group-prepend"><span class="input-group-text">US$</span></div>
+                                                    <input type="text" id="garantias_total_usd_mobile" class="form-control form-control-sm" value="0.00" readonly>
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
 
                                 <style>
                                     /* Mobile tweaks: make file inputs and badges more usable on phones */
@@ -138,6 +206,138 @@ $this->load->view('layout/navbar'); ?>
                                         #garantias-table td, #garantias-table th { font-size: .95rem; }
                                         /* Make remove buttons easier to tap */
                                         #garantias-table .remove-row { padding: .35rem .5rem; }
+                                        
+                                        /* Mobile card styles for garantias */
+                                        #garantias-cards .card {
+                                            border: 1px solid #dfe7f4;
+                                            border-radius: 4px;
+                                            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+                                        }
+                                        #garantias-cards .card-body {
+                                            padding: 1rem;
+                                        }
+                                        #garantias-cards .form-group {
+                                            margin-bottom: 1rem;
+                                        }
+                                        #garantias-cards label {
+                                            font-weight: 600;
+                                            font-size: 0.9rem;
+                                            margin-bottom: 0.4rem;
+                                            color: #333;
+                                        }
+                                        #garantias-cards .form-control,
+                                        #garantias-cards .form-control-file {
+                                            font-size: 1rem;
+                                            padding: 0.6rem 0.75rem;
+                                        }
+                                        #garantias-cards .input-group-text {
+                                            font-size: 0.9rem;
+                                        }
+                                        #garantias-cards .row {
+                                            margin-right: -0.5rem;
+                                            margin-left: -0.5rem;
+                                        }
+                                        #garantias-cards .col-6,
+                                        #garantias-cards .col-12 {
+                                            padding-right: 0.5rem;
+                                            padding-left: 0.5rem;
+                                        }
+                                        #garantias-cards .text-right {
+                                            padding-top: 0.5rem;
+                                            border-top: 1px solid #e0e0e0;
+                                        }
+                                        #garantias-cards .btn {
+                                            font-size: 0.9rem;
+                                            padding: 0.5rem 1rem;
+                                        }
+                                        /* Existing photos styles in mobile cards */
+                                        #garantias-cards .existing-fotos-list {
+                                            margin-bottom: 1rem;
+                                            padding-bottom: 1rem;
+                                            border-bottom: 1px solid #e9ecef;
+                                        }
+                                        #garantias-cards .existing-fotos-list .text-muted {
+                                            font-size: 0.85rem;
+                                            margin-bottom: 0.5rem;
+                                        }
+                                        #garantias-cards .existing-fotos-list .d-flex {
+                                            gap: 0.5rem;
+                                        }
+                                        #garantias-cards .existing-fotos-list a {
+                                            width: 70px;
+                                            height: 70px;
+                                            border-radius: 4px;
+                                            border: 1px solid #dfe7f4;
+                                            display: inline-block;
+                                            overflow: hidden;
+                                        }
+                                        #garantias-cards .existing-fotos-list img {
+                                            width: 100%;
+                                            height: 100%;
+                                            object-fit: cover;
+                                        }
+                                    }
+                                    
+                                    /* Styles for photo deletion */
+                                    .photo-wrapper {
+                                        position: relative;
+                                        transition: opacity 0.2s ease;
+                                    }
+                                    
+                                    .photo-wrapper.marked-for-deletion {
+                                        opacity: 0.5;
+                                    }
+                                    
+                                    .photo-wrapper.marked-for-deletion .existing-photo {
+                                        filter: grayscale(100%);
+                                        opacity: 0.6;
+                                    }
+                                    
+                                    .photo-wrapper.marked-for-deletion::after {
+                                        content: '';
+                                        position: absolute;
+                                        top: 0;
+                                        left: 0;
+                                        right: 0;
+                                        bottom: 0;
+                                        border: 2px solid #dc3545;
+                                        border-radius: 4px;
+                                        background: repeating-linear-gradient(
+                                            45deg,
+                                            rgba(220, 53, 69, 0.1),
+                                            rgba(220, 53, 69, 0.1) 10px,
+                                            transparent 10px,
+                                            transparent 20px
+                                        );
+                                    }
+                                    
+                                    .delete-photo-btn {
+                                        background-color: #dc3545;
+                                        border: none;
+                                        color: white;
+                                        font-weight: bold;
+                                        cursor: pointer;
+                                        transition: all 0.2s ease;
+                                        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                                    }
+                                    
+                                    .delete-photo-btn:hover {
+                                        background-color: #c82333;
+                                        transform: scale(1.1);
+                                        box-shadow: 0 3px 6px rgba(0,0,0,0.3);
+                                    }
+                                    
+                                    .photo-wrapper.marked-for-deletion .delete-photo-btn {
+                                        background-color: #28a745;
+                                    }
+                                    
+                                    .photo-wrapper.marked-for-deletion .delete-photo-btn:hover {
+                                        background-color: #218838;
+                                    }
+
+                                    /* Ensure the mobile totals card is hidden on desktop */
+                                    @media (min-width: 768px) {
+                                        #garantias-mobile-total { display: none !important; }
                                     }
                                 </style>
 
@@ -220,6 +420,13 @@ $this->load->view('layout/navbar'); ?>
                                             });
                                             $('#garantias_total').val(sum.toFixed(2));
                                             $('#garantias_total_usd').val(sumUSD.toFixed(2));
+                                            // Update mobile totals if present
+                                            if ($('#garantias_total_mobile').length) {
+                                                $('#garantias_total_mobile').val(sum.toFixed(2));
+                                            }
+                                            if ($('#garantias_total_usd_mobile').length) {
+                                                $('#garantias_total_usd_mobile').val(sumUSD.toFixed(2));
+                                            }
                                         }
 
                                         // Evento para recalcular cuando cambia cantidad o costo
@@ -240,7 +447,7 @@ $this->load->view('layout/navbar'); ?>
                                         });
 
                                         // UID counter for newly added rows
-                                        var uidCounter = <?php echo isset($initial_rows) ? $initial_rows : 1; ?>;
+                                        var uidCounter = <?php echo isset($initial_rows) ? $initial_rows : 0; ?>;
 
                                         function renderFileList(uid){
                                             var list = filePool[uid] || [];
@@ -289,7 +496,7 @@ $this->load->view('layout/navbar'); ?>
                                             var $tbody = $('#garantias-table tbody');
                                             var $total = $tbody.find('tr.total-row');
                                             var $tr = $('<tr data-uid="'+uid+'"></tr>');
-                                            var $tdQty = $('<td class="text-center align-middle"></td>').append('<input type="number" name="cantidad[]" min="0" step="1" class="form-control form-control-sm text-center qty" value="'+(data.cantidad||'')+'">');
+                                            var $tdQty = $('<td class="text-center align-middle"></td>').append('<input type="hidden" name="garantia_id[]" value="">').append('<input type="number" name="cantidad[]" min="0" step="1" class="form-control form-control-sm text-center qty" value="'+(data.cantidad||'')+'">');
                                             var $tdName = $('<td></td>').append('<input type="text" name="nombre[]" class="form-control form-control-sm name" value="'+(data.nombre||'')+'" placeholder="Descripción / Nombre de la garantía">');
                                             var $fileDiv = $('<div class="mt-1"></div>');
                                             $fileDiv.append('<input type="file" accept="image/*" class="form-control-file foto-input" data-uid="'+uid+'" multiple>');
@@ -347,7 +554,30 @@ $this->load->view('layout/navbar'); ?>
                                         // flag to indicate we should open PDF after successful save
                                         var print_after_save = false;
 
-                                        // When user clicks Print on unsaved form, set flag and submit
+                                        // Track photos marked for deletion: {uid: {photo: data-photo}}
+                                        var photosToDelete = {};
+
+                                        // Handle delete photo button clicks
+                                        $(document).on('click', '.delete-photo-btn', function(e){
+                                            e.preventDefault();
+                                            e.stopPropagation();
+                                            var $wrapper = $(this).closest('.photo-wrapper');
+                                            var uid = $wrapper.data('uid');
+                                            var photoData = $wrapper.data('photo');
+                                            
+                                            if (!photosToDelete[uid]) {
+                                                photosToDelete[uid] = {};
+                                            }
+                                            
+                                            // Toggle deletion state
+                                            if (photosToDelete[uid][photoData]) {
+                                                delete photosToDelete[uid][photoData];
+                                                $wrapper.removeClass('marked-for-deletion');
+                                            } else {
+                                                photosToDelete[uid][photoData] = true;
+                                                $wrapper.addClass('marked-for-deletion');
+                                            }
+                                        });
                                         $(document).on('click', '#print_save_btn', function(){
                                             if (confirm('Guardar el formato y generar PDF ahora?')) {
                                                 print_after_save = true;
@@ -380,6 +610,15 @@ $this->load->view('layout/navbar'); ?>
                                                 }
                                                 dataRowIndex++;
                                             });
+
+                                            // Add photos marked for deletion
+                                            var deleteIndex = 0;
+                                            for (var uid in photosToDelete) {
+                                                for (var photo in photosToDelete[uid]) {
+                                                    fd.append('fotos_eliminar[' + deleteIndex + ']', photo);
+                                                    deleteIndex++;
+                                                }
+                                            }
 
                                             var $btn = $form.find('button[type=submit]').prop('disabled', true).text('Guardando...');
 
@@ -428,13 +667,15 @@ $this->load->view('layout/navbar'); ?>
                                             });
                                         });
 
-                                        // Mobile card sync: move inputs into stacked cards for small screens
+                                        // Mobile card sync: create visual card layout for small screens without moving inputs
                                         function createCardForUid(uid){
                                             if($('#garantia-card-'+uid).length) return;
                                             var $tr = $('#garantias-table tbody tr[data-uid="'+uid+'"]');
                                             if (!$tr.length) return;
                                             var $card = $('<div class="card mb-2" id="garantia-card-'+uid+'"></div>');
                                             var $body = $('<div class="card-body"></div>');
+                                            
+                                            // Get references to actual inputs
                                             var $cantidad = $tr.find('input[name="cantidad[]"]');
                                             var $nombre = $tr.find('input[name="nombre[]"]');
                                             var $modelo = $tr.find('input[name="modelo[]"]');
@@ -445,55 +686,167 @@ $this->load->view('layout/navbar'); ?>
                                             var $fotoInput = $tr.find('.foto-input');
                                             var $fotosList = $tr.find('.fotos-list');
                                             var $fotosFilename = $tr.find('.fotos-filename');
+                                            var $existingFotos = $tr.find('.existing-fotos-list');
 
+                                            // Row 1: Cantidad y Descripción
                                             var $row = $('<div class="row"></div>');
-                                            $row.append($('<div class="col-4 form-group"></div>').append('<label class="d-block">Cant.</label>').append($cantidad));
-                                            $row.append($('<div class="col-8 form-group"></div>').append('<label class="d-block">Descripción</label>').append($nombre));
+                                            $row.append($('<div class="col-4 form-group"></div>')
+                                                .append('<label class="d-block">Cant.</label>')
+                                                .append($cantidad.clone().attr('id', 'mobile_cant_'+uid)));
+                                            $row.append($('<div class="col-8 form-group"></div>')
+                                                .append('<label class="d-block">Descripción</label>')
+                                                .append($nombre.clone().attr('id', 'mobile_nombre_'+uid)));
                                             $body.append($row);
 
+                                            // Row 2: Modelo y Marca
                                             var $row2 = $('<div class="row"></div>');
-                                            $row2.append($('<div class="col-6 form-group"></div>').append('<label class="d-block">Modelo</label>').append($modelo));
-                                            $row2.append($('<div class="col-6 form-group"></div>').append('<label class="d-block">Marca</label>').append($marca));
+                                            $row2.append($('<div class="col-6 form-group"></div>')
+                                                .append('<label class="d-block">Modelo</label>')
+                                                .append($modelo.clone().attr('id', 'mobile_modelo_'+uid)));
+                                            $row2.append($('<div class="col-6 form-group"></div>')
+                                                .append('<label class="d-block">Marca</label>')
+                                                .append($marca.clone().attr('id', 'mobile_marca_'+uid)));
                                             $body.append($row2);
 
+                                            // Row 3: Nº Serie y Avalúo C$
                                             var $row3 = $('<div class="row"></div>');
-                                            $row3.append($('<div class="col-6 form-group"></div>').append('<label class="d-block">Nº Serie</label>').append($nserie));
-                                            $row3.append($('<div class="col-6 form-group"></div>').append('<label class="d-block">Avalúo C$</label>').append($costo));
+                                            $row3.append($('<div class="col-6 form-group"></div>')
+                                                .append('<label class="d-block">Nº Serie</label>')
+                                                .append($nserie.clone().attr('id', 'mobile_serie_'+uid)));
+                                            $row3.append($('<div class="col-6 form-group"></div>')
+                                                .append('<label class="d-block">Avalúo C$</label>')
+                                                .append($costo.clone().attr('id', 'mobile_costo_'+uid)));
                                             $body.append($row3);
 
-                                            // Mostrar valor en dólares (solo lectura)
+                                            // Row 3b: Avalúo US$
                                             var $costoDolares = $tr.find('.cost-dolares[data-uid="'+uid+'"]').clone();
                                             var $row3b = $('<div class="row"></div>');
-                                            $row3b.append($('<div class="col-12 form-group"></div>').append('<label class="d-block">Avalúo US$</label>').append($costoDolares));
+                                            $row3b.append($('<div class="col-12 form-group"></div>')
+                                                .append('<label class="d-block">Avalúo US$</label>')
+                                                .append($costoDolares));
                                             $body.append($row3b);
 
-                                            $body.append($('<div class="form-group"></div>').append('<label class="d-block">Estado</label>').append($tiempo));
+                                            // Row 4: Estado/Tiempo de vida
+                                            $body.append($('<div class="form-group"></div>')
+                                                .append('<label class="d-block">Estado</label>')
+                                                .append($tiempo.clone().attr('id', 'mobile_tiempo_'+uid)));
 
-                                            var $photoDiv = $('<div class="form-group"></div>').append('<label class="d-block">Fotos</label>');
-                                            $photoDiv.append($fotoInput);
-                                            $photoDiv.append($fotosFilename);
-                                            $photoDiv.append($fotosList);
+                                            // Row 5: Fotos (incluyendo fotos existentes)
+                                            var $photoDiv = $('<div class="form-group"></div>')
+                                                .append('<label class="d-block">Fotos</label>');
+                                            
+                                            // Si existen fotos guardadas, mostrarlas primero
+                                            if ($existingFotos.length > 0) {
+                                                $photoDiv.append($existingFotos.clone().attr('id', 'mobile_existing_'+uid));
+                                            }
+                                            
+                                            $photoDiv.append($fotoInput.clone().attr('id', 'mobile_fotos_'+uid))
+                                                .append($fotosFilename.clone().attr('id', 'mobile_filename_'+uid))
+                                                .append($fotosList.clone().attr('id', 'mobile_fotoslist_'+uid));
                                             $body.append($photoDiv);
 
-                                            var $actions = $('<div class="text-right mt-2"></div>');
+                                            // Actions
+                                            var $actions = $('<div class="text-right mt-3"></div>');
                                             var $remove = $('<button type="button" class="btn btn-sm btn-danger remove-row">Eliminar</button>');
                                             $actions.append($remove);
                                             $body.append($actions);
 
                                             $card.append($body);
                                             $('#garantias-cards').append($card);
+                                            
+                                            // Sync mobile inputs with table inputs
+                                            syncMobileCardToTable(uid);
+                                        }
+                                        
+                                        // Function to keep mobile card inputs in sync with table inputs
+                                        function syncMobileCardToTable(uid){
+                                            var $tr = $('#garantias-table tbody tr[data-uid="'+uid+'"]');
+                                            var mobileInputs = {
+                                                cantidad: $('#mobile_cant_'+uid),
+                                                nombre: $('#mobile_nombre_'+uid),
+                                                modelo: $('#mobile_modelo_'+uid),
+                                                marca: $('#mobile_marca_'+uid),
+                                                serie: $('#mobile_serie_'+uid),
+                                                costo: $('#mobile_costo_'+uid),
+                                                tiempo: $('#mobile_tiempo_'+uid)
+                                            };
+                                            
+                                            // Update mobile when table changes
+                                            $tr.find('input[name="cantidad[]"]').on('change', function(){
+                                                mobileInputs.cantidad.val($(this).val());
+                                            });
+                                            $tr.find('input[name="nombre[]"]').on('change', function(){
+                                                mobileInputs.nombre.val($(this).val());
+                                            });
+                                            $tr.find('input[name="modelo[]"]').on('change', function(){
+                                                mobileInputs.modelo.val($(this).val());
+                                            });
+                                            $tr.find('input[name="marca[]"]').on('change', function(){
+                                                mobileInputs.marca.val($(this).val());
+                                            });
+                                            $tr.find('input[name="n_serie[]"]').on('change', function(){
+                                                mobileInputs.serie.val($(this).val());
+                                            });
+                                            $tr.find('input[name="costo[]"]').on('change', function(){
+                                                mobileInputs.costo.val($(this).val());
+                                            });
+                                            $tr.find('input[name="tiempo_vida[]"]').on('change', function(){
+                                                mobileInputs.tiempo.val($(this).val());
+                                            });
+                                            
+                                            // Update table when mobile changes
+                                            mobileInputs.cantidad.on('change', function(){
+                                                $tr.find('input[name="cantidad[]"]').val($(this).val()).trigger('change');
+                                            });
+                                            mobileInputs.nombre.on('change', function(){
+                                                $tr.find('input[name="nombre[]"]').val($(this).val());
+                                            });
+                                            mobileInputs.modelo.on('change', function(){
+                                                $tr.find('input[name="modelo[]"]').val($(this).val());
+                                            });
+                                            mobileInputs.marca.on('change', function(){
+                                                $tr.find('input[name="marca[]"]').val($(this).val());
+                                            });
+                                            mobileInputs.serie.on('change', function(){
+                                                $tr.find('input[name="n_serie[]"]').val($(this).val());
+                                            });
+                                            mobileInputs.costo.on('change', function(){
+                                                $tr.find('input[name="costo[]"]').val($(this).val()).trigger('change');
+                                            });
+                                            mobileInputs.tiempo.on('change', function(){
+                                                $tr.find('input[name="tiempo_vida[]"]').val($(this).val());
+                                            });
                                         }
 
 
-                                        // DESACTIVADO: No mover inputs a tarjetas en móvil para evitar bloqueos en celulares
-                                        // Ahora siempre se muestra la tabla, así los campos funcionan en todos los dispositivos
-                                        // Si se quiere volver a activar la vista de tarjetas, restaurar la función buildMobileCards y su llamada
+                                        // Build mobile cards for all existing rows on load and on resize
+                                        function buildMobileCards(){
+                                            $('#garantias-table tbody tr').not('.total-row').each(function(){
+                                                var uid = $(this).data('uid');
+                                                if (uid !== undefined && $(window).width() < 768) {
+                                                    createCardForUid(uid);
+                                                }
+                                            });
+                                        }
 
-                                        // $(function(){
-                                        //     buildMobileCards();
-                                        //     var resizeTimer = null;
-                                        //     $(window).on('resize', function(){ clearTimeout(resizeTimer); resizeTimer = setTimeout(function(){ buildMobileCards(); }, 200); });
-                                        // });
+                                        $(function(){
+                                            // Build cards on initial load if on mobile
+                                            if ($(window).width() < 768) {
+                                                buildMobileCards();
+                                            }
+                                            var resizeTimer = null;
+                                            $(window).on('resize', function(){ 
+                                                clearTimeout(resizeTimer); 
+                                                resizeTimer = setTimeout(function(){ 
+                                                    if ($(window).width() < 768) {
+                                                        buildMobileCards();
+                                                    } else {
+                                                        // Clear cards if resizing to desktop
+                                                        $('#garantias-cards').empty();
+                                                    }
+                                                }, 200); 
+                                            });
+                                        });
 
                                     })(jQuery);
                                 } else {

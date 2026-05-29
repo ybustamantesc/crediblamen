@@ -5,12 +5,32 @@
 <div class="app-sidebar colored <?php echo ($this->router->fetch_class() == 'tesoreria' ? 'sidebar-teso' : ''); ?>">
 	<style>
 		/* Improve sidebar readability: darker text and slightly smaller items */
+		.app-sidebar .navigation-main .nav-item a {
+			display: flex !important;
+			align-items: center !important;
+			gap: 4px !important;
+		}
 		.app-sidebar .navigation-main .nav-item a span {
 			color: #222 !important;
 			font-size: 13px !important;
+			white-space: normal !important;
+			overflow-wrap: break-word !important;
+			word-break: break-word !important;
+			line-height: 1.4;
+			flex: 1;
 		}
 		.app-sidebar .navigation-main .nav-item a i {
 			color: #333 !important;
+			flex-shrink: 0;
+			min-width: 16px;
+			text-align: center;
+		}
+		/* Active and hover states with white text */
+		.app-sidebar .navigation-main .nav-item.active a span,
+		.app-sidebar .navigation-main .nav-item.active a i,
+		.app-sidebar .navigation-main .nav-item a:hover span,
+		.app-sidebar .navigation-main .nav-item a:hover i {
+			color: #ffffff !important;
 		}
 		.app-sidebar .sidebar-profile .profile-name {
 			font-size: 14px;
@@ -18,6 +38,27 @@
 		.app-sidebar .nav-lavel {
 			font-size: 12px;
 			color: #444;
+		}
+
+		/* Sidebar header styles for user profile */
+		.app-sidebar .sidebar-header {
+			display: flex !important;
+			align-items: center !important;
+			gap: 12px !important;
+			justify-content: space-between !important;
+			padding-right: 12px !important;
+		}
+		.app-sidebar .sidebar-profile-header {
+			display: flex;
+			flex-direction: column;
+			justify-content: center;
+			flex: 1;
+		}
+		.app-sidebar .sidebar-header .nav-toggle,
+		.app-sidebar .sidebar-header .nav-close {
+			margin-left: auto !important;
+			margin-right: 16px !important;
+			flex-shrink: 0;
 		}
 
 		/* Tesorería: menú tipo botones (coordinado con otros módulos) */
@@ -35,7 +76,7 @@
 			display: flex;
 			align-items: flex-start;
 			justify-content: flex-start;
-			gap: 12px;
+			gap: 6px;
 			background: #ffffff;
 			color: #1f2937 !important;
 			border: 1px solid #e3e8f2;
@@ -87,17 +128,35 @@
 			</div>
 			<!-- brand text removed to keep a cleaner, logo-only header -->
 		</a>
-		<button type="button" class="nav-toggle"><i data-toggle="expanded" class="ik ik-toggle-right toggle-icon"></i></button>
+		<?php $user = $this->ion_auth->user()->row(); $perfil = isset($user->perfil) ? $user->perfil : NULL; ?>
+		<div class="sidebar-profile-header px-3 py-2" style="flex: 1;">
+			<div class="profile-name font-weight-bold" style="font-size: 13px; color: #222;"><?php echo isset($user) ? ($user->first_name ?: ($user->username ?: $user->email)) : 'Usuario'; ?></div>
+			<?php
+			// Try to show the user's group name if possible (Ion Auth)
+			$role_label = 'Usuario';
+			try {
+				if (isset($this->ion_auth) && method_exists($this->ion_auth, 'get_users_groups')) {
+					$g = $this->ion_auth->get_users_groups($user->id)->row();
+					if ($g && isset($g->name)) {
+						$role_label = $g->name;
+					}
+				}
+			} catch (Exception $e) { /* ignore */ }
+			?>
+			<div class="profile-role small text-muted" style="font-size: 11px; color: #666;"><?php echo htmlspecialchars($role_label); ?></div>
+		</div>
+		<!-- nav-toggle removed for full-view layout -->
 		<button id="sidebarClose" class="nav-close"><i class="ik ik-x"></i></button>
 	</div>
 
-	<?php $user = $this->ion_auth->user()->row(); $perfil = isset($user->perfil) ? $user->perfil : NULL; 
-	$is_contab = ($this->router->fetch_class() == 'contabilidad');
-	$is_pld = ($this->router->fetch_class() == 'pld');
-	$is_teso = ($this->router->fetch_class() == 'tesoreria');
-	$is_konami = ($this->router->fetch_class() == 'konami');
-	$is_admin = ($this->router->fetch_class() == 'administracion'); ?>
-<?php
+<?php 
+$perfil = isset($user->perfil) ? $user->perfil : NULL; 
+$is_contab = ($this->router->fetch_class() == 'contabilidad');
+$is_pld = ($this->router->fetch_class() == 'pld');
+$is_teso = ($this->router->fetch_class() == 'tesoreria');
+$is_konami = ($this->router->fetch_class() == 'konami');
+$is_admin = ($this->router->fetch_class() == 'administracion'); 
+
 // Detect promotor role: either Ion Auth group 'promotor' or legacy perfil == 4
 $is_promotor = false;
 try {
@@ -115,28 +174,7 @@ try {
    server-side to avoid flicker and to keep the sidebar focused. */ ?>
 
 <div class="sidebar-content">
-	<div class="sidebar-profile px-3 py-2 d-flex align-items-center">
-		<div class="profile-img mr-2">
-			<img src="<?php echo base_url('public/img/logo.jpg'); ?>" alt="avatar" class="rounded-circle" width="44" height="44">
-		</div>
-		<div class="profile-info">
-			<div class="profile-name font-weight-bold"><?php echo isset($user) ? ($user->first_name ?: ($user->username ?: $user->email)) : 'Usuario'; ?></div>
-			<?php
-			// Try to show the user's group name if possible (Ion Auth)
-			$role_label = 'Usuario';
-			try {
-				if (isset($this->ion_auth) && method_exists($this->ion_auth, 'get_users_groups')) {
-					$g = $this->ion_auth->get_users_groups($user->id)->row();
-					if ($g && isset($g->name)) {
-						$role_label = $g->name;
-					}
-				}
-			} catch (Exception $e) { /* ignore */ }
-			?>
-			<div class="profile-role small text-muted"><?php echo htmlspecialchars($role_label); ?></div>
-		</div>
-	</div>
-
+		<!-- Perfil movido al sidebar-header -->
 <?php if (isset($is_admin) && $is_admin): ?>
 		<div class="nav-container">
 			<nav id="main-menu-navigation" class="navigation-main">
@@ -319,11 +357,11 @@ try {
 					<?php endif; ?>
 
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'solicitudes' && $this->router->fetch_method() == 'validacion_aprobacion' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('solicitudes/validacion_aprobacion'); ?>"><i class="fas fa-check-square"></i><span>7. Comite de Aprobaciones</span></a>
+						<a href="<?php echo base_url('solicitudes/validacion_aprobacion'); ?>"><i class="fas fa-check-square"></i><span>7. Comité de Aprobaciones</span></a>
 					</div>
 					<!-- Nuevo acceso rápido: Emisión Plan de Pago -->
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'prestamo' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('prestamo'); ?>"><i class="fas fa-file-invoice-dollar"></i><span>8. Emision Plan de Pago</span></a>
+						<a href="<?php echo base_url('prestamo'); ?>"><i class="fas fa-file-invoice-dollar"></i><span>8. Emisión Plan de Pago</span></a>
 					</div>
 					<!-- 9. Contratos (oculto) -->
 					<!--

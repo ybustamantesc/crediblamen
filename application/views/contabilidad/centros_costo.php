@@ -1,7 +1,7 @@
 <style>
     .servicont-centros-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 30px 0;
+        padding: 30px 30px;
         margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -30,8 +30,8 @@
                         <i class="fas fa-building" style="font-size: 24px; color: #ffffff;"></i>
                     </div>
                     <div>
-                        <h1 class="servicont-catalogo-title">Centros de Costo</h1>
-                        <p class="servicont-catalogo-subtitle" style="color: #ffffff !important;">Gestión de centros de costo para distribución contable</p>
+                        <h1 class="servicont-header-title">Centros de Costo</h1>
+                        <p class="servicont-header-subtitle">Gestión de centros de costo para distribución contable</p>
                     </div>
                 </div>
             </div>

@@ -349,16 +349,20 @@ window.attachModalEvents = function() {
         newLine.className = 'entry-line';
         newLine.style.cssText = 'margin-bottom:16px;';
 
-        // Get centro_costo options from the first line's select
+        // Get centro_costo options from a preserved template or from the first line's select
         let centroCostoOptions = '<option value="">-- Centro de Costo --</option>';
-        const firstCentroCosto = document.querySelector('.line-centro-costo');
-        if (firstCentroCosto) {
-            const options = firstCentroCosto.querySelectorAll('option');
-            options.forEach((opt, i) => {
-                if (i > 0) { // Skip first placeholder
-                    centroCostoOptions += '<option value="' + opt.value + '">' + opt.textContent + '</option>';
-                }
-            });
+        if (window.centroCostoOptionsHtml && window.centroCostoOptionsHtml.length) {
+            centroCostoOptions = window.centroCostoOptionsHtml;
+        } else {
+            const firstCentroCosto = document.querySelector('.line-centro-costo');
+            if (firstCentroCosto) {
+                const options = firstCentroCosto.querySelectorAll('option');
+                options.forEach((opt, i) => {
+                    if (i > 0) { // Skip first placeholder
+                        centroCostoOptions += '<option value="' + opt.value + '">' + opt.textContent + '</option>';
+                    }
+                });
+            }
         }
 
         // Get main description value
@@ -366,23 +370,43 @@ window.attachModalEvents = function() {
         const descriptionValue = mainDescription ? mainDescription.value : '';
 
         newLine.innerHTML = `
-            <div style="display:grid;grid-template-columns:1.5fr 2.5fr 1fr 1fr 1fr 1fr 50px;gap:12px;margin-bottom:8px;align-items:center;">
-                <select name="lines[${lineCounter}][centro_costo_id]" class="line-centro-costo" data-line="${lineCounter}" style="width:100%;height:44px;padding:8px 12px;border:2px solid #e5e7eb;border-radius:6px;font-size:13px;transition:all 0.3s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e5e7eb'">
-                    ${centroCostoOptions}
-                </select>
-                <div style="height:44px;">
-                    <select name="lines[${lineCounter}][account_id]" class="account-select" style="width:100%;height:44px;padding:8px 12px;border:2px solid #e5e7eb;border-radius:6px;font-size:13px;transition:all 0.3s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e5e7eb'">
+            <div class="entry-line-row">
+                <div class="field-wrapper">
+                    <label>Centro de costo</label>
+                    <select name="lines[${lineCounter}][centro_costo_id]" class="line-centro-costo" data-line="${lineCounter}">
+                        ${centroCostoOptions}
+                    </select>
+                </div>
+                <div class="field-wrapper">
+                    <label>Cuenta</label>
+                    <select name="lines[${lineCounter}][account_id]" class="account-select">
                         <option value="">-- Buscar por código o nombre --</option>
                     </select>
                 </div>
-                <input type="number" step="0.01" name="lines[${lineCounter}][debit]" placeholder="0.00" class="line-debit line-debit-mxn" data-line="${lineCounter}" style="width:100%;height:44px;padding:8px 12px;border:2px solid #e5e7eb;border-radius:6px;text-align:right;font-size:13px;transition:all 0.3s;" onfocus="this.style.borderColor='#ef4444'" onblur="this.style.borderColor='#e5e7eb'" />
-                <input type="number" step="0.01" name="lines[${lineCounter}][debit_usd]" placeholder="0.00" class="line-debit-usd" data-line="${lineCounter}" style="width:100%;height:44px;padding:8px 12px;border:2px solid #e5e7eb;border-radius:6px;text-align:right;font-size:13px;background:#fef3c7;transition:all 0.3s;" onfocus="this.style.borderColor='#f59e0b'" onblur="this.style.borderColor='#e5e7eb'" />
-                <input type="number" step="0.01" name="lines[${lineCounter}][credit]" placeholder="0.00" class="line-credit line-credit-mxn" data-line="${lineCounter}" style="width:100%;height:44px;padding:8px 12px;border:2px solid #e5e7eb;border-radius:6px;text-align:right;font-size:13px;transition:all 0.3s;" onfocus="this.style.borderColor='#10b981'" onblur="this.style.borderColor='#e5e7eb'" />
-                <input type="number" step="0.01" name="lines[${lineCounter}][credit_usd]" placeholder="0.00" class="line-credit-usd" data-line="${lineCounter}" style="width:100%;height:44px;padding:8px 12px;border:2px solid #e5e7eb;border-radius:6px;text-align:right;font-size:13px;background:#d1fae5;transition:all 0.3s;" onfocus="this.style.borderColor='#059669'" onblur="this.style.borderColor='#e5e7eb'" />
-                <button type="button" class="btn-remove-line" data-line="${lineCounter}" style="background:#ef4444;color:#fff;border:none;width:44px;height:44px;border-radius:6px;cursor:pointer;font-size:18px;line-height:1;transition:all 0.3s;" onmouseover="this.style.background='#dc2626'" onmouseout="this.style.background='#ef4444'">×</button>
+                <div class="field-wrapper">
+                    <label>Debe (NIO)</label>
+                    <input type="number" step="0.01" name="lines[${lineCounter}][debit]" placeholder="0.00" class="entry-line-field line-debit line-debit-mxn" data-line="${lineCounter}" />
+                </div>
+                <div class="field-wrapper">
+                    <label>Debe (USD)</label>
+                    <input type="number" step="0.01" name="lines[${lineCounter}][debit_usd]" placeholder="0.00" class="entry-line-field line-debit-usd" data-line="${lineCounter}" />
+                </div>
+                <div class="field-wrapper">
+                    <label>Haber (NIO)</label>
+                    <input type="number" step="0.01" name="lines[${lineCounter}][credit]" placeholder="0.00" class="entry-line-field line-credit line-credit-mxn" data-line="${lineCounter}" />
+                </div>
+                <div class="field-wrapper">
+                    <label>Haber (USD)</label>
+                    <input type="number" step="0.01" name="lines[${lineCounter}][credit_usd]" placeholder="0.00" class="entry-line-field line-credit-usd" data-line="${lineCounter}" />
+                </div>
+                <div class="field-wrapper action-wrapper">
+                    <label>&nbsp;</label>
+                    <button type="button" class="btn-remove-line" data-line="${lineCounter}">×</button>
+                </div>
             </div>
-            <div>
-                <input name="lines[${lineCounter}][description]" value="${descriptionValue.replace(/"/g, '&quot;')}" placeholder="Detalle del movimiento..." style="width:100%;height:44px;padding:8px 12px;border:2px solid #e5e7eb;border-radius:6px;font-size:13px;transition:all 0.3s;" onfocus="this.style.borderColor='#667eea'" onblur="this.style.borderColor='#e5e7eb' />
+            <div class="field-wrapper detail-wrapper" style="padding-left:0;">
+                <label>Detalle</label>
+                <input name="lines[${lineCounter}][description]" value="${descriptionValue.replace(/"/g, '&quot;')}" placeholder="Detalle del movimiento..." class="entry-line-field" style="text-align:left;" />
             </div>
         `;
 
@@ -630,33 +654,65 @@ window.attachModalEvents = function() {
                 console.log(pair[0] + ': ' + pair[1]);
             }
 
-            const endpoint = window.ADD_ENTRY_URL || (base_url + 'contabilidad/add_entry');
+            const isUpdate = !!formData.get('id');
+            const endpoint = isUpdate ? (window.UPDATE_ENTRY_URL || (base_url + 'contabilidad/update_entry')) : (window.ADD_ENTRY_URL || (base_url + 'contabilidad/add_entry'));
             fetch(endpoint, {
                 method: 'POST',
                 body: formData
             })
-            .then(r => {
-                console.log('Response status:', r.status);
-                return r.text();
-            })
+            .then(r => { lastResponseStatus = r.status; return r.text(); })
             .then(text => {
+                console.log('Response status:', typeof lastResponseStatus !== 'undefined' ? lastResponseStatus : '(unknown)');
                 console.log('Response text:', text);
-                try {
-                    const data = JSON.parse(text);
-                    if (data.status === 'success') {
-                        alert('Asiento guardado correctamente');
-                        modal.remove();
-                        // Recargar la página para ver el nuevo asiento
-                        location.reload();
-                    } else {
-                        alert('Error al guardar: ' + (data.message || 'Error desconocido'));
-                        console.error('Error data:', data);
+
+                function safeParseResponse(txt) {
+                    try { return JSON.parse(txt); } catch(e) {
+                        // Try to extract JSON object inside noisy HTML/text
+                        const startObj = txt.indexOf('{');
+                        const endObj = txt.lastIndexOf('}');
+                        if (startObj !== -1 && endObj !== -1 && endObj > startObj) {
+                            const candidate = txt.slice(startObj, endObj + 1);
+                            try { return JSON.parse(candidate); } catch(e2) { /* ignore */ }
+                        }
+                        const startArr = txt.indexOf('[');
+                        const endArr = txt.lastIndexOf(']');
+                        if (startArr !== -1 && endArr !== -1 && endArr > startArr) {
+                            const candidate = txt.slice(startArr, endArr + 1);
+                            try { return JSON.parse(candidate); } catch(e3) { /* ignore */ }
+                        }
+                        return null;
                     }
-                } catch(parseError) {
-                    console.error('Error parsing JSON:', parseError);
-                    console.error('Response text:', text);
-                    alert('Error al procesar respuesta del servidor. Revisa la consola para más detalles.');
                 }
+
+                const data = safeParseResponse(text);
+
+                // If parsed JSON and success
+                if (data && data.status === 'success') {
+                    alert(isUpdate ? 'Asiento actualizado correctamente' : 'Asiento guardado correctamente');
+                    modal.remove();
+                    location.reload();
+                    return;
+                }
+
+                // If we couldn't parse JSON but HTTP status is OK and text contains 'success', assume success (tolerant fallback)
+                if (!data && typeof lastResponseStatus !== 'undefined' && lastResponseStatus >= 200 && lastResponseStatus < 300 && /"?success"?/i.test(text)) {
+                    console.warn('Response could not be parsed as JSON but contains success; proceeding as success.');
+                    alert(isUpdate ? 'Asiento actualizado correctamente' : 'Asiento guardado correctamente');
+                    modal.remove();
+                    location.reload();
+                    return;
+                }
+
+                // If parsed but server returned error
+                if (data && data.status !== 'success') {
+                    alert('Error al guardar: ' + (data.message || data.error || 'Error desconocido'));
+                    console.error('Error data:', data);
+                    return;
+                }
+
+                // Otherwise show helpful console output instead of a cryptic alert
+                console.error('No se pudo parsear la respuesta del servidor como JSON. Status:', lastResponseStatus, 'Response:', text);
+                alert('Error al procesar respuesta del servidor. Revisa la consola para más detalles.');
             })
             .catch(err => {
                 console.error('Error de red:', err);

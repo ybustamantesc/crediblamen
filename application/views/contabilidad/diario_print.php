@@ -4,34 +4,43 @@
     <meta charset="utf-8" />
     <title>Comprobante de Diario - <?php echo isset($empresa->razon_social) ? htmlspecialchars($empresa->razon_social) : ''; ?></title>
     <style>
-        @page { margin:18mm 12mm; }
-        body { font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif; color:#111; font-size:13px; margin:0; }
-        .wrap { width:820px; max-width:100%; margin:12px auto; padding:12px; box-sizing:border-box; }
-        .header { text-align:center; margin-bottom:6px; }
-        .header .company { font-size:16px; font-weight:700; }
-        .header .title { margin-top:6px; font-size:15px; font-weight:700; }
-        .meta { display:flex; justify-content:space-between; margin-top:8px; gap:12px; }
-        .box { border:1px solid #000; padding:8px; }
+        @page { margin:10mm 8mm; }
+        body { font-family: 'DejaVu Sans', Arial, Helvetica, sans-serif; color:#111; font-size:11px; margin:0; }
+        .wrap { width:100%; max-width:100%; margin:0 auto; padding:0; box-sizing:border-box; }
+        .header { text-align:center; margin-bottom:16px; }
+        .header .company { font-size:15px; font-weight:700; }
+        .header .title { margin-top:6px; font-size:13px; font-weight:700; }
+        .header > div:first-child { background-color:#0b3d91; color:#fff; padding:8px; border-radius:3px; }
+        .meta { display:flex; justify-content:space-between; margin-top:12px; margin-bottom:16px; gap:16px; font-size:10px; }
+        .meta > div { flex:1; }
+        .meta-left { flex:2; }
+        .meta-right { flex:1; text-align:right; }
+        .box { border:1px solid #000; padding:6px; }
         /* Elegant table: external border + vertical separators between columns; no horizontal internal lines */
-        table { width:100%; border-collapse:separate; border-spacing:0; margin-top:10px; font-size:12px; border:1px solid #000; }
-        th, td { padding:8px 10px; border-left:1px solid #000; }
+        table { width:100%; border-collapse:separate; border-spacing:0; margin-top:12px; margin-bottom:12px; font-size:10px; border:1px solid #000; }
+        th, td { padding:6px 5px; border-left:1px solid #000; }
         th:first-child, td:first-child { border-left: none; }
-        th { background:#f7f7f7; font-weight:700; text-align:left; }
+        th { background:#0b3d91; color:#fff; font-weight:700; text-align:left; font-size:10px; }
         tbody tr td { border-top: none; border-bottom: none; }
         /* Totals row: show top border and bolder text */
-        .totals-row th, .totals-row td { border-top:1px solid #000; font-weight:700; background:transparent; }
+        .totals-row th, .totals-row td { border-top:1px solid #000; font-weight:700; background:#0b3d91; color:#fff; }
+        .totals-row td.right { color: #fff; }
         /* Align numeric columns */
         .right { text-align:right; }
-        .center { text-align:center; }
-        .right { text-align:right; }
+        /* Meta section: clean label styling */
+        .meta strong { font-weight:700; }
         .center { text-align:center; }
         .no-border { border: none; }
+        /* Status area */
+        .status-area { margin-top:15px; margin-bottom:30px; font-weight:600; text-align:center; font-size:12px; }
         /* Larger signature area to allow manual signing */
-        .sig-row { margin-top:28px; display:flex; justify-content:space-between; align-items:flex-end; min-height:180px; }
-        .sig { width:30%; text-align:center; border-top:1px solid #000; padding-top:14px; font-weight:600; }
+        .sig-table { width:100%; border-collapse:collapse; margin-top:60px; border:none; }
+        .sig-cell { width:33.33%; text-align:center; padding:0 10px; border:none; }
+        .sig-line { border-top:1px solid #000; height:40px; margin-bottom:-6px; }
+        .sig-label { font-weight:600; font-size:13px; padding:0; }
         @media print {
-            .wrap { padding:8mm; }
-            .sig-row { min-height:200px; }
+            .wrap { padding:0; }
+            .sig-line { height:50px; }
         }
     </style>
 </head>
@@ -49,8 +58,7 @@
     ?>
     <div class="wrap">
         <div class="header">
-              <!-- Title removed as requested -->
-            <div style="margin-top:6px;font-size:14px;font-weight:700;">COMPROBANTE DE DIARIO</div>
+            <div style="font-size:14px;font-weight:700;">COMPROBANTE DE DIARIO</div>
         </div>
 
         <?php
@@ -70,54 +78,67 @@
             else $display_doc_type = $header->description;
         ?>
         <div class="meta">
-            <div style="flex:1; margin-right:10px;">
+            <div class="meta-left">
                 <div><strong>Tipo de Documento:</strong> <?php echo htmlspecialchars($display_doc_type); ?></div>
-                <div style="margin-top:6px;"><strong>Comentario:</strong> <?php echo htmlspecialchars($header->description); ?></div>
-                <div style="margin-top:6px;"><strong>Tipo de Cambio:</strong> <?php echo $tasa !== null ? number_format($tasa,4,',','.') : 'N/A'; ?></div>
+                <div style="margin-top:8px;"><strong>Comentario:</strong> <?php echo htmlspecialchars($header->description); ?></div>
+                <div style="margin-top:8px;"><strong>Tipo de Cambio:</strong> <?php echo $tasa !== null ? number_format($tasa,4,'.',',') : 'N/A'; ?></div>
             </div>
-            <div style="width:220px;text-align:right;">
+            <div class="meta-right">
                 <div><strong>Documento No.:</strong> <?php echo sprintf('%09d', $header->id); ?></div>
-                <div style="margin-top:6px;"><strong>Fecha:</strong> <?php echo htmlspecialchars($fecha_es); ?></div>
+                <div style="margin-top:8px;"><strong>Fecha:</strong> <?php echo htmlspecialchars($fecha_es); ?></div>
             </div>
         </div>
 
         <table>
             <thead>
                 <tr>
-                    <th style="width:80px">Código</th>
-                    <th style="width:90px">Tipo Doc</th>
-                    <th style="width:120px">Centro Costo</th>
-                    <th>Nombre</th>
-                    <th>Comentario</th>
-                    <th style="width:100px">Tipo Cambio</th>
-                    <th style="width:120px" class="right">Débito</th>
-                    <th style="width:120px" class="right">Crédito</th>
+                    <th style="width:13%">Código</th>
+                    <th style="width:17%">Nombre</th>
+                    <th style="width:11%">Centro Costo</th>
+                    <th style="width:17%">Comentario</th>
+                    <th style="width:8%" class="right">Débito NIO</th>
+                    <th style="width:8%" class="right">Débito USD</th>
+                    <th style="width:8%" class="right">Crédito NIO</th>
+                    <th style="width:10%" class="right">Crédito USD</th>
                 </tr>
             </thead>
             <tbody>
-                <?php foreach ($lines as $ln): ?>
+                <?php foreach ($lines as $ln):
+                    $debit_usd = $tasa !== null && $tasa > 0 ? floatval($ln->debit) / $tasa : 0.0;
+                    $credit_usd = $tasa !== null && $tasa > 0 ? floatval($ln->credit) / $tasa : 0.0;
+                ?>
                 <tr>
                     <td class="center"><?php echo htmlspecialchars($ln->code); ?></td>
-                    <td class="center"><?php echo htmlspecialchars(!empty($ln->doc_type) ? $ln->doc_type : (!empty($ln->document_type) ? $ln->document_type : (!empty($ln->documento) ? $ln->documento : (!empty($header->document_type) ? $header->document_type : '')))); ?></td>
-                    <td class="center"><?php echo htmlspecialchars(!empty($ln->centro_costo) ? $ln->centro_costo : (!empty($ln->cost_center) ? $ln->cost_center : (!empty($ln->centro) ? $ln->centro : ''))); ?></td>
                     <td><?php echo htmlspecialchars($ln->name); ?></td>
+                    <td class="center"><?php
+                        $centro_costo = '';
+                        if (!empty($ln->centro_costo_codigo) || !empty($ln->centro_costo_nombre)) {
+                            $centro_costo = trim((!empty($ln->centro_costo_codigo) ? $ln->centro_costo_codigo : '') .
+                                (!empty($ln->centro_costo_codigo) && !empty($ln->centro_costo_nombre) ? ' - ' : '') .
+                                (!empty($ln->centro_costo_nombre) ? $ln->centro_costo_nombre : ''));
+                        }
+                        echo htmlspecialchars($centro_costo);
+                    ?></td>
                     <td><?php echo htmlspecialchars($ln->line_description); ?></td>
-                    <td class="center"><?php echo $tasa !== null ? number_format($tasa,4,',','.') : '-'; ?></td>
-                    <td class="right"><?php echo $ln->debit > 0 ? number_format($ln->debit,2,',','.') : '-'; ?></td>
-                    <td class="right"><?php echo $ln->credit > 0 ? number_format($ln->credit,2,',','.') : '-'; ?></td>
+                    <td class="right"><?php echo $ln->debit > 0 ? 'C$ ' . number_format($ln->debit,2,'.',',') : '-'; ?></td>
+                    <td class="right"><?php echo $ln->debit > 0 ? '$ ' . number_format($debit_usd,2,'.',',') : '-'; ?></td>
+                    <td class="right"><?php echo $ln->credit > 0 ? 'C$ ' . number_format($ln->credit,2,'.',',') : '-'; ?></td>
+                    <td class="right"><?php echo $ln->credit > 0 ? '$ ' . number_format($credit_usd,2,'.',',') : '-'; ?></td>
                 </tr>
                 <?php endforeach; ?>
             </tbody>
             <tfoot>
                 <tr class="totals-row">
-                    <th class="no-border" colspan="6" style="text-align:right;">Totales</th>
-                    <th class="right"><?php echo number_format($header->total_debit,2,',','.'); ?></th>
-                    <th class="right"><?php echo number_format($header->total_credit,2,',','.'); ?></th>
+                    <th class="no-border" colspan="4" style="text-align:right;">Totales</th>
+                    <th class="right"><?php echo 'C$ ' . number_format($header->total_debit,2,'.',','); ?></th>
+                    <th class="right"><?php echo '$ ' . number_format($tasa !== null && $tasa > 0 ? floatval($header->total_debit) / $tasa : 0.0,2,'.',','); ?></th>
+                    <th class="right"><?php echo 'C$ ' . number_format($header->total_credit,2,'.',','); ?></th>
+                    <th class="right"><?php echo '$ ' . number_format($tasa !== null && $tasa > 0 ? floatval($header->total_credit) / $tasa : 0.0,2,'.',','); ?></th>
                 </tr>
             </tfoot>
         </table>
 
-        <div style="margin-top:10px; font-weight:600; text-align:center;">
+        <div class="status-area">
             <?php if (abs($header->total_debit - $header->total_credit) < 0.01): ?>
                 ASIENTO CUADRADO
             <?php else: ?>
@@ -125,11 +146,22 @@
             <?php endif; ?>
         </div>
 
-        <div class="sig-row">
-            <div class="sig">Firma Elaboró</div>
-            <div class="sig">Firma Revisó</div>
-            <div class="sig">Firma Aprobó</div>
-        </div>
+        <table class="sig-table">
+            <tr>
+                <td class="sig-cell">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Firma Elaboró</div>
+                </td>
+                <td class="sig-cell">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Firma Revisó</div>
+                </td>
+                <td class="sig-cell">
+                    <div class="sig-line"></div>
+                    <div class="sig-label">Firma Aprobó</div>
+                </td>
+            </tr>
+        </table>
 
     </div>
 </body>

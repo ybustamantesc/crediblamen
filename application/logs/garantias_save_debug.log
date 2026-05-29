@@ -4550,3 +4550,2302 @@ CHECKPOINT 3: rowCount=1
 CHECKPOINT 4: Processing row 0
 CHECKPOINT 6: Inserted garantia_id=4
 SAVE completed for solicitud_id=11
+=== GARANTIAS SAVE DEBUG 2026-05-25T14:10:05-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 
+        )
+
+    [nombre] => Array
+        (
+            [0] => 
+        )
+
+    [modelo] => Array
+        (
+            [0] => 
+        )
+
+    [marca] => Array
+        (
+            [0] => 
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 
+        )
+
+    [costo] => Array
+        (
+            [0] => 
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => 
+        )
+
+    [total] => 0.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T14:44:51-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 2
+        )
+
+    [nombre] => Array
+        (
+            [0] => 
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Blanco
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 80000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Ok
+        )
+
+    [total] => 160000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images (9).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php8564.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 7770
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+=== GARANTIAS SAVE DEBUG 2026-05-25T14:45:01-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 2
+        )
+
+    [nombre] => Array
+        (
+            [0] => 
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Blanco
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 80000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Ok
+        )
+
+    [total] => 160000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images (9).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpAD11.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 7770
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+=== GARANTIAS SAVE DEBUG 2026-05-25T14:45:40-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => 
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Blanco
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images (8).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php451C.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 7535
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+=== GARANTIAS SAVE DEBUG 2026-05-25T14:45:57-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => 
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Blanco
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 123ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images (8).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php8727.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 7535
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+=== GARANTIAS SAVE DEBUG 2026-05-25T14:46:32-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => 
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Blanco
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 123ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+=== GARANTIAS SAVE DEBUG 2026-05-25T14:50:34-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images (9).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpBF7A.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 7770
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 6: Inserted garantia_id=5
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T14:51:48-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images (8).jpg
+                            [1] => images (9).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                            [1] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpE08F.tmp
+                            [1] => D:\xampp\tmp\phpE090.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                            [1] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 7535
+                            [1] => 7770
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=5
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T15:39:27-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images.jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php8135.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 8669
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=5
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:06:31-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 
+            [2] => 1
+            [3] => 
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+            [1] => 
+            [2] => Busito
+            [3] => 
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+            [1] => 
+            [2] => BUS3K
+            [3] => 
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => 
+            [2] => Azul
+            [3] => 
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+            [1] => 
+            [2] => 152ABC
+            [3] => 
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+            [1] => 
+            [2] => 10000.00
+            [3] => 
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => 
+            [2] => Bueno
+            [3] => 
+        )
+
+    [total] => 10000.00
+    [fotos_eliminar] => Array
+        (
+            [0] => uploads/garantias/solicitud_15/2d1e4714369976ab7aef9d075554cc9d.jpg
+            [1] => uploads/garantias/solicitud_15/e16c2e673bcac392a19663513cd88d46.jpg
+        )
+
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=4
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=5
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 4: Processing row 2
+CHECKPOINT 6: Inserted garantia_id=6
+CHECKPOINT 4: Processing row 3
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:06:51-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+            [1] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+            [1] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+            [1] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+            [1] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => Bueno
+        )
+
+    [total] => 20000.00
+    [fotos_eliminar] => Array
+        (
+            [0] => uploads/garantias/solicitud_15/7bc1fb3fb21164b52565b89669e51d23.jpg
+        )
+
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=6
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=5
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:07:03-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => adicionales.jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpC8D5.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 8953
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=6
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:07:38-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+            [2] => 1
+            [3] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+            [1] => Busito
+            [2] => Busito
+            [3] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+            [1] => BUS3K
+            [2] => BUS3K
+            [3] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => Azul
+            [2] => Azul
+            [3] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+            [1] => 152ABC
+            [2] => 152ABC
+            [3] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+            [1] => 10000.00
+            [2] => 10000.00
+            [3] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => Bueno
+            [2] => Bueno
+            [3] => Bueno
+        )
+
+    [total] => 20000.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=4
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=6
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=5
+CHECKPOINT 4: Processing row 2
+CHECKPOINT 6: Inserted garantia_id=7
+CHECKPOINT 4: Processing row 3
+CHECKPOINT 6: Inserted garantia_id=8
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:10:15-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=8
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:10:59-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [total] => 0.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=0
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:19:42-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [garantia_id] => Array
+        (
+            [0] => 6
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=6
+DELETED garantia_id=8 because it was not present in posted data
+DELETED garantia_id=7 because it was not present in posted data
+DELETED garantia_id=5 because it was not present in posted data
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:23:47-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [garantia_id] => Array
+        (
+            [0] => 6
+            [1] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+            [2] => 1
+            [3] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+            [1] => Cosas
+            [2] => Busito
+            [3] => Cosas
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+            [1] => 123
+            [2] => BUS3K
+            [3] => 123
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => 321
+            [2] => Azul
+            [3] => 321
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+            [1] => 1212
+            [2] => 152ABC
+            [3] => 1212
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+            [1] => 100
+            [2] => 10000.00
+            [3] => 100
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => Bueno
+            [2] => Bueno
+            [3] => Bueno
+        )
+
+    [total] => 10100.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=4
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=6
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 6: Inserted garantia_id=9
+CHECKPOINT 4: Processing row 2
+CHECKPOINT 6: Inserted garantia_id=10
+CHECKPOINT 4: Processing row 3
+CHECKPOINT 6: Inserted garantia_id=11
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:26:22-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [garantia_id] => Array
+        (
+            [0] => 6
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 10000.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=6
+DELETED garantia_id=11 because it was not present in posted data
+DELETED garantia_id=10 because it was not present in posted data
+DELETED garantia_id=9 because it was not present in posted data
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:26:40-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [garantia_id] => Array
+        (
+            [0] => 6
+            [1] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Busito
+            [1] => 
+        )
+
+    [modelo] => Array
+        (
+            [0] => BUS3K
+            [1] => Cositas
+        )
+
+    [marca] => Array
+        (
+            [0] => Azul
+            [1] => 1231
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 152ABC
+            [1] => 3131
+        )
+
+    [costo] => Array
+        (
+            [0] => 10000.00
+            [1] => 150
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+            [1] => 
+        )
+
+    [total] => 10150.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=6
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 6: Inserted garantia_id=12
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:26:51-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [garantia_id] => Array
+        (
+            [0] => 12
+            [1] => 6
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cosas
+            [1] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => Cositas
+            [1] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => 1231
+            [1] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 3131
+            [1] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 150.00
+            [1] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => 
+            [1] => Bueno
+        )
+
+    [total] => 10150.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=12
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=6
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-25T16:27:25-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [garantia_id] => Array
+        (
+            [0] => 12
+            [1] => 6
+            [2] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+            [2] => 1
+            [3] => 1
+            [4] => 1
+            [5] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cosas
+            [1] => Busito
+            [2] => Algo
+            [3] => Cosas
+            [4] => Busito
+            [5] => Algo
+        )
+
+    [modelo] => Array
+        (
+            [0] => Cositas
+            [1] => BUS3K
+            [2] => 
+            [3] => Cositas
+            [4] => BUS3K
+            [5] => 
+        )
+
+    [marca] => Array
+        (
+            [0] => 1231
+            [1] => Azul
+            [2] => 
+            [3] => 1231
+            [4] => Azul
+            [5] => 
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 3131
+            [1] => 152ABC
+            [2] => 
+            [3] => 3131
+            [4] => 152ABC
+            [5] => 
+        )
+
+    [costo] => Array
+        (
+            [0] => 150.00
+            [1] => 10000.00
+            [2] => 1500
+            [3] => 150.00
+            [4] => 10000.00
+            [5] => 1500
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => 
+            [1] => Bueno
+            [2] => 
+            [3] => 
+            [4] => Bueno
+            [5] => 
+        )
+
+    [total] => 11650.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=6
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=12
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=6
+CHECKPOINT 4: Processing row 2
+CHECKPOINT 6: Inserted garantia_id=13
+CHECKPOINT 4: Processing row 3
+CHECKPOINT 6: Found similar garantia_id=12, updated instead of insert
+CHECKPOINT 4: Processing row 4
+CHECKPOINT 6: Found similar garantia_id=6, updated instead of insert
+CHECKPOINT 4: Processing row 5
+CHECKPOINT 6: Found similar garantia_id=13, updated instead of insert
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-26T09:31:52-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 11
+    [garantia_id] => Array
+        (
+            [0] => 4
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cosa
+        )
+
+    [modelo] => Array
+        (
+            [0] => Su
+        )
+
+    [marca] => Array
+        (
+            [0] => Verde
+        )
+
+    [n_serie] => Array
+        (
+            [0] => dfsa
+        )
+
+    [costo] => Array
+        (
+            [0] => 100.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Ok
+        )
+
+    [total] => 100.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 6cgqAOkb_400x400.jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php574A.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 14298
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=4
+SAVE completed for solicitud_id=11
+=== GARANTIAS SAVE DEBUG 2026-05-26T11:09:45-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 14
+    [garantia_id] => Array
+        (
+            [0] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Un parque
+        )
+
+    [modelo] => Array
+        (
+            [0] => Parque
+        )
+
+    [marca] => Array
+        (
+            [0] => Verde
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+        )
+
+    [costo] => Array
+        (
+            [0] => 15000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Cuidado
+        )
+
+    [total] => 15000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 360_F_341448248_AJ0S225TTqp2uFBqQmvHRh5Ah5FP09T1.jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpF2D4.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 81325
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 6: Inserted garantia_id=14
+SAVE completed for solicitud_id=14
+=== GARANTIAS SAVE DEBUG 2026-05-26T11:10:30-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 14
+    [garantia_id] => Array
+        (
+            [0] => 14
+            [1] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 2
+        )
+
+    [nombre] => Array
+        (
+            [0] => Un parque
+            [1] => Una foto de persona
+        )
+
+    [modelo] => Array
+        (
+            [0] => Parque
+            [1] => Fotitos
+        )
+
+    [marca] => Array
+        (
+            [0] => Verde
+            [1] => Cosas
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+            [1] => 002
+        )
+
+    [costo] => Array
+        (
+            [0] => 15000.00
+            [1] => 150
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Cuidado
+            [1] => Muy bien
+        )
+
+    [total] => 15300.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => foto-generica.jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpA368.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [1] => Array
+                        (
+                            [0] => 25642
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=14
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 6: Inserted garantia_id=15
+SAVE completed for solicitud_id=14
+=== GARANTIAS SAVE DEBUG 2026-05-26T11:29:30-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 14
+    [garantia_id] => Array
+        (
+            [0] => 14
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Un parque
+        )
+
+    [modelo] => Array
+        (
+            [0] => Parque
+        )
+
+    [marca] => Array
+        (
+            [0] => Verde
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+        )
+
+    [costo] => Array
+        (
+            [0] => 15000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Cuidado
+        )
+
+    [total] => 15000.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=14
+DELETED garantia_id=15 because it was not present in posted data
+SAVE completed for solicitud_id=14
+=== GARANTIAS SAVE DEBUG 2026-05-26T12:33:55-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 15
+    [garantia_id] => Array
+        (
+            [0] => 13
+            [1] => 6
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Algo
+            [1] => Busito
+        )
+
+    [modelo] => Array
+        (
+            [0] => 
+            [1] => BUS3K
+        )
+
+    [marca] => Array
+        (
+            [0] => 
+            [1] => Azul
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 
+            [1] => 152ABC
+        )
+
+    [costo] => Array
+        (
+            [0] => 1500.00
+            [1] => 10000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => 
+            [1] => Bueno
+        )
+
+    [total] => 11500.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=13
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=6
+DELETED garantia_id=12 because it was not present in posted data
+SAVE completed for solicitud_id=15
+=== GARANTIAS SAVE DEBUG 2026-05-26T12:49:21-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 14
+    [garantia_id] => Array
+        (
+            [0] => 14
+            [1] => 
+            [2] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+            [1] => 1
+            [2] => 2
+        )
+
+    [nombre] => Array
+        (
+            [0] => Un parque
+            [1] => Prueba adio
+            [2] => Cosillas
+        )
+
+    [modelo] => Array
+        (
+            [0] => Parque
+            [1] => dsafsa
+            [2] => gdfsgds
+        )
+
+    [marca] => Array
+        (
+            [0] => Verde
+            [1] => fdsafs
+            [2] => fdsafa
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 001
+            [1] => 
+            [2] => sdfas
+        )
+
+    [costo] => Array
+        (
+            [0] => 15000.00
+            [1] => 452
+            [2] => 4272
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Cuidado
+            [1] => 
+            [2] => 
+        )
+
+    [total] => 23996.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=3
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=14
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 6: Inserted garantia_id=16
+CHECKPOINT 4: Processing row 2
+CHECKPOINT 6: Inserted garantia_id=17
+SAVE completed for solicitud_id=14
+=== GARANTIAS SAVE DEBUG 2026-05-26T12:52:27-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 14
+    [garantia_id] => Array
+        (
+            [0] => 17
+            [1] => 14
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 2
+            [1] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cosillas
+            [1] => Un parque
+        )
+
+    [modelo] => Array
+        (
+            [0] => gdfsgds
+            [1] => Parque
+        )
+
+    [marca] => Array
+        (
+            [0] => fdsafa
+            [1] => Verde
+        )
+
+    [n_serie] => Array
+        (
+            [0] => sdfas
+            [1] => 001
+        )
+
+    [costo] => Array
+        (
+            [0] => 4272.00
+            [1] => 15000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => 
+            [1] => Cuidado
+        )
+
+    [total] => 23544.00
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=2
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=17
+CHECKPOINT 4: Processing row 1
+CHECKPOINT 5: Updated garantia_id=14
+DELETED garantia_id=16 because it was not present in posted data
+SAVE completed for solicitud_id=14

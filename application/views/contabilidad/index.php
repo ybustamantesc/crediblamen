@@ -1,18 +1,14 @@
 <?php $this->load->view('layout/navbar'); ?>
-<div class="page-wrap">
+<div class="page-wrap servicont-main-wrapper">
     <?php $this->load->view('contabilidad/sidebar_contabilidad'); ?>
     <div class="main-content">
         <div class="container-fluid">
-            <div class="page-header">
-                <div class="row align-items-end">
-                    <div class="col-lg-8">
-                        <div class="page-header-title">
-                            <i class="fas fa-calculator bg-blue"></i>
-                            <div class="d-inline">
-                                <h5> Contabilidad </h5>
-                                <span>Módulo de asientos y reportes</span>
-                            </div>
-                        </div>
+            <div class="servicont-mayor-header">
+                <div class="d-flex align-items-center">
+                    <div class="servicont-header-icon"><i class="fas fa-calculator"></i></div>
+                    <div>
+                        <h1 class="servicont-header-title">Contabilidad</h1>
+                        <p class="servicont-header-subtitle">Módulo de asientos y reportes</p>
                     </div>
                 </div>
             </div>

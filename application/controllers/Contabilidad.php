@@ -51,6 +51,200 @@ class Contabilidad extends CI_Controller {
         $this->load->view('contabilidad/diario_print', $viewData);
     }
 
+    // Export journal entry as PDF (for download)
+    public function diario_export_pdf()
+    {
+        $id = $this->input->get('id');
+        if (!$id) { show_error('ID inválido', 400); return; }
+        $this->load->model('Contabilidad_model');
+        $this->load->model('Core_model');
+        $data = $this->Contabilidad_model->get_journal($id);
+        if (!$data) { show_error('Asiento no encontrado', 404); return; }
+        $empresa = $this->core_model->get_by_id('tb_sistema', array('id' => 1));
+        $viewData = array_merge($data, ['empresa' => $empresa]);
+        
+        // Capture the view as HTML
+        $html = $this->load->view('contabilidad/diario_print', $viewData, true);
+        
+        // Load Dompdf
+        if (!class_exists('\Dompdf\Dompdf')) {
+            if (file_exists(FCPATH . 'dompdf/autoload.inc.php')) {
+                require_once FCPATH . 'dompdf/autoload.inc.php';
+            } elseif (file_exists(FCPATH . 'vendor/autoload.php')) {
+                require_once FCPATH . 'vendor/autoload.php';
+            }
+        }
+        if (!class_exists('\Dompdf\Dompdf')) {
+            show_error('Dompdf no disponible en el servidor', 500);
+            return;
+        }
+        
+        // Create PDF
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+        
+        // Stream with download
+        $filename = 'asiento_' . intval($id) . '.pdf';
+        $dompdf->stream($filename, array('Attachment' => 1));
+    }
+
+    // Export journal entry as XLSX (for download)
+    public function diario_export_xlsx()
+    {
+        $id = $this->input->get('id');
+        if (!$id) { show_error('ID inválido', 400); return; }
+        $this->load->model('Contabilidad_model');
+        $this->load->model('Core_model');
+        $data = $this->Contabilidad_model->get_journal($id);
+        if (!$data) { show_error('Asiento no encontrado', 404); return; }
+        $empresa = $this->core_model->get_by_id('tb_sistema', array('id' => 1));
+        
+        // Load PhpSpreadsheet
+        if (!class_exists('\PhpOffice\PhpSpreadsheet\Spreadsheet')) {
+            if (file_exists(FCPATH . 'vendor/autoload.php')) {
+                require_once FCPATH . 'vendor/autoload.php';
+            }
+        }
+        if (!class_exists('\PhpOffice\PhpSpreadsheet\Spreadsheet')) {
+            show_error('PhpSpreadsheet no disponible en el servidor', 500);
+            return;
+        }
+        
+        // Create spreadsheet
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Asiento');
+        
+        $row = 1;
+        $company = isset($empresa->razon_social) ? $empresa->razon_social : 'Empresa';
+        
+        // Header
+        $sheet->mergeCells('A'.$row.':H'.$row);
+        $sheet->setCellValue('A'.$row, $company);
+        $sheet->getStyle('A'.$row)->getFont()->setBold(true)->setSize(12)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A'.$row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0B3D91');
+        $sheet->getStyle('A'.$row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $row++;
+        
+        $sheet->mergeCells('A'.$row.':H'.$row);
+        $sheet->setCellValue('A'.$row, 'Asiento #' . intval($id));
+        $sheet->getStyle('A'.$row)->getFont()->setBold(true)->setSize(11)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A'.$row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0B3D91');
+        $sheet->getStyle('A'.$row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+        $row += 2;
+        
+        // Journal header info
+        $journal_date = isset($data['header']->date) ? $data['header']->date : '';
+        $journal_desc = isset($data['header']->description) ? $data['header']->description : '';
+        
+        $sheet->setCellValue('A'.$row, 'Fecha:');
+        $sheet->setCellValue('B'.$row, $journal_date);
+        $sheet->getStyle('A'.$row)->getFont()->setBold(true)->getColor()->setRGB('0B3D91');
+        $row++;
+        
+        $sheet->setCellValue('A'.$row, 'Descripción:');
+        $sheet->setCellValue('B'.$row, $journal_desc);
+        $sheet->getStyle('A'.$row)->getFont()->setBold(true)->getColor()->setRGB('0B3D91');
+        $row += 2;
+        
+        // Tipo de cambio para cálculo en USD
+        $this->load->model('TasaCambio_model');
+        $tasa = null;
+        if (!empty($journal_date)) {
+            $tasa = $this->TasaCambio_model->get_tasa_vigente($journal_date, 'compra');
+            $tasa = $tasa !== null ? floatval($tasa) : null;
+        }
+
+        // Column headers
+        $headers = ['Código', 'Nombre', 'Centro Costo', 'Comentario', 'Débito NIO', 'Débito USD', 'Crédito NIO', 'Crédito USD'];
+        $headerRow = $row;
+        $col = 'A';
+        foreach ($headers as $h) {
+            $sheet->setCellValue($col.$row, $h);
+            $sheet->getStyle($col.$row)->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+            $sheet->getStyle($col.$row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+            $sheet->getStyle($col.$row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0B3D91');
+            $col++;
+        }
+        $row++;
+        
+        // Lines
+        if (isset($data['lines']) && is_array($data['lines'])) {
+            foreach ($data['lines'] as $line) {
+                $centro_costo = '';
+                if (!empty($line->centro_costo_codigo) || !empty($line->centro_costo_nombre)) {
+                    $centro_costo = trim((!empty($line->centro_costo_codigo) ? $line->centro_costo_codigo : '') .
+                        (!empty($line->centro_costo_codigo) && !empty($line->centro_costo_nombre) ? ' - ' : '') .
+                        (!empty($line->centro_costo_nombre) ? $line->centro_costo_nombre : ''));
+                } else {
+                    $centro_costo = $line->centro_costo ?? '';
+                }
+
+                $debit = floatval($line->debit ?? 0);
+                $credit = floatval($line->credit ?? 0);
+                $debit_usd = ($tasa !== null && $tasa > 0) ? $debit / $tasa : 0.0;
+                $credit_usd = ($tasa !== null && $tasa > 0) ? $credit / $tasa : 0.0;
+
+                $sheet->setCellValue('A'.$row, $line->code ?? '');
+                $sheet->setCellValue('B'.$row, $line->name ?? '');
+                $sheet->setCellValue('C'.$row, $centro_costo);
+                $sheet->setCellValue('D'.$row, $line->line_description ?? '');
+                $sheet->setCellValue('E'.$row, $debit);
+                $sheet->setCellValue('F'.$row, $debit_usd);
+                $sheet->setCellValue('G'.$row, $credit);
+                $sheet->setCellValue('H'.$row, $credit_usd);
+                $row++;
+            }
+        }
+        
+        // Totals row
+        $row++;
+        $sheet->mergeCells('A'.$row.':D'.$row);
+        $sheet->setCellValue('A'.$row, 'TOTAL');
+        $sheet->getStyle('A'.$row)->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A'.$row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0B3D91');
+        $sheet->getStyle('A'.$row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+        
+        // Sum formulas
+        $dataStartRow = $headerRow + 1;
+        $dataEndRow = $row - 2;
+        $sheet->setCellValue('E'.$row, '=SUM(E' . $dataStartRow . ':E' . $dataEndRow . ')');
+        $sheet->setCellValue('F'.$row, '=SUM(F' . $dataStartRow . ':F' . $dataEndRow . ')');
+        $sheet->setCellValue('G'.$row, '=SUM(G' . $dataStartRow . ':G' . $dataEndRow . ')');
+        $sheet->setCellValue('H'.$row, '=SUM(H' . $dataStartRow . ':H' . $dataEndRow . ')');
+        $sheet->getStyle('E'.$row)->getFont()->setBold(true);
+        $sheet->getStyle('F'.$row)->getFont()->setBold(true);
+        $sheet->getStyle('G'.$row)->getFont()->setBold(true);
+        $sheet->getStyle('H'.$row)->getFont()->setBold(true);
+        
+        // Column widths
+        $sheet->getColumnDimension('A')->setWidth(18);
+        $sheet->getColumnDimension('B')->setWidth(50);
+        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('D')->setWidth(40);
+        $sheet->getColumnDimension('E')->setWidth(16);
+        $sheet->getColumnDimension('F')->setWidth(16);
+        $sheet->getColumnDimension('G')->setWidth(16);
+        $sheet->getColumnDimension('H')->setWidth(16);
+
+        // Wrap text for long descriptions/names
+        $sheet->getStyle('B:H')->getAlignment()->setWrapText(true);
+        
+        // Number formats
+        $sheet->getStyle('E:H')->getNumberFormat()->setFormatCode('#,##0.00');
+        
+        // Output
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $filename = 'asiento_' . intval($id) . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+        $writer->save('php://output');
+    }
+
     // View for Auxiliares report
     public function auxiliares()
     {
@@ -321,6 +515,11 @@ class Contabilidad extends CI_Controller {
         $post = $this->input->post();
         $start = isset($post['start']) && $post['start'] ? $post['start'] : null;
         $end = isset($post['end']) && $post['end'] ? $post['end'] : null;
+        $currency = strtolower(trim(isset($post['currency']) ? $post['currency'] : 'local'));
+        if ($currency !== 'usd') {
+            $currency = 'local';
+        }
+
         $accounts = [];
         if (isset($post['all']) && $post['all']) {
             $accounts = [];
@@ -328,9 +527,59 @@ class Contabilidad extends CI_Controller {
             $accounts = array_map('intval', $post['accounts']);
         }
 
-        $data = $this->Contabilidad_model->get_auxiliares($accounts, $start, $end);
+        // obtain raw data
+        $raw = $this->Contabilidad_model->get_auxiliares($accounts, $start, $end);
+
+        // By default return raw data (no date filter applied).
+        // Only remove lines without date when user filtered by start or end.
+        if ($start || $end) {
+            $data = [];
+            foreach ($raw as $acc) {
+                // filter out lines that have no date or invalid placeholder
+                $lines = array_filter($acc['lines'], function($l){
+                    $d = isset($l['date']) ? trim((string)$l['date']) : '';
+                    return ($d !== '' && $d !== null && $d !== '0000-00-00');
+                });
+                if (!empty($lines)) {
+                    $acc['lines'] = array_values($lines);
+                    $data[] = $acc;
+                }
+            }
+        } else {
+            $data = $raw;
+        }
+
+        // apply currency conversion only to remaining accounts
+        if ($currency === 'usd') {
+            $this->db->select('tasa_cambio');
+            $this->db->order_by('fecha', 'DESC');
+            $this->db->limit(1);
+            $tasa = $this->db->get('tb_tasa_cambio')->row();
+            $exchange_rate = ($tasa && isset($tasa->tasa_cambio)) ? floatval($tasa->tasa_cambio) : 36.50;
+            if ($exchange_rate <= 0) {
+                $exchange_rate = 36.50;
+            }
+
+            foreach ($data as &$acc) {
+                $acc['opening'] = round($acc['opening'] / $exchange_rate, 2);
+                foreach ($acc['lines'] as &$line) {
+                    $line['debit'] = round($line['debit'] / $exchange_rate, 2);
+                    $line['credit'] = round($line['credit'] / $exchange_rate, 2);
+                    $line['balance'] = round($line['balance'] / $exchange_rate, 2);
+                }
+                unset($line);
+                $acc['final_balance'] = round($acc['final_balance'] / $exchange_rate, 2);
+            }
+            unset($acc);
+        }
+
         header('Content-Type: application/json');
-        echo json_encode(['status' => 'success', 'data' => $data]);
+        echo json_encode([
+            'status' => 'success',
+            'data' => $data,
+            'currency' => $currency,
+            'currency_label' => ($currency === 'usd' ? '(USD)' : '(Moneda local)')
+        ]);
     }
 
     // Export auxiliares to CSV (simple)
@@ -612,7 +861,26 @@ class Contabilidad extends CI_Controller {
     public function list_entries()
     {
         header('Content-Type: application/json');
-        $entries = $this->Contabilidad_model->get_journals();
+        $start_date = $this->input->get('start_date');
+        $end_date = $this->input->get('end_date');
+
+        // Normalize and validate dates to avoid SQL issues
+        $parsedStart = null;
+        $parsedEnd = null;
+        if ($start_date) {
+            $dt = DateTime::createFromFormat('Y-m-d', $start_date);
+            if ($dt && $dt->format('Y-m-d') === $start_date) {
+                $parsedStart = $start_date;
+            }
+        }
+        if ($end_date) {
+            $dt = DateTime::createFromFormat('Y-m-d', $end_date);
+            if ($dt && $dt->format('Y-m-d') === $end_date) {
+                $parsedEnd = $end_date;
+            }
+        }
+
+        $entries = $this->Contabilidad_model->get_journals($parsedStart, $parsedEnd);
         echo json_encode(['status' => 'success', 'data' => $entries]);
     }
 
@@ -637,6 +905,9 @@ class Contabilidad extends CI_Controller {
         $payload = [
             'date' => isset($post['date']) ? $post['date'] : date('Y-m-d'),
             'description' => isset($post['description']) ? $post['description'] : '',
+            // Send both keys to remain compatible with databases that have either
+            'document_type' => isset($post['document_type']) ? $post['document_type'] : (isset($post['entry_type']) ? $post['entry_type'] : null),
+            'entry_type' => isset($post['document_type']) ? $post['document_type'] : (isset($post['entry_type']) ? $post['entry_type'] : null),
             'lines' => $lines
         ];
         $ok = $this->Contabilidad_model->update_journal($id, $payload);
@@ -1240,6 +1511,247 @@ class Contabilidad extends CI_Controller {
         echo json_encode(['success' => true, 'lines' => $formatted_lines]);
     }
 
+    public function export_selected_entries_pdf()
+    {
+        $json = file_get_contents('php://input');
+        $input = json_decode($json, true);
+        $entry_ids = isset($input['entry_ids']) && is_array($input['entry_ids']) ? array_filter(array_map('intval', $input['entry_ids'])) : [];
+
+        if (empty($entry_ids)) {
+            show_error('IDs de asientos requeridos', 400);
+            return;
+        }
+
+        $this->load->model('Contabilidad_model');
+        $this->load->model('Core_model');
+
+        $entries = [];
+        foreach ($entry_ids as $entry_id) {
+            $journal = $this->Contabilidad_model->get_journal($entry_id);
+            if ($journal) {
+                $entries[] = $journal;
+            }
+        }
+
+        if (empty($entries)) {
+            show_error('No se encontraron los asientos seleccionados', 404);
+            return;
+        }
+
+        $empresa = $this->core_model->get_by_id('tb_sistema', ['id' => 1]);
+        $html = $this->load->view('contabilidad/diario_print_multi', [
+            'entries' => $entries,
+            'empresa' => $empresa
+        ], true);
+
+        if (!class_exists('\Dompdf\Dompdf')) {
+            if (file_exists(FCPATH . 'dompdf/autoload.inc.php')) {
+                require_once FCPATH . 'dompdf/autoload.inc.php';
+            } elseif (file_exists(FCPATH . 'vendor/autoload.php')) {
+                require_once FCPATH . 'vendor/autoload.php';
+            }
+        }
+
+        if (!class_exists('\Dompdf\Dompdf')) {
+            show_error('Dompdf no disponible en el servidor', 500);
+            return;
+        }
+
+        $options = new \Dompdf\Options();
+        $options->set('isRemoteEnabled', true);
+        $dompdf = new \Dompdf\Dompdf($options);
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+
+        $filename = 'libro_diario_seleccionados_' . date('Ymd_His') . '.pdf';
+        $dompdf->stream($filename, ['Attachment' => 1]);
+    }
+
+    public function export_selected_entries_csv()
+    {
+        require_once APPPATH . '../vendor/autoload.php';
+
+        $json = file_get_contents('php://input');
+        $input = json_decode($json, true);
+        $entry_ids = isset($input['entry_ids']) && is_array($input['entry_ids']) ? array_filter(array_map('intval', $input['entry_ids'])) : [];
+
+        if (empty($entry_ids)) {
+            show_error('IDs de asientos requeridos', 400);
+            return;
+        }
+
+        $this->load->model('Contabilidad_model');
+        $this->load->model('Core_model');
+        $empresa = $this->core_model->get_by_id('tb_sistema', ['id' => 1]);
+        $companyName = $empresa && isset($empresa->razon_social) ? $empresa->razon_social : 'Empresa';
+
+        $lines = $this->Contabilidad_model->get_journal_lines_by_entry_ids($entry_ids);
+        if (empty($lines)) {
+            show_error('No se encontraron las líneas para los asientos seleccionados', 404);
+            return;
+        }
+
+        $this->db->select('tasa_cambio');
+        $this->db->order_by('fecha', 'DESC');
+        $this->db->limit(1);
+        $tasa = $this->db->get('tb_tasa_cambio')->row();
+        $exchange_rate = $tasa && isset($tasa->tasa_cambio) ? floatval($tasa->tasa_cambio) : 36.50;
+
+        $grouped = [];
+        foreach ($lines as $line) {
+            $entryId = $line->journal_id;
+            if (!isset($grouped[$entryId])) {
+                $grouped[$entryId] = [
+                    'header' => [
+                        'entry_id' => $entryId,
+                        'entry_type' => $line->entry_type ?: 'CD',
+                        'date' => $line->date,
+                        'journal_description' => $line->journal_description,
+                    ],
+                    'lines' => []
+                ];
+            }
+            $grouped[$entryId]['lines'][] = $line;
+        }
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Libro Diario');
+
+        $sheet->mergeCells('A1:H1');
+        $sheet->setCellValue('A1', $companyName);
+        $sheet->mergeCells('A2:H2');
+        $sheet->setCellValue('A2', 'Libro Diario - Asientos Seleccionados');
+        $sheet->mergeCells('A3:H3');
+        $sheet->setCellValue('A3', 'Exportado: ' . date('d/m/Y H:i:s'));
+        $sheet->mergeCells('A4:H4');
+        $sheet->setCellValue('A4', 'Asientos seleccionados: ' . count($grouped));
+
+        $sheet->getStyle('A1:H1')->getFont()->setBold(true)->setSize(16)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A1:H1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('1F4E78');
+        $sheet->getStyle('A2:H2')->getFont()->setBold(true)->setSize(13)->getColor()->setRGB('FFFFFF');
+        $sheet->getStyle('A2:H2')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0B5394');
+        $sheet->getStyle('A3:H4')->getFont()->setSize(10)->getColor()->setRGB('1F2937');
+        $sheet->getStyle('A1:H4')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('A1:H4')->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+
+        $sheet->getColumnDimension('A')->setWidth(40);
+        $sheet->getColumnDimension('B')->setWidth(18);
+        $sheet->getColumnDimension('C')->setWidth(14);
+        $sheet->getColumnDimension('D')->setWidth(32);
+        $sheet->getColumnDimension('E')->setWidth(32);
+        $sheet->getColumnDimension('F')->setWidth(18);
+        $sheet->getColumnDimension('G')->setWidth(18);
+        $sheet->getColumnDimension('H')->setWidth(18);
+
+        $row = 6;
+        $grandTotals = ['debit_nio' => 0, 'credit_nio' => 0, 'debit_usd' => 0, 'credit_usd' => 0];
+
+        foreach ($grouped as $journal) {
+            $header = $journal['header'];
+            $sheet->mergeCells('A' . $row . ':H' . $row);
+            $sheet->setCellValue('A' . $row, 'Asiento: ' . $header['entry_type'] . '-' . $header['entry_id'] . ' | Fecha: ' . date('d/m/Y', strtotime($header['date'])) . ' | Descripción: ' . $header['journal_description']);
+            $sheet->getStyle('A' . $row)->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+            $sheet->getStyle('A' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0B5394');
+            $sheet->getStyle('A' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+            $sheet->getRowDimension($row)->setRowHeight(22);
+            $row++;
+
+            $lineHeaders = [
+                'A' => 'Cuenta',
+                'B' => 'Código cuenta',
+                'C' => 'Descripción línea',
+                'D' => 'Centro de costo',
+                'E' => 'Débito NIO',
+                'F' => 'Crédito NIO',
+                'G' => 'Débito USD',
+                'H' => 'Crédito USD'
+            ];
+
+            foreach ($lineHeaders as $col => $label) {
+                $sheet->setCellValue($col . $row, $label);
+                $sheet->getStyle($col . $row)->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+                $sheet->getStyle($col . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0B5394');
+                $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle($col . $row)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+            }
+            $sheet->getRowDimension($row)->setRowHeight(22);
+            $row++;
+
+            $entryDebit = 0;
+            $entryCredit = 0;
+            $entryDebitUsd = 0;
+            $entryCreditUsd = 0;
+
+            foreach ($journal['lines'] as $line) {
+                $debit = floatval($line->debit);
+                $credit = floatval($line->credit);
+                $debitUsd = isset($line->debit_usd) ? floatval($line->debit_usd) : ($exchange_rate > 0 ? $debit / $exchange_rate : 0);
+                $creditUsd = isset($line->credit_usd) ? floatval($line->credit_usd) : ($exchange_rate > 0 ? $credit / $exchange_rate : 0);
+                $accountName = trim(($line->account_code ? $line->account_code . ' - ' : '') . ($line->account_name ?: ''));
+                $description = trim($line->line_description ?: $header['journal_description']);
+                $centro = isset($line->centro_costo_codigo) && $line->centro_costo_codigo ? ($line->centro_costo_codigo . ' - ' . $line->centro_costo_nombre) : '';
+
+                $sheet->setCellValue('A' . $row, $accountName);
+                $sheet->setCellValue('B' . $row, $line->account_code ?? '');
+                $sheet->setCellValue('C' . $row, $description);
+                $sheet->setCellValue('D' . $row, $centro);
+                $sheet->setCellValue('E' . $row, $debit);
+                $sheet->setCellValue('F' . $row, $credit);
+                $sheet->setCellValue('G' . $row, $debitUsd);
+                $sheet->setCellValue('H' . $row, $creditUsd);
+
+                $sheet->getStyle('E' . $row . ':H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                $sheet->getStyle('A' . $row . ':H' . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)->getColor()->setRGB('D1D5DB');
+
+                $entryDebit += $debit;
+                $entryCredit += $credit;
+                $entryDebitUsd += $debitUsd;
+                $entryCreditUsd += $creditUsd;
+                $row++;
+            }
+
+            $sheet->setCellValue('A' . $row, 'Subtotal Asiento');
+            $sheet->mergeCells('A' . $row . ':D' . $row);
+            $sheet->setCellValue('E' . $row, $entryDebit);
+            $sheet->setCellValue('F' . $row, $entryCredit);
+            $sheet->setCellValue('G' . $row, $entryDebitUsd);
+            $sheet->setCellValue('H' . $row, $entryCreditUsd);
+            $sheet->getStyle('A' . $row . ':H' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('E' . $row . ':H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->getStyle('A' . $row . ':H' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('E2E8F0');
+            $sheet->getStyle('A' . $row . ':H' . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)->getColor()->setRGB('D1D5DB');
+            $row += 2;
+
+            $grandTotals['debit_nio'] += $entryDebit;
+            $grandTotals['credit_nio'] += $entryCredit;
+            $grandTotals['debit_usd'] += $entryDebitUsd;
+            $grandTotals['credit_usd'] += $entryCreditUsd;
+        }
+
+        $sheet->setCellValue('A' . $row, 'Totales generales');
+        $sheet->mergeCells('A' . $row . ':D' . $row);
+        $sheet->setCellValue('E' . $row, $grandTotals['debit_nio']);
+        $sheet->setCellValue('F' . $row, $grandTotals['credit_nio']);
+        $sheet->setCellValue('G' . $row, $grandTotals['debit_usd']);
+        $sheet->setCellValue('H' . $row, $grandTotals['credit_usd']);
+        $sheet->getStyle('A' . $row . ':H' . $row)->getFont()->setBold(true);
+        $sheet->getStyle('E' . $row . ':H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+        $sheet->getStyle('A' . $row . ':H' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('CBD5E1');
+        $sheet->getStyle('A' . $row . ':H' . $row)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)->getColor()->setRGB('D1D5DB');
+
+        $sheet->getStyle('A1:H' . $row)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+
+        $filename = 'libro_diario_seleccionados_' . date('Ymd_His') . '.xlsx';
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment; filename="' . $filename . '"');
+
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        $writer->save('php://output');
+        exit;
+    }
+
     // Página: Libro Mayor
     public function mayor()
     {
@@ -1259,7 +1771,28 @@ class Contabilidad extends CI_Controller {
         $posted = [];
         if ($all) {
             foreach ($all as $j) {
-                if (isset($j->posted) && intval($j->posted) === 1) $posted[] = $j;
+                if (isset($j->posted) && intval($j->posted) === 1) {
+                    // default local currency symbol is C$ for NIO/Córdobas
+                    $j->currency_symbol = 'C$';
+                    $j->foreign_symbol = '$';
+                    $exchange_rate = 36.50;
+                    if ($this->db->table_exists('tb_tasa_cambio')) {
+                        $rate_query = $this->db
+                            ->select('tasa_cambio')
+                            ->from('tb_tasa_cambio')
+                            ->where('fecha <=', $j->date)
+                            ->order_by('fecha', 'DESC')
+                            ->limit(1)
+                            ->get();
+                        $rate_row = $rate_query->row();
+                        if ($rate_row && isset($rate_row->tasa_cambio)) {
+                            $exchange_rate = floatval($rate_row->tasa_cambio);
+                        }
+                    }
+                    $j->debit_usd = ($exchange_rate > 0) ? floatval($j->total_debit) / $exchange_rate : 0.0;
+                    $j->credit_usd = ($exchange_rate > 0) ? floatval($j->total_credit) / $exchange_rate : 0.0;
+                    $posted[] = $j;
+                }
             }
         }
         $data['entries'] = $posted;
@@ -1486,54 +2019,154 @@ class Contabilidad extends CI_Controller {
 
         // Column widths
         $sheet->getColumnDimension('A')->setWidth(14);
-        $sheet->getColumnDimension('B')->setWidth(12);
-        $sheet->getColumnDimension('C')->setWidth(60);
-        $sheet->getColumnDimension('D')->setWidth(16);
+        $sheet->getColumnDimension('B')->setWidth(35);
+        $sheet->getColumnDimension('C')->setWidth(20);
+        $sheet->getColumnDimension('D')->setWidth(30);
         $sheet->getColumnDimension('E')->setWidth(16);
-        $sheet->getColumnDimension('F')->setWidth(14);
+        $sheet->getColumnDimension('F')->setWidth(16);
+        $sheet->getColumnDimension('G')->setWidth(16);
+        $sheet->getColumnDimension('H')->setWidth(16);
 
         // Title
-        $sheet->mergeCells('A1:F1');
+        $sheet->mergeCells('A1:H1');
         $sheet->setCellValue('A1', 'Libro Mayor - Asientos Mayorizados');
         $sheet->getStyle('A1')->getFont()->setBold(true)->setSize(16)->getColor()->setRGB('FFFFFF');
         $sheet->getStyle('A1')->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0B5394');
         $sheet->getStyle('A1')->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
         $sheet->getRowDimension(1)->setRowHeight(28);
 
-        // Headers
-        $headers = ['Fecha', 'Asiento ID', 'Descripción', 'Total Debe', 'Total Haber', 'Estado'];
-        $r = 2; $c = 'A';
-        foreach ($headers as $h) {
-            $sheet->setCellValue($c . $r, $h);
-            $sheet->getStyle($c . $r)->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
-            $sheet->getStyle($c . $r)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('1F4E78');
-            $sheet->getStyle($c . $r)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-            $c++;
-        }
-
         $row = 3;
+        $grandDebitNio = 0.0;
+        $grandCreditNio = 0.0;
+        $grandDebitUsd = 0.0;
+        $grandCreditUsd = 0.0;
+
         foreach ($filtered as $f) {
             $fecha = isset($f->date) ? date('d/m/Y', strtotime($f->date)) : '';
-            $sheet->setCellValue('A' . $row, $fecha);
+            $sheet->setCellValue('A' . $row, 'Asiento ID:');
             $sheet->setCellValue('B' . $row, intval($f->id));
-            $sheet->setCellValue('C' . $row, $f->description ?? '');
-            $debe = isset($f->total_debit) ? floatval($f->total_debit) : 0;
-            $haber = isset($f->total_credit) ? floatval($f->total_credit) : 0;
-            $sheet->setCellValue('D' . $row, $debe);
-            $sheet->setCellValue('E' . $row, $haber);
-            $sheet->setCellValue('F' . $row, (isset($f->posted) && intval($f->posted) === 1) ? 'Mayorizado' : 'Pendiente');
-
-            // number formats
-            $sheet->getStyle('D' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
-            $sheet->getStyle('E' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $sheet->setCellValue('E' . $row, 'Fecha:');
+            $sheet->setCellValue('F' . $row, $fecha);
+            $sheet->mergeCells('B' . $row . ':D' . $row);
+            $sheet->getStyle('A' . $row . ':H' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
             $row++;
+
+            $sheet->setCellValue('A' . $row, 'Comentario:');
+            $sheet->mergeCells('B' . $row . ':H' . $row);
+            $sheet->setCellValue('B' . $row, $f->description ?? '');
+            $sheet->getStyle('A' . $row . ':H' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+            $row += 2;
+
+            // Headers for journal detail
+            $headers = ['Código', 'Nombre', 'Centro Costo', 'Comentario', 'Débito NIO', 'Débito USD', 'Crédito NIO', 'Crédito USD'];
+            $col = 'A';
+            foreach ($headers as $h) {
+                $sheet->setCellValue($col . $row, $h);
+                $sheet->getStyle($col . $row)->getFont()->setBold(true)->getColor()->setRGB('FFFFFF');
+                $sheet->getStyle($col . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('1F4E78');
+                $sheet->getStyle($col . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+                $sheet->getStyle($col . $row)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_CENTER);
+                $col++;
+            }
+            $row++;
+
+            $journal = $this->Contabilidad_model->get_journal($f->id);
+            $lines = isset($journal['lines']) ? $journal['lines'] : array();
+            $totalDebit = 0.0;
+            $totalCredit = 0.0;
+            $exchangeRate = 36.50;
+            $tasa = null;
+            if (!empty($f->date)) {
+                $CI = &get_instance();
+                if (!isset($CI->TasaCambio_model)) {
+                    $CI->load->model('TasaCambio_model');
+                }
+                $tasa = $CI->TasaCambio_model->get_tasa_vigente($f->date, 'compra');
+                $tasa = $tasa !== null ? floatval($tasa) : null;
+                if ($tasa > 0) {
+                    $exchangeRate = $tasa;
+                }
+            }
+
+            foreach ($lines as $ln) {
+                $debit = floatval($ln->debit);
+                $credit = floatval($ln->credit);
+                $totalDebit += $debit;
+                $totalCredit += $credit;
+                $debitUsd = $exchangeRate > 0 ? $debit / $exchangeRate : 0;
+                $creditUsd = $exchangeRate > 0 ? $credit / $exchangeRate : 0;
+
+                $centroCosto = '';
+                if (!empty($ln->centro_costo_codigo) || !empty($ln->centro_costo_nombre)) {
+                    $centroCosto = trim((!empty($ln->centro_costo_codigo) ? $ln->centro_costo_codigo : '') .
+                        (!empty($ln->centro_costo_codigo) && !empty($ln->centro_costo_nombre) ? ' - ' : '') .
+                        (!empty($ln->centro_costo_nombre) ? $ln->centro_costo_nombre : ''));
+                }
+
+                $sheet->setCellValue('A' . $row, $ln->code ?? '');
+                $sheet->setCellValue('B' . $row, $ln->name ?? '');
+                $sheet->setCellValue('C' . $row, $centroCosto);
+                $sheet->setCellValue('D' . $row, $ln->line_description ?? '');
+                $sheet->setCellValue('E' . $row, $debit > 0 ? $debit : null);
+                $sheet->setCellValue('F' . $row, $debit > 0 ? $debitUsd : null);
+                $sheet->setCellValue('G' . $row, $credit > 0 ? $credit : null);
+                $sheet->setCellValue('H' . $row, $credit > 0 ? $creditUsd : null);
+
+                if ($debit > 0) {
+                    $sheet->getStyle('E' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    $sheet->getStyle('F' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                }
+                if ($credit > 0) {
+                    $sheet->getStyle('G' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                    $sheet->getStyle('H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+                }
+                $row++;
+            }
+
+            // Totals row for this journal
+            $sheet->setCellValue('A' . $row, 'Totales Asiento');
+            $sheet->mergeCells('A' . $row . ':D' . $row);
+            $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+            $sheet->setCellValue('E' . $row, $totalDebit);
+            $sheet->setCellValue('F' . $row, $exchangeRate > 0 ? ($totalDebit / $exchangeRate) : 0);
+            $sheet->setCellValue('G' . $row, $totalCredit);
+            $sheet->setCellValue('H' . $row, $exchangeRate > 0 ? ($totalCredit / $exchangeRate) : 0);
+            $sheet->getStyle('A' . $row . ':H' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0F172A');
+            $sheet->getStyle('A' . $row . ':H' . $row)->getFont()->getColor()->setRGB('FFFFFF');
+            $sheet->getStyle('E' . $row . ':H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $row += 2;
+
+            $grandDebitNio += $totalDebit;
+            $grandCreditNio += $totalCredit;
+            $grandDebitUsd += $exchangeRate > 0 ? ($totalDebit / $exchangeRate) : 0;
+            $grandCreditUsd += $exchangeRate > 0 ? ($totalCredit / $exchangeRate) : 0;
         }
 
-        // Alignments
+        if (!empty($filtered)) {
+            $sheet->setCellValue('A' . $row, 'Totales Consolidados');
+            $sheet->mergeCells('A' . $row . ':D' . $row);
+            $sheet->getStyle('A' . $row . ':D' . $row)->getFont()->setBold(true);
+            $sheet->getStyle('A' . $row . ':A' . $row)->getFont()->setSize(12);
+            $row++;
+            $sheet->setCellValue('A' . $row, 'Total General');
+            $sheet->mergeCells('A' . $row . ':D' . $row);
+            $sheet->setCellValue('E' . $row, $grandDebitNio);
+            $sheet->setCellValue('F' . $row, $grandDebitUsd);
+            $sheet->setCellValue('G' . $row, $grandCreditNio);
+            $sheet->setCellValue('H' . $row, $grandCreditUsd);
+            $sheet->getStyle('A' . $row . ':H' . $row)->getFill()->setFillType(\PhpOffice\PhpSpreadsheet\Style\Fill::FILL_SOLID)->getStartColor()->setRGB('0F172A');
+            $sheet->getStyle('A' . $row . ':H' . $row)->getFont()->getColor()->setRGB('FFFFFF');
+            $sheet->getStyle('E' . $row . ':H' . $row)->getNumberFormat()->setFormatCode('#,##0.00');
+            $row += 2;
+        }
+
         $last = max(3, $row - 1);
-        $sheet->getStyle('A3:A' . $last)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('B3:B' . $last)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
-        $sheet->getStyle('D3:E' . $last)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle('A3:H' . $last)->getAlignment()->setVertical(\PhpOffice\PhpSpreadsheet\Style\Alignment::VERTICAL_TOP);
+        $sheet->getStyle('A4:D' . $last)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
+        $sheet->getStyle('E4:H' . $last)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_RIGHT);
+        $sheet->getStyle('B4:B' . $last)->getAlignment()->setWrapText(true);
+        $sheet->getStyle('D4:D' . $last)->getAlignment()->setWrapText(true);
+        $sheet->getStyle('A3:H' . $last)->getBorders()->getAllBorders()->setBorderStyle(\PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN)->getColor()->setRGB('1F4E78');
 
         // Remove gridlines and adjust page setup to portrait fit-to-width
         $sheet->setShowGridlines(false);
@@ -1544,27 +2177,6 @@ class Contabilidad extends CI_Controller {
         $sheet->getPageMargins()->setBottom(0.4);
         $sheet->getPageMargins()->setLeft(0.4);
         $sheet->getPageMargins()->setRight(0.4);
-
-        // Signature block: add spacing then three signature lines
-        $sigStart = $row + 2;
-        // Merge ranges for three sigs across A-F (pairs)
-        $sheet->mergeCells('A' . $sigStart . ':B' . $sigStart);
-        $sheet->mergeCells('C' . $sigStart . ':D' . $sigStart);
-        $sheet->mergeCells('E' . $sigStart . ':F' . $sigStart);
-        // apply top border to create signature line
-        $lineStyle = [
-            'borders' => [
-                'top' => [ 'borderStyle' => \PhpOffice\PhpSpreadsheet\Style\Border::BORDER_THIN, 'color' => ['rgb'=>'000000'] ]
-            ]
-        ];
-        $sheet->getStyle('A' . $sigStart . ':B' . $sigStart)->applyFromArray($lineStyle);
-        $sheet->getStyle('C' . $sigStart . ':D' . $sigStart)->applyFromArray($lineStyle);
-        $sheet->getStyle('E' . $sigStart . ':F' . $sigStart)->applyFromArray($lineStyle);
-        // labels in next row
-        $sheet->setCellValue('A' . ($sigStart + 1), 'Contador General');
-        $sheet->setCellValue('C' . ($sigStart + 1), 'Gerente General');
-        $sheet->setCellValue('E' . ($sigStart + 1), 'Administrador');
-        $sheet->getStyle('A' . ($sigStart + 1) . ':F' . ($sigStart + 1))->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
 
         // Output
         $filename = 'Mayorizados_' . date('Ymd_His') . '.xlsx';
@@ -1577,6 +2189,192 @@ class Contabilidad extends CI_Controller {
         $writer->save('php://output');
         $spreadsheet->disconnectWorksheets();
         unset($spreadsheet);
+        exit;
+    }
+
+    // Export posted journals (filtered) as PDF
+    public function mayor_export_posted_pdf()
+    {
+        $start = $this->input->get('start_date');
+        $end = $this->input->get('end_date');
+        $asiento = $this->input->get('asiento');
+        $desc = $this->input->get('description');
+
+        if (!class_exists('\Dompdf\Dompdf')) {
+            if (file_exists(FCPATH . 'dompdf/autoload.inc.php')) {
+                require_once FCPATH . 'dompdf/autoload.inc.php';
+            } elseif (file_exists(FCPATH . 'vendor/autoload.php')) {
+                require_once FCPATH . 'vendor/autoload.php';
+            }
+        }
+        if (!class_exists('\Dompdf\Dompdf')) {
+            show_error('Dompdf no disponible en el servidor', 500);
+            return;
+        }
+
+        $all = $this->Contabilidad_model->get_journals($start, $end);
+        $filtered = array();
+        if ($all) {
+            foreach ($all as $j) {
+                if (!isset($j->posted) || intval($j->posted) !== 1) continue;
+                if ($asiento && strpos((string)$j->id, $asiento) === false) continue;
+                if ($desc && stripos((string)($j->description ?? ''), $desc) === false) continue;
+                $filtered[] = $j;
+            }
+        }
+
+        $html = '<html><head><meta charset="UTF-8"><style>';
+        $html .= 'body{font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#333;margin:0;padding:12px;}';
+        $html .= 'h1{font-size:20px;margin-bottom:8px;color:#0b3d91;}';
+        $html .= '.journal-title{font-size:14px;font-weight:700;margin-top:24px;margin-bottom:8px;color:#1f4e78;}';
+        $html .= '.journal-meta{margin-bottom:10px;font-size:11px;color:#333;}';
+        $html .= 'table{width:100%;border-collapse:collapse;margin-top:10px;margin-bottom:18px;page-break-inside:auto;}';
+        $html .= 'th,td{border:1px solid #ccc;padding:8px;vertical-align:top;}';
+        $html .= 'th{background:#2a5298;color:#fff;text-align:left;}';
+        $html .= '.text-right{text-align:right;}';
+        $html .= '.journal-section{page-break-after:always;}';
+        $html .= '.journal-section.summary{page-break-after:auto;}';
+        $html .= '.totals-row th,.totals-row td{background:#0f172a;color:#fff;font-weight:700;}';
+        $html .= '.summary-table{margin-top:20px;margin-bottom:30px;width:100%;border-collapse:collapse;}';
+        $html .= '.summary-table th,.summary-table td{border:1px solid #ccc;padding:10px;vertical-align:middle;}';
+        $html .= '.summary-table th{background:#1f4e78;color:#fff;}';
+        $html .= '.signature-block{width:100%;border-collapse:collapse;margin-top:110px;page-break-inside:avoid;}';
+        $html .= '.signature-cell{width:33.33%;text-align:center;border:none;padding:0 10px;vertical-align:bottom;}';
+        $html .= '.signature-line{border-top:1px solid #000;height:38px;margin-bottom:8px;}';
+        $html .= '.signature-label{font-weight:700;font-size:12px;}';
+        $html .= '.status-area{text-align:center;font-weight:700;margin-top:10px;margin-bottom:20px;}';
+        $html .= '.no-result{margin-top:20px;font-size:13px;color:#555;}';
+        $html .= '</style></head><body>';
+        $html .= '<h1>Libro Mayor - Asientos Mayorizados</h1>';
+
+        $grandDebitNio = 0.0;
+        $grandCreditNio = 0.0;
+        $grandDebitUsd = 0.0;
+        $grandCreditUsd = 0.0;
+
+        if (empty($filtered)) {
+            $html .= '<div class="no-result">No se encontraron asientos mayorizados con los filtros aplicados.</div>';
+        } else {
+            foreach ($filtered as $j) {
+                $journal = $this->Contabilidad_model->get_journal($j->id);
+                if (empty($journal) || !isset($journal['header'])) continue;
+
+                $header = $journal['header'];
+                $lines = isset($journal['lines']) ? $journal['lines'] : array();
+                $fecha = !empty($header->date) ? date('d/m/Y', strtotime($header->date)) : '';
+                $docType = !empty($header->entry_type) ? $header->entry_type : (!empty($header->document_type) ? $header->document_type : '');
+
+                $html .= '<div class="journal-section">';
+                $html .= '<div class="journal-title">Asiento ' . intval($header->id) . ' - ' . htmlspecialchars($docType) . '</div>';
+                $html .= '<div class="journal-meta">Fecha: ' . htmlspecialchars($fecha) . ' &nbsp;|&nbsp; Comentario: ' . htmlspecialchars($header->description ?? '') . '</div>';
+                $html .= '<table><thead><tr>';
+                $html .= '<th style="width:13%;">Código</th>';
+                $html .= '<th style="width:18%;">Nombre</th>';
+                $html .= '<th style="width:12%;">Centro Costo</th>';
+                $html .= '<th style="width:22%;">Comentario</th>';
+                $html .= '<th style="width:10%;" class="text-right">Débito NIO</th>';
+                $html .= '<th style="width:10%;" class="text-right">Débito USD</th>';
+                $html .= '<th style="width:10%;" class="text-right">Crédito NIO</th>';
+                $html .= '<th style="width:10%;" class="text-right">Crédito USD</th>';
+                $html .= '</tr></thead><tbody>';
+
+                $totalDebit = 0;
+                $totalCredit = 0;
+                $exchangeRate = 36.50;
+                $tasa = null;
+                if (!empty($header->date)) {
+                    $CI = &get_instance();
+                    if (!isset($CI->TasaCambio_model)) {
+                        $CI->load->model('TasaCambio_model');
+                    }
+                    $tasa = $CI->TasaCambio_model->get_tasa_vigente($header->date, 'compra');
+                    $tasa = $tasa !== null ? floatval($tasa) : null;
+                    if ($tasa > 0) {
+                        $exchangeRate = $tasa;
+                    }
+                }
+
+                foreach ($lines as $ln) {
+                    $debit = floatval($ln->debit);
+                    $credit = floatval($ln->credit);
+                    $totalDebit += $debit;
+                    $totalCredit += $credit;
+                    $debitUsd = $exchangeRate > 0 ? $debit / $exchangeRate : 0;
+                    $creditUsd = $exchangeRate > 0 ? $credit / $exchangeRate : 0;
+
+                    $centroCosto = '';
+                    if (!empty($ln->centro_costo_codigo) || !empty($ln->centro_costo_nombre)) {
+                        $centroCosto = trim((!empty($ln->centro_costo_codigo) ? $ln->centro_costo_codigo : '') .
+                            (!empty($ln->centro_costo_codigo) && !empty($ln->centro_costo_nombre) ? ' - ' : '') .
+                            (!empty($ln->centro_costo_nombre) ? $ln->centro_costo_nombre : ''));
+                    }
+
+                    $html .= '<tr>';
+                    $html .= '<td>' . htmlspecialchars($ln->code ?? '') . '</td>';
+                    $html .= '<td>' . htmlspecialchars($ln->name ?? '') . '</td>';
+                    $html .= '<td>' . htmlspecialchars($centroCosto) . '</td>';
+                    $html .= '<td>' . htmlspecialchars($ln->line_description ?? '') . '</td>';
+                    $html .= '<td class="text-right">' . ($debit > 0 ? 'C$ ' . number_format($debit, 2, '.', ',') : '-') . '</td>';
+                    $html .= '<td class="text-right">' . ($debit > 0 ? '$ ' . number_format($debitUsd, 2, '.', ',') : '-') . '</td>';
+                    $html .= '<td class="text-right">' . ($credit > 0 ? 'C$ ' . number_format($credit, 2, '.', ',') : '-') . '</td>';
+                    $html .= '<td class="text-right">' . ($credit > 0 ? '$ ' . number_format($creditUsd, 2, '.', ',') : '-') . '</td>';
+                    $html .= '</tr>';
+                }
+
+                $html .= '<tr class="totals-row">';
+                $html .= '<td colspan="4" class="text-right">Totales</td>';
+                $html .= '<td class="text-right">C$ ' . number_format($totalDebit, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">$ ' . number_format($exchangeRate > 0 ? $totalDebit / $exchangeRate : 0, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">C$ ' . number_format($totalCredit, 2, '.', ',') . '</td>';
+                $html .= '<td class="text-right">$ ' . number_format($exchangeRate > 0 ? $totalCredit / $exchangeRate : 0, 2, '.', ',') . '</td>';
+                $html .= '</tr>';
+                $html .= '</tbody></table>';
+                $html .= '<div class="status-area">' . (abs($totalDebit - $totalCredit) < 0.01 ? 'ASIENTO CUADRADO' : 'DIFERENCIA: ' . number_format(abs($totalDebit - $totalCredit), 2, ',', '.')) . '</div>';
+                $html .= '</div>';
+
+                $grandDebitNio += $totalDebit;
+                $grandCreditNio += $totalCredit;
+                $grandDebitUsd += $exchangeRate > 0 ? ($totalDebit / $exchangeRate) : 0;
+                $grandCreditUsd += $exchangeRate > 0 ? ($totalCredit / $exchangeRate) : 0;
+            }
+
+            $html .= '<div class="journal-section summary">';
+            $html .= '<div class="journal-title">Totales Consolidados</div>';
+            $html .= '<table class="summary-table"><thead><tr>';
+            $html .= '<th>Concepto</th>';
+            $html .= '<th class="text-right">Débito NIO</th>';
+            $html .= '<th class="text-right">Débito USD</th>';
+            $html .= '<th class="text-right">Crédito NIO</th>';
+            $html .= '<th class="text-right">Crédito USD</th>';
+            $html .= '</tr></thead><tbody>';
+            $html .= '<tr class="totals-row">';
+            $html .= '<td style="text-align:right;">Total General</td>';
+            $html .= '<td class="text-right">C$ ' . number_format($grandDebitNio, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">$ ' . number_format($grandDebitUsd, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">C$ ' . number_format($grandCreditNio, 2, '.', ',') . '</td>';
+            $html .= '<td class="text-right">$ ' . number_format($grandCreditUsd, 2, '.', ',') . '</td>';
+            $html .= '</tr>';
+            $html .= '</tbody></table>';
+            $html .= '<table class="signature-block"><tr>';
+            $html .= '<td class="signature-cell"><div class="signature-line"></div><div class="signature-label">Firma Elaboró</div></td>';
+            $html .= '<td class="signature-cell"><div class="signature-line"></div><div class="signature-label">Firma Revisó</div></td>';
+            $html .= '<td class="signature-cell"><div class="signature-line"></div><div class="signature-label">Firma Aprobó</div></td>';
+            $html .= '</tr></table>';
+            $html .= '</div>';
+        }
+
+        $html .= '</body></html>';
+
+        $dompdf = new \Dompdf\Dompdf();
+        $dompdf->setPaper('A4', 'landscape');
+        $dompdf->loadHtml($html);
+        $dompdf->render();
+
+        $filename = 'Mayorizados_' . date('Ymd_His') . '.pdf';
+        if (ob_get_contents()) {
+            ob_end_clean();
+        }
+        $dompdf->stream($filename, array('Attachment' => 1));
         exit;
     }
     
@@ -2039,12 +2837,44 @@ class Contabilidad extends CI_Controller {
         $sheet->getStyle('B' . $row)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_LEFT);
         $sheet->getRowDimension($row)->setRowHeight(20);
         
-        // Add signature placeholders (three sign lines and titles) after totals
-        $row++; // spacing row
-        // merge cells for three signature areas: A-C, D-F, G-I
-        $sheet->mergeCells('A' . $row . ':C' . $row);
-        $sheet->mergeCells('D' . $row . ':F' . $row);
-        $sheet->mergeCells('G' . $row . ':I' . $row);
+        $signaturePaths = $this->get_balanza_signature_paths($empresa);
+
+        // Add signature image row
+        $row++;
+        $imageRow = $row;
+        $sheet->getRowDimension($imageRow)->setRowHeight(140);
+        $sheet->mergeCells('A' . $imageRow . ':C' . $imageRow);
+        $sheet->mergeCells('D' . $imageRow . ':F' . $imageRow);
+        $sheet->mergeCells('G' . $imageRow . ':I' . $imageRow);
+        $sheet->getStyle('A' . $imageRow . ':I' . $imageRow)->getAlignment()->setHorizontal(\PhpOffice\PhpSpreadsheet\Style\Alignment::HORIZONTAL_CENTER);
+
+        foreach ($signaturePaths as $role => $path) {
+            if (!$path) {
+                continue;
+            }
+            $drawing = new \PhpOffice\PhpSpreadsheet\Worksheet\Drawing();
+            $drawing->setName('Firma ' . ucfirst($role));
+            $drawing->setDescription('Firma ' . ucfirst($role));
+            $drawing->setPath($path);
+            $drawing->setHeight(120);
+            $drawing->setResizeProportional(true);
+            $coordinate = 'A' . $imageRow;
+            if ($role === 'financiero') {
+                $coordinate = 'D' . $imageRow;
+            } elseif ($role === 'gerente') {
+                $coordinate = 'G' . $imageRow;
+            }
+            $drawing->setCoordinates($coordinate);
+            $drawing->setOffsetX(10);
+            $drawing->setOffsetY(5);
+            $drawing->setWorksheet($sheet);
+        }
+
+        $row++;
+        $lineRow = $row;
+        $sheet->mergeCells('A' . $lineRow . ':C' . $lineRow);
+        $sheet->mergeCells('D' . $lineRow . ':F' . $lineRow);
+        $sheet->mergeCells('G' . $lineRow . ':I' . $lineRow);
         $topBorderStyle = [
             'borders' => [
                 'top' => [
@@ -2053,10 +2883,10 @@ class Contabilidad extends CI_Controller {
                 ]
             ]
         ];
-        $sheet->getStyle('A' . $row . ':C' . $row)->applyFromArray($topBorderStyle);
-        $sheet->getStyle('D' . $row . ':F' . $row)->applyFromArray($topBorderStyle);
-        $sheet->getStyle('G' . $row . ':I' . $row)->applyFromArray($topBorderStyle);
-        $sheet->getRowDimension($row)->setRowHeight(18);
+        $sheet->getStyle('A' . $lineRow . ':C' . $lineRow)->applyFromArray($topBorderStyle);
+        $sheet->getStyle('D' . $lineRow . ':F' . $lineRow)->applyFromArray($topBorderStyle);
+        $sheet->getStyle('G' . $lineRow . ':I' . $lineRow)->applyFromArray($topBorderStyle);
+        $sheet->getRowDimension($lineRow)->setRowHeight(18);
 
         $row++;
         $sheet->setCellValue('A' . $row, 'Contador General');
@@ -2378,15 +3208,22 @@ class Contabilidad extends CI_Controller {
         $data = $this->Contabilidad_model->get_trial_balance($start, $end, $account, $include_zero, ($group === 'mayor' ? $prefix_len : null));
         $empresa = $this->core_model->get_by_id('tb_sistema', array('id' => 1));
 
-        // exporter info
+        // Exporter info
         $exported_by = null;
         if ($this->load->is_loaded('ion_auth') || isset($this->ion_auth)) {
             try { $u = $this->ion_auth->user()->row(); $exported_by = isset($u->username) ? $u->username : null; } catch(Exception $e) { $exported_by = null; }
         }
         $exported_at = date('Y-m-d H:i:s');
 
+        $signaturePaths = $this->get_balanza_signature_paths($empresa);
+        $signatureData = [
+            'contador' => $this->get_signature_data_uri($signaturePaths['contador']),
+            'financiero' => $this->get_signature_data_uri($signaturePaths['financiero']),
+            'gerente' => $this->get_signature_data_uri($signaturePaths['gerente']),
+        ];
+
         // render HTML using a dedicated view
-        $html = $this->load->view('contabilidad/balanza_pdf', ['data' => $data, 'empresa' => $empresa, 'start' => $start, 'end' => $end, 'exported_by' => $exported_by, 'exported_at' => $exported_at], true);
+        $html = $this->load->view('contabilidad/balanza_pdf', ['data' => $data, 'empresa' => $empresa, 'start' => $start, 'end' => $end, 'exported_by' => $exported_by, 'exported_at' => $exported_at, 'signatures' => $signatureData], true);
 
         // include dompdf (project contains dompdf/ at FCPATH)
         if (!defined('FCPATH')) define('FCPATH', dirname(dirname(dirname(__FILE__))) . DIRECTORY_SEPARATOR);
@@ -2624,10 +3461,16 @@ class Contabilidad extends CI_Controller {
         echo json_encode(['status'=>'ok']);
     }
 
-    // Upload a signature image and store path in tb_sistema.firma (id=1)
+    // Upload a signature image and store path in tb_sistema for the requested role
     public function upload_signature()
     {
         header('Content-Type: application/json');
+        $role = $this->input->post('role') ?: 'contador';
+        $column = $this->get_signature_column($role);
+        if (!$column) {
+            echo json_encode(['status' => 'error', 'error' => 'Rol inválido']);
+            return;
+        }
         if (empty($_FILES) || !isset($_FILES['firma'])) {
             echo json_encode(['status'=>'error','error'=>'No file uploaded']);
             return;
@@ -2645,20 +3488,95 @@ class Contabilidad extends CI_Controller {
         }
         $uploads = FCPATH . 'uploads' . DIRECTORY_SEPARATOR;
         if (!is_dir($uploads)) mkdir($uploads, 0755, true);
-        $target = 'firma_' . time() . '.' . $ext;
+        $target = 'firma_' . $role . '_' . time() . '.' . $ext;
         $dest = $uploads . $target;
         if (!move_uploaded_file($file['tmp_name'], $dest)) {
             echo json_encode(['status'=>'error','error'=>'No se pudo mover el archivo']);
             return;
         }
 
-        // ensure column exists
-        if (!$this->db->field_exists('firma', 'tb_sistema')) {
-            $this->db->query("ALTER TABLE `tb_sistema` ADD COLUMN `firma` VARCHAR(255) NULL");
+        if (!$this->db->field_exists($column, 'tb_sistema')) {
+            $this->db->query("ALTER TABLE `tb_sistema` ADD COLUMN `$column` VARCHAR(255) NULL");
         }
-        // update record id=1
-        $ok = $this->db->where('id', 1)->update('tb_sistema', ['firma' => $target]);
-        if ($ok) echo json_encode(['status'=>'success','path' => base_url('uploads/'.$target)]); else echo json_encode(['status'=>'error','error'=>'DB update failed']);
+        $ok = $this->db->where('id', 1)->update('tb_sistema', [$column => $target]);
+        if ($ok) echo json_encode(['status'=>'success','path' => base_url('uploads/'.$target), 'role' => $role]); else echo json_encode(['status'=>'error','error'=>'DB update failed']);
+    }
+
+    public function delete_signature()
+    {
+        header('Content-Type: application/json');
+        $role = $this->input->post('role') ?: $this->input->get('role');
+        $column = $this->get_signature_column($role);
+        if (!$column) {
+            echo json_encode(['status' => 'error', 'error' => 'Rol inválido']);
+            return;
+        }
+
+        if (!$this->db->field_exists($column, 'tb_sistema')) {
+            echo json_encode(['status' => 'success']);
+            return;
+        }
+
+        $empresa = $this->db->select($column)->where('id', 1)->get('tb_sistema')->row();
+        if (!$empresa) {
+            echo json_encode(['status'=>'error','error'=>'Registro no encontrado']);
+            return;
+        }
+        $filename = isset($empresa->$column) ? $empresa->$column : '';
+        if ($filename) {
+            $filepath = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . basename($filename);
+            if (is_file($filepath)) {
+                @unlink($filepath);
+            }
+        }
+
+        $ok = $this->db->where('id', 1)->update('tb_sistema', [$column => null]);
+        if ($ok) echo json_encode(['status'=>'success']); else echo json_encode(['status'=>'error','error'=>'DB update failed']);
+    }
+
+    private function get_signature_column($role)
+    {
+        $map = [
+            'contador' => 'firma_contador',
+            'financiero' => 'firma_financiero',
+            'gerente' => 'firma_gerente',
+        ];
+        return isset($map[$role]) ? $map[$role] : null;
+    }
+
+    private function get_balanza_signature_paths($empresa)
+    {
+        $map = [
+            'contador' => 'firma_contador',
+            'financiero' => 'firma_financiero',
+            'gerente' => 'firma_gerente',
+        ];
+        $results = [
+            'contador' => '',
+            'financiero' => '',
+            'gerente' => '',
+        ];
+        if (!$empresa) {
+            return $results;
+        }
+        foreach ($map as $role => $field) {
+            if (!empty($empresa->{$field})) {
+                $path = FCPATH . 'uploads' . DIRECTORY_SEPARATOR . basename($empresa->{$field});
+                if (is_file($path)) {
+                    $results[$role] = $path;
+                }
+            }
+        }
+        return $results;
+    }
+
+    private function get_signature_data_uri($path)
+    {
+        if (!$path || !is_file($path)) {
+            return '';
+        }
+        $mime = mime_content_type($path) ?: 'image/png';
+        return 'data:' . $mime . ';base64,' . base64_encode(file_get_contents($path));
     }
 
     // Poll endpoint to check whether background PDF is ready
@@ -4398,6 +5316,8 @@ class Contabilidad extends CI_Controller {
         $payload = [
             'date' => isset($post['date']) ? $post['date'] : date('Y-m-d'),
             'description' => isset($post['description']) ? $post['description'] : '',
+            'document_type' => isset($post['document_type']) ? $post['document_type'] : null,
+            'entry_type' => isset($post['document_type']) ? $post['document_type'] : null,
             'lines' => $lines,
             'source_type' => isset($post['source_type']) ? $post['source_type'] : null,
             'source_id' => isset($post['source_id']) ? intval($post['source_id']) : null,

@@ -20,7 +20,7 @@ document.addEventListener('DOMContentLoaded', function(){
 <style>
     .servicont-diario-header {
         background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
-        padding: 30px 0;
+        padding: 30px 30px;
         margin-bottom: 30px;
         box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
         position: relative;
@@ -61,6 +61,157 @@ document.addEventListener('DOMContentLoaded', function(){
     .servicont-diario-btn i {
         font-size: 14px;
     }
+
+    .diario-wrapper {
+        overflow-x: auto;
+        width: 100%;
+    }
+
+    .table-diary {
+        width: 100%;
+        border-collapse: collapse;
+        table-layout: auto;
+        min-width: 100%;
+    }
+
+    .table-diary th,
+    .table-diary td {
+        word-break: break-word;
+        white-space: normal;
+        vertical-align: middle;
+    }
+
+    .servicont-catalogo-card.servicont-diario-card,
+    .servicont-catalogo-card.servicont-diario-card .card-body {
+        overflow: visible !important;
+    }
+
+    .table-diary th:first-child,
+    .table-diary td:first-child {
+        white-space: nowrap;
+        width: 50px;
+    }
+
+    .table-diary th.col-actions,
+    .table-diary td.col-actions {
+        white-space: nowrap;
+        width: 130px;
+        max-width: 130px;
+    }
+
+    .diario-wrapper,
+    .table-diary,
+    .table-diary th,
+    .table-diary td {
+        overflow: visible !important;
+    }
+
+    .diario-wrapper .table-responsive {
+        overflow-x: auto !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch !important;
+    }
+
+    .diario-wrapper .table-responsive table {
+        overflow: visible !important;
+    }
+
+    @media (max-width: 980px) {
+        .table-diary {
+            min-width: 920px;
+        }
+    }
+
+    .actions-menu {
+        position: relative;
+        display: inline-block;
+        text-align: center;
+        z-index: 9999;
+        overflow: visible !important;
+        width: 100%;
+    }
+
+    .actions-menu summary {
+        list-style: none;
+        cursor: pointer;
+        background: #475569;
+        color: #fff;
+        border: none;
+        padding: 8px 10px;
+        border-radius: 8px;
+        font-weight: 600;
+        outline: none;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: 6px;
+        position: relative;
+        z-index: 9999;
+        white-space: nowrap;
+        min-width: 90px;
+        max-width: 120px;
+        text-align: center;
+        line-height: 1.2;
+    }
+
+    .actions-menu summary::-webkit-details-marker {
+        display: none;
+    }
+
+    .actions-menu[open] summary {
+        border-bottom-left-radius: 0;
+        border-bottom-right-radius: 0;
+    }
+
+    .actions-list {
+        display: flex;
+        position: fixed;
+        right: auto;
+        bottom: auto;
+        top: 0;
+        left: 0;
+        background: #fff;
+        border: 1px solid #d1d5db;
+        border-radius: 10px;
+        box-shadow: 0 12px 24px rgba(0,0,0,0.12);
+        min-width: 220px;
+        max-width: none;
+        overflow: visible;
+        z-index: 9998;
+        padding: 8px;
+        white-space: normal;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-start;
+        visibility: hidden;
+        opacity: 0;
+        pointer-events: none;
+        transition: none;
+    }
+
+    .actions-menu[open] .actions-list {
+        display: flex;
+    }
+
+    .actions-list button {
+        min-width: 100px;
+        flex: 1 0 auto;
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        padding: 10px 14px;
+        color: #1f2937;
+        background: #f9fafb;
+        border: 1px solid #e5e7eb;
+        border-radius: 10px;
+        font-size: 14px;
+        cursor: pointer;
+        white-space: nowrap;
+    }
+
+    .actions-list button:hover {
+        background: #f3f4f6;
+    }
 </style>
 
 <?php $this->load->view('layout/navbar'); ?>
@@ -74,18 +225,18 @@ document.addEventListener('DOMContentLoaded', function(){
                         <i class="fas fa-book-open" style="font-size: 24px; color: #ffffff;"></i>
                     </div>
                     <div>
-                        <h1 class="servicont-catalogo-title">Libro Diario</h1>
-                        <p class="servicont-catalogo-subtitle" style="color: #ffffff !important;">Registro de asientos contables del sistema</p>
+                        <h1 class="servicont-header-title">Libro Diario</h1>
+                        <p class="servicont-header-subtitle">Registro de asientos contables del sistema</p>
                     </div>
                 </div>
             </div>
             
             <div class="row">
                 <div class="col-md-12">
-                    <div class="servicont-catalogo-card">
-                        <div class="card-body" style="position:relative; padding: 30px;">
+                    <div class="servicont-catalogo-card servicont-diario-card">
+                        <div class="card-body" style="position:relative; padding: 30px; overflow: visible;">
                             <!-- Barra de herramientas -->
-                            <div style="display:flex;gap:12px;margin-bottom:25px;flex-wrap:wrap;align-items:center;">
+                            <div class="servicont-toolbar">
                                 <button id="btnNewAsiento" class="servicont-diario-btn">
                                     <i class="fas fa-plus"></i> Nuevo Asiento
                                 </button>
@@ -96,6 +247,9 @@ document.addEventListener('DOMContentLoaded', function(){
                                 
                                 <button id="btnExportPDF" class="servicont-diario-btn" style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);">
                                     <i class="fas fa-file-pdf"></i> Exportar PDF
+                                </button>
+                                <button id="btnExportCSV" class="servicont-diario-btn" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">
+                                    <i class="fas fa-file-csv"></i> Exportar CSV
                                 </button>
                                 
                                 <!-- Filtro por tipo de documento -->
@@ -127,9 +281,10 @@ document.addEventListener('DOMContentLoaded', function(){
                             
                             <div id="diarioContent">
                                 <?php if (isset($entries) && is_array($entries) && count($entries)): ?>
-                                    <div class="diario-wrapper" style="overflow:auto;position:relative;">
-                                        <table class="table-diary" style="width:100%;border-collapse:separate;border-spacing:0;min-width:760px;background:#fff;border-radius:8px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.1);font-size:15px;">
-                                            <thead>
+                                    <div class="diario-wrapper">
+                                        <div class="table-responsive">
+                                            <table class="table-diary">
+                                                <thead>
                                                 <tr style="background:linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);">
                                                     <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;width:50px;">
                                                         <input type="checkbox" id="selectAll" style="width:18px;height:18px;cursor:pointer;" />
@@ -153,7 +308,7 @@ document.addEventListener('DOMContentLoaded', function(){
                                                 $centro_costo_ids = isset($d->centro_costo_ids) ? $d->centro_costo_ids : '';
                                                 $centro_costo_nombres = isset($d->centro_costo_nombres) && $d->centro_costo_nombres ? $d->centro_costo_nombres : '-';
                                             ?>
-                                                <tr class="entry-row" data-id="<?php echo $d->id; ?>" data-type="<?php echo $entry_type; ?>" data-centro="<?php echo $centro_costo_ids; ?>" data-description="<?php echo strtolower(htmlspecialchars($d->description)); ?>" data-posted="<?php echo $is_posted ? '1' : '0'; ?>" data-voided="<?php echo $is_voided ? '1' : '0'; ?>" style="border-bottom:1px solid #f3f4f6;transition:all 0.2s;<?php if($is_voided) echo 'opacity:0.5;'; ?>" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+                                                <tr class="entry-row" data-id="<?php echo $d->id; ?>" data-type="<?php echo $entry_type; ?>" data-centro="<?php echo $centro_costo_ids; ?>" data-description="<?php echo strtolower(htmlspecialchars($d->description)); ?>" data-date="<?php echo date('Y-m-d', strtotime($d->date)); ?>" data-posted="<?php echo $is_posted ? '1' : '0'; ?>" data-voided="<?php echo $is_voided ? '1' : '0'; ?>" style="border-bottom:1px solid #f3f4f6;transition:all 0.2s;<?php if($is_voided) echo 'opacity:0.5;'; ?>" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
                                                     <td style="padding:14px 12px;text-align:center;">
                                                         <?php if(!$is_voided && !$is_posted): ?>
                                                             <input type="checkbox" class="entry-checkbox" data-id="<?php echo $d->id; ?>" style="width:18px;height:18px;cursor:pointer;" />
@@ -182,16 +337,16 @@ document.addEventListener('DOMContentLoaded', function(){
                                                             <i class="fas fa-file-alt" style="color:#94a3b8;font-size:9px;margin-right:4px;"></i><?php echo $entry_type; ?>
                                                         </span>
                                                     </td>
-                                                    <td style="padding:14px 12px;color:#6b7280;font-size:13px;white-space:nowrap;">
+                                                    <td style="padding:14px 12px;color:#6b7280;font-size:13px;">
                                                         <span style="display:inline-block;background:#f3f4f6;color:#4b5563;padding:3px 8px;border-radius:6px;font-size:11px;font-weight:600;">
                                                             <?php echo $centro_costo_nombres; ?>
                                                         </span>
                                                     </td>
-                                                    <td style="padding:14px 12px;color:#6b7280;font-size:14px;white-space:nowrap;">
+                                                    <td style="padding:14px 12px;color:#6b7280;font-size:14px;">
                                                         <?php echo date('d/m/Y', strtotime($d->date)); ?>
                                                     </td>
                                                     <td style="padding:14px 12px;">
-                                                        <div style="font-weight:500;color:#1f2937;font-size:14px;margin-bottom:6px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;">
+                                                        <div style="font-weight:500;color:#1f2937;font-size:14px;margin-bottom:6px;overflow-wrap:break-word;word-break:break-word;white-space:normal;">
                                                             <?php echo htmlspecialchars($d->description); ?>
                                                             <?php if($is_voided): ?>
                                                                 <span style="background:#ef4444;color:#fff;padding:2px 8px;border-radius:12px;font-size:10px;font-weight:600;margin-left:8px;">ANULADO</span>
@@ -206,31 +361,36 @@ document.addEventListener('DOMContentLoaded', function(){
                                                             </span>
                                                         </div>
                                                     </td>
-                                                    <td style="padding:14px 12px;text-align:center;white-space:nowrap;position:relative;z-index:1;">
-                                                        <button class="cc-btn cc-btn-view btn btn-sm" data-id="<?php echo $d->id; ?>" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
-                                                            <i class="fas fa-eye" style="color:#3b82f6;"></i> Ver
-                                                        </button>
-                                                        
-                                                        <?php if(!$is_voided && !$is_posted): ?>
-                                                            <button class="cc-btn cc-btn-edit btn btn-sm" data-id="<?php echo $d->id; ?>" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
-                                                                <i class="fas fa-edit" style="color:#f59e0b;"></i> Editar
-                                                            </button>
-                                                            <button class="cc-btn cc-btn-void btn btn-sm" data-id="<?php echo $d->id; ?>" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
-                                                                <i class="fas fa-ban" style="color:#ef4444;"></i> Anular
-                                                            </button>
-                                                            <button class="cc-btn cc-btn-post btn btn-sm" data-id="<?php echo $d->id; ?>" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
-                                                                <i class="fas fa-check-double" style="color:#10b981;"></i> Mayorizar
-                                                            </button>
-                                                        <?php elseif($is_posted && !$is_voided): ?>
-                                                            <button class="cc-btn cc-btn-unpost btn btn-sm" data-id="<?php echo $d->id; ?>" style="position:relative;z-index:1;background:#475569;color:white;border:none;font-weight:500;">
-                                                                <i class="fas fa-unlock" style="color:#06b6d4;"></i> Desmayorizar
-                                                            </button>
-                                                        <?php endif; ?>
+                                                    <td class="col-actions" style="padding:14px 12px;text-align:center;white-space:nowrap;position:relative;z-index:1;">
+                                                        <details class="actions-menu">
+                                                            <summary>Acciones</summary>
+                                                            <div class="actions-list">
+                                                                <button type="button" class="cc-btn cc-btn-view" data-id="<?php echo $d->id; ?>">
+                                                                    <i class="fas fa-eye" style="margin-right:8px;color:#3b82f6;"></i> Ver
+                                                                </button>
+                                                                <?php if(!$is_voided && !$is_posted): ?>
+                                                                    <button type="button" class="cc-btn cc-btn-edit" data-id="<?php echo $d->id; ?>">
+                                                                        <i class="fas fa-edit" style="margin-right:8px;color:#f59e0b;"></i> Editar
+                                                                    </button>
+                                                                    <button type="button" class="cc-btn cc-btn-void" data-id="<?php echo $d->id; ?>">
+                                                                        <i class="fas fa-ban" style="margin-right:8px;color:#ef4444;"></i> Anular
+                                                                    </button>
+                                                                    <button type="button" class="cc-btn cc-btn-post" data-id="<?php echo $d->id; ?>">
+                                                                        <i class="fas fa-check-double" style="margin-right:8px;color:#10b981;"></i> Mayorizar
+                                                                    </button>
+                                                                <?php elseif($is_posted && !$is_voided): ?>
+                                                                    <button type="button" class="cc-btn cc-btn-unpost" data-id="<?php echo $d->id; ?>">
+                                                                        <i class="fas fa-unlock" style="margin-right:8px;color:#06b6d4;"></i> Desmayorizar
+                                                                    </button>
+                                                                <?php endif; ?>
+                                                            </div>
+                                                        </details>
                                                     </td>
                                                 </tr>
                                             <?php endforeach; ?>
                                             </tbody>
                                         </table>
+                                        </div>
                                     </div>
                                     
                                     <div id="noResultsMessage" style="display:none;padding:40px;text-align:center;color:#6b7280;">
@@ -270,5 +430,63 @@ document.addEventListener('DOMContentLoaded', function(){
     50% { opacity: 0.7; }
 }
 </style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    function refreshActionsMenu(details) {
+        var menu = details.querySelector('.actions-list');
+        var summary = details.querySelector('summary');
+        if (!menu || !summary) return;
+
+        if (!details.open) {
+            menu.style.visibility = 'hidden';
+            menu.style.opacity = '0';
+            menu.style.pointerEvents = 'none';
+            return;
+        }
+
+        var rect = summary.getBoundingClientRect();
+        var top = rect.top - menu.offsetHeight - 8;
+        var left = rect.right - menu.offsetWidth;
+        left = Math.min(Math.max(8, left), window.innerWidth - menu.offsetWidth - 8);
+        top = Math.max(8, top);
+
+        menu.style.position = 'fixed';
+        menu.style.zIndex = '21000';
+        menu.style.top = top + 'px';
+        menu.style.left = left + 'px';
+        menu.style.right = 'auto';
+        menu.style.bottom = 'auto';
+        menu.style.visibility = 'visible';
+        menu.style.opacity = '1';
+        menu.style.pointerEvents = 'auto';
+    }
+
+    var allDetails = Array.from(document.querySelectorAll('details.actions-menu'));
+    document.body.addEventListener('toggle', function(event) {
+        var details = event.target.closest('details.actions-menu');
+        if (!details) return;
+        setTimeout(function() {
+            refreshActionsMenu(details);
+        }, 0);
+    }, true);
+
+    window.addEventListener('scroll', function() {
+        allDetails.filter(function(details) { return details.open; }).forEach(function(details) {
+            setTimeout(function() {
+                refreshActionsMenu(details);
+            }, 0);
+        });
+    });
+
+    window.addEventListener('resize', function() {
+        allDetails.filter(function(details) { return details.open; }).forEach(function(details) {
+            setTimeout(function() {
+                refreshActionsMenu(details);
+            }, 0);
+        });
+    });
+});
+</script>
 
 <!-- Scripts are loaded via the footer using $scripts from the controller to avoid duplicates -->
