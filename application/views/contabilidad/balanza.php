@@ -67,6 +67,14 @@
                                         </div>
                                         <small class="form-text text-muted">Elija "Mayor" para mostrar solo las cuentas de mayor; "Detalle" mostrará todas las cuentas.</small>
                                     </div>
+                                    <div class="col-md-2">
+                                        <label style="font-weight:600; color:#2a5298; margin-bottom:8px;">Moneda</label>
+                                        <select id="balanzaCurrency" class="form-control servicont-input">
+                                            <option value="local">Moneda local (Córdobas)</option>
+                                            <option value="usd">Dólares (USD)</option>
+                                        </select>
+                                        <small class="form-text text-muted">Seleccione la moneda en que se muestran los montos.</small>
+                                    </div>
                                     <!-- Botones eliminados: Exportar todo (Excel) y PDF BG - ocultados por solicitud -->
                                 </div>
                                 <div class="form-row">
@@ -109,26 +117,20 @@
                                             <tr>
                                                 <th>Código</th>
                                                 <th>Cuenta</th>
-                                                <th class="text-right">Saldo Inicial (Deudor)</th>
-                                                <th class="text-right">Saldo Inicial (Acreedor)</th>
-                                                <th class="text-right">Debe</th>
-                                                <th class="text-right">Haber</th>
-                                                <th class="text-right">Saldo Final (Deudor)</th>
-                                                <th class="text-right">Saldo Final (Acreedor)</th>
-                                                <th class="text-right">Balance Final</th>
+                                                <th class="text-right">Saldo Anterior</th>
+                                                <th class="text-right">Cargos</th>
+                                                <th class="text-right">Abonos</th>
+                                                <th class="text-right">Saldo Actual</th>
                                             </tr>
                                         </thead>
                                         <tbody></tbody>
                                         <tfoot style="background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%); font-weight: 700;">
                                             <tr>
                                                 <th colspan="2">Totales</th>
-                                                <th id="tot_open_deudor" class="text-right"></th>
-                                                <th id="tot_open_acreedor" class="text-right"></th>
-                                                <th id="tot_debits" class="text-right"></th>
-                                                <th id="tot_credits" class="text-right"></th>
-                                                <th id="tot_close_deudor" class="text-right"></th>
-                                                <th id="tot_close_acreedor" class="text-right"></th>
-                                                <th id="tot_balance_final" class="text-right"></th>
+                                                <th id="tot_saldo_anterior" class="text-right"></th>
+                                                <th id="tot_cargos" class="text-right"></th>
+                                                <th id="tot_abonos" class="text-right"></th>
+                                                <th id="tot_saldo_actual" class="text-right"></th>
                                             </tr>
                                         </tfoot>
                                     </table>

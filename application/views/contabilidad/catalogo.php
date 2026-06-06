@@ -265,7 +265,29 @@
                                 <tr>
                                     <td><strong><?php echo htmlspecialchars($a->code); ?></strong></td>
                                     <td><?php echo htmlspecialchars($a->name); ?></td>
-                                    <td class="text-muted"><?php echo htmlspecialchars($a->type); ?></td>
+                                    <td class="text-muted"><?php echo htmlspecialchars(ucfirst(strtolower(trim($a->type ?? '')))); ?></td>
+                                    <td style="font-weight:600;color:#2a5298">
+                                        <?php
+                                            $tipo = isset($a->type) ? strtolower(trim($a->type)) : '';
+                                            $grp = '';
+                                            if (isset($a->agrupador_estado) && trim($a->agrupador_estado) !== '') {
+                                                $grp = $a->agrupador_estado;
+                                            } elseif (in_array($tipo, ['activo','pasivo','patrimonio'])) {
+                                                if (isset($a->report_bs) && trim($a->report_bs) !== '') {
+                                                    $grp = $a->report_bs;
+                                                }
+                                            } else {
+                                                if (isset($a->report_is) && trim($a->report_is) !== '') {
+                                                    $grp = $a->report_is;
+                                                }
+                                            }
+                                            if ($grp !== '') {
+                                                echo htmlspecialchars($grp);
+                                            } else {
+                                                echo '<span style="color:#94a3b8;font-size:11px;">Sin definir</span>';
+                                            }
+                                        ?>
+                                    </td>
                                     <td>
                                         <?php if(isset($a->naturaleza) && $a->naturaleza): ?>
                                             <span style="background:#64748b;color:#fff;padding:3px 8px;border-radius:6px;font-size:10px;font-weight:600;white-space:nowrap;border:1px solid #475569;">

@@ -4,108 +4,223 @@
 <?php $is_home = ($this->router->fetch_class() == 'home'); ?>
 <div class="app-sidebar colored <?php echo ($this->router->fetch_class() == 'tesoreria' ? 'sidebar-teso' : ''); ?>">
 	<style>
-		/* Improve sidebar readability: darker text and slightly smaller items */
+		/* GENERIC SIDEBAR STYLES - Apply to all modules, not just tesorería */
 		.app-sidebar .navigation-main .nav-item a {
 			display: flex !important;
 			align-items: center !important;
-			gap: 4px !important;
+			gap: 10px !important;
+			padding: 12px 18px !important;
+			margin-left: 8px !important;
+			margin-right: 8px !important;
+			overflow: visible !important;
+			white-space: normal !important;
+			width: auto !important;
+			max-width: none !important;
+			color: #333333 !important;
+		}
+		.app-sidebar .navigation-main .nav-item a:hover,
+		.app-sidebar .navigation-main .nav-item.active > a {
+			color: #ffffff !important;
 		}
 		.app-sidebar .navigation-main .nav-item a span {
-			color: #222 !important;
 			font-size: 13px !important;
-			white-space: normal !important;
-			overflow-wrap: break-word !important;
-			word-break: break-word !important;
 			line-height: 1.4;
-			flex: 1;
+			flex: 1 1 auto;
+			min-width: auto !important;
+			width: auto !important;
+			white-space: normal !important;
+			overflow: visible !important;
+			overflow-wrap: anywhere !important;
+			word-break: break-word !important;
+			color: inherit !important;
 		}
-		.app-sidebar .navigation-main .nav-item a i {
-			color: #333 !important;
-			flex-shrink: 0;
-			min-width: 16px;
-			text-align: center;
-		}
-		/* Active and hover states with white text */
-		.app-sidebar .navigation-main .nav-item.active a span,
-		.app-sidebar .navigation-main .nav-item.active a i,
 		.app-sidebar .navigation-main .nav-item a:hover span,
-		.app-sidebar .navigation-main .nav-item a:hover i {
+		.app-sidebar .navigation-main .nav-item.active > a span {
 			color: #ffffff !important;
 		}
-		.app-sidebar .sidebar-profile .profile-name {
-			font-size: 14px;
-		}
-		.app-sidebar .nav-lavel {
-			font-size: 12px;
-			color: #444;
-		}
 
-		/* Sidebar header styles for user profile */
-		.app-sidebar .sidebar-header {
+		/* Generic menu items (used in Consultas and other dropdowns) */
+		.app-sidebar .navigation-main .submenu-content {
+			max-width: none !important;
+			width: auto !important;
+			min-width: 250px !important;
+		}
+		.app-sidebar .navigation-main .nav-item:not(.open) .submenu-content {
+			display: none !important;
+		}
+		.app-sidebar .navigation-main .nav-item.open .submenu-content {
+			display: flex !important;
+			flex-direction: column !important;
+		}
+		.app-sidebar .navigation-main .submenu-content .menu-item {
 			display: flex !important;
 			align-items: center !important;
-			gap: 12px !important;
-			justify-content: space-between !important;
-			padding-right: 12px !important;
-		}
-		.app-sidebar .sidebar-profile-header {
-			display: flex;
-			flex-direction: column;
-			justify-content: center;
-			flex: 1;
-		}
-		.app-sidebar .sidebar-header .nav-toggle,
-		.app-sidebar .sidebar-header .nav-close {
-			margin-left: auto !important;
-			margin-right: 16px !important;
-			flex-shrink: 0;
-		}
-
-		/* Tesorería: menú tipo botones (coordinado con otros módulos) */
-		.app-sidebar.sidebar-teso .navigation-main .nav-lavel,
-		.app-sidebar.sidebar-teso .sidebar-profile .profile-name,
-		.app-sidebar.sidebar-teso .sidebar-profile .profile-role,
-		.app-sidebar.sidebar-teso .navigation-main .nav-item.has-sub.active.open > a span,
-		.app-sidebar.sidebar-teso .navigation-main .nav-item.has-sub.active.open > a i {
-			color: #ffffff !important;
-		}
-		.app-sidebar.sidebar-teso .navigation-main .submenu-content {
-			padding: 8px;
-		}
-		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item {
-			display: flex;
-			align-items: flex-start;
 			justify-content: flex-start;
-			gap: 6px;
+			gap: 10px;
 			background: #ffffff;
 			color: #1f2937 !important;
 			border: 1px solid #e3e8f2;
-			border-radius: 8px;
-			padding: 11px 12px;
+			border-radius: 12px;
+			padding: 12px 14px;
 			margin: 0 0 10px;
 			font-size: 13px;
 			font-weight: 600;
-			line-height: 1.25;
-			box-shadow: 0 2px 8px rgba(15, 23, 42, .08);
-			min-height: 42px;
+			line-height: 1.35;
+			box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+			min-height: 48px;
+			text-decoration: none;
+			overflow: visible !important;
+			white-space: normal !important;
+			word-break: break-word;
+			overflow-wrap: break-word;
+			max-width: none !important;
+			width: auto !important;
+			box-sizing: border-box !important;
+		}
+		.app-sidebar .navigation-main .submenu-content .menu-item span {
+			display: block;
+			flex: 1 1 auto;
+			color: #1f2937 !important;
+			font-size: 13px !important;
+			line-height: 1.35;
+			white-space: normal;
+			overflow: visible !important;
+			overflow-wrap: anywhere;
+			word-break: break-word;
+			min-width: 0 !important;
+		}
+		.app-sidebar .navigation-main .submenu-content .menu-item:hover {
+			background: #3a4d63;
+			border-color: #4a5d7a;
+			color: #ffffff !important;
+		}
+		.app-sidebar .navigation-main .submenu-content .menu-item:hover span {
+			color: #ffffff !important;
+		}
+
+		/* Improve sidebar readability for tesorería and preserve colored sidebar aesthetic */
+		.app-sidebar.sidebar-teso .sidebar-header {
+			background-color: #272d36 !important;
+		}
+		.app-sidebar.sidebar-teso .sidebar-content {
+			background-color: #404e67 !important;
+		}
+		.app-sidebar.sidebar-teso .navigation-main .nav-item a {
+			display: flex !important;
+			align-items: center !important;
+			gap: 10px !important;
+			padding: 12px 18px !important;
+			margin-left: 8px !important;
+			margin-right: 8px !important;
+			overflow: visible !important;
+			white-space: normal !important;
+			color: #ffffff !important;
+			width: auto !important;
+			max-width: none !important;
+		}
+		.app-sidebar.sidebar-teso .navigation-main .nav-item a i {
+			color: #bcc8d8 !important;
+			flex: 0 0 auto !important;
+			min-width: 24px !important;
+			width: 24px !important;
+			text-align: center !important;
+			font-size: 18px !important;
+		}
+		.app-sidebar.sidebar-teso .navigation-main .nav-item a span {
+			color: #ffffff !important;
+			font-size: 13px !important;
+			line-height: 1.4;
+			flex: 1 1 auto;
+			min-width: auto !important;
+			width: auto !important;
+			white-space: normal !important;
+			overflow: visible !important;
+			overflow-wrap: anywhere !important;
+			word-break: break-word !important;
+		}
+		.app-sidebar.sidebar-teso .navigation-main .nav-item a:hover {
+			background-color: rgba(255, 255, 255, 0.1) !important;
+		}
+		.app-sidebar.sidebar-teso .navigation-main .nav-item a:hover span {
+			color: #ffffff !important;
+		}
+		.app-sidebar.sidebar-teso .sidebar-profile .profile-name,
+		.app-sidebar.sidebar-teso .sidebar-profile .profile-role,
+		.app-sidebar.sidebar-teso .navigation-main .nav-lavel {
+			color: #ffffff !important;
+		}
+
+		/* Tesorería: menú tipo botones (coordinado con otros módulos) */
+		.app-sidebar.sidebar-teso .navigation-main .nav-item.has-sub .submenu-content {
+			background-color: #4a5872 !important;
+			padding: 12px 12px !important;
+			max-width: none !important;
+			width: auto !important;
+			min-width: 250px !important;
+			display: flex !important;
+			flex-direction: column !important;
+		}
+		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item {
+			display: flex !important;
+			align-items: center !important;
+			justify-content: flex-start;
+			gap: 10px;
+			background: #ffffff;
+			color: #1f2937 !important;
+			border: 1px solid #e3e8f2;
+			border-radius: 12px;
+			padding: 12px 14px;
+			margin: 0 0 10px;
+			font-size: 13px;
+			font-weight: 600;
+			line-height: 1.35;
+			box-shadow: 0 4px 14px rgba(15, 23, 42, .08);
+			min-height: 48px;
+			text-decoration: none;
+			overflow: visible !important;
+			white-space: normal !important;
+			word-break: break-word;
+			overflow-wrap: break-word;
+			max-width: none !important;
+			width: auto !important;
+			box-sizing: border-box !important;
 		}
 		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item i {
-			width: 16px;
-			min-width: 16px;
-			flex: 0 0 16px;
-			text-align: center;
-			color: #4b5563 !important;
-			font-size: 13px;
+			display: inline-flex !important;
+			align-items: center !important;
+			justify-content: center !important;
+			width: 42px !important;
+			height: 42px !important;
+			min-width: 42px !important;
+			flex: 0 0 42px !important;
+			line-height: 42px !important;
+			font-size: 18px !important;
+			text-align: center !important;
+			color: inherit !important;
+			background: transparent !important;
+			border-radius: 10px !important;
+			padding: 0 !important;
+			box-sizing: border-box !important;
 		}
 		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item span {
 			display: block;
 			flex: 1 1 auto;
-			color: inherit !important;
+			color: #1f2937 !important;
 			font-size: 13px !important;
 			line-height: 1.35;
 			white-space: normal;
+			overflow: visible !important;
 			overflow-wrap: anywhere;
 			word-break: break-word;
+			min-width: 0 !important;
+		}
+		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item:hover {
+			background: #3a4d63;
+			border-color: #4a5d7a;
+			color: #ffffff !important;
+		}
+		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item:hover span {
+			color: #ffffff !important;
 		}
 		.app-sidebar.sidebar-teso .navigation-main .submenu-content .menu-item.active {
 			background: linear-gradient(120deg, #2f5d87 0%, #3a6e97 100%);
@@ -293,13 +408,13 @@ try {
 							<a href="<?php echo base_url('tesoreria/cajas_bancos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cajas_bancos' ? 'active' : ''); ?>"><i class="fas fa-university"></i><span>Bancario</span></a>
 							<a href="<?php echo base_url('tesoreria/movimientos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'movimientos' ? 'active' : ''); ?>"><i class="fas fa-exchange-alt"></i><span>Documentos</span></a>
 							<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'conciliacion' ? 'active' : ''); ?>"><i class="fas fa-check-circle"></i><span>Conciliación</span></a>
-							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'pagos' ? 'active' : ''); ?>"><i class="fas fa-credit-card"></i><span>Pagos de Credito</span></a>
-							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cobros' ? 'active' : ''); ?>"><i class="fas fa-hand-holding-usd"></i><span></span></a>
-							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'arqueos' ? 'active' : ''); ?>"><i class="fas fa-cash-register"></i><span>Arqueos de Credito</span></a>
+							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'pagos' ? 'active' : ''); ?>"><i class="fas fa-credit-card"></i><span>Pagos de Crédito</span></a>
+							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cobros' ? 'active' : ''); ?>"><i class="fas fa-hand-holding-usd"></i><span>Cobros</span></a>
+							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'arqueos' ? 'active' : ''); ?>"><i class="fas fa-coins"></i><span>Arqueos de Crédito</span></a>
 							<a href="<?php echo base_url('tesoreria/flujo'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'flujo' ? 'active' : ''); ?>"><i class="fas fa-chart-line"></i><span>Flujo de Efectivo</span></a>
 							<a href="<?php echo base_url('tesoreria/integracion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'integracion' ? 'active' : ''); ?>"><i class="fas fa-link"></i><span>Integración Bancaria</span></a>
 							<a href="<?php echo base_url('tesoreria/reportes'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'reportes' ? 'active' : ''); ?>"><i class="fas fa-file-alt"></i><span>Reportería</span></a>
-							<a href="<?php echo base_url('tesoreria/seguridad'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'seguridad' ? 'active' : ''); ?>"><i class="fas fa-user-shield"></i><span>Seguridad y Roles</span></a>
+							<!-- Seguridad y Roles removed for Tesorería -->
 						</div>
 					</div>
 					<?php elseif ($is_konami) : ?>
@@ -485,12 +600,12 @@ try {
 							<a href="<?php echo base_url('tesoreria/movimientos'); ?>" class="menu-item">Documentos</a>
 							<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item">Conciliación</a>
 							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item">Pagos de Credito</a>
-							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item"></a>
+							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item">Cobros</a>
 							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item">Arqueos de Credito</a>
 							<a href="<?php echo base_url('tesoreria/flujo'); ?>" class="menu-item">Flujo de Efectivo</a>
 							<a href="<?php echo base_url('tesoreria/integracion'); ?>" class="menu-item">Integración Bancaria</a>
 							<a href="<?php echo base_url('tesoreria/reportes'); ?>" class="menu-item">Reportería</a>
-							<a href="<?php echo base_url('tesoreria/seguridad'); ?>" class="menu-item">Seguridad y Roles</a>
+							<!-- Seguridad y Roles removed for Tesorería -->
 						</div>
 					</div>
 					<?php elseif ($is_admin) : ?>
@@ -589,12 +704,12 @@ try {
 							<a href="<?php echo base_url('tesoreria/movimientos'); ?>" class="menu-item">Documentos</a>
 							<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item">Conciliación</a>
 							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item">Pagos de Credito</a>
-							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item"></a>
+							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item">Cobros</a>
 							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item">Arqueos de Credito</a>
 							<a href="<?php echo base_url('tesoreria/flujo'); ?>" class="menu-item">Flujo de Efectivo</a>
 							<a href="<?php echo base_url('tesoreria/integracion'); ?>" class="menu-item">Integración Bancaria</a>
 							<a href="<?php echo base_url('tesoreria/reportes'); ?>" class="menu-item">Reportería</a>
-							<a href="<?php echo base_url('tesoreria/seguridad'); ?>" class="menu-item">Seguridad y Roles</a>
+							<!-- Seguridad y Roles removed for Tesorería -->
 						</div>
 					</div>
 					<?php endif; ?>

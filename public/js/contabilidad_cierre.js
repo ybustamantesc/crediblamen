@@ -2,6 +2,16 @@ document.addEventListener('DOMContentLoaded', function(){
   function byId(id){return document.getElementById(id);} 
   function showAlert(msg, type){ alert(msg); }
 
+  function formatDateDMY(value) {
+    if (!value) return '';
+    var parts = value.split(' ');
+    var datePart = parts[0];
+    var timePart = parts[1] || '';
+    var datePieces = datePart.split('-');
+    if (datePieces.length !== 3) return value;
+    return datePieces[2].padStart(2,'0') + '/' + datePieces[1].padStart(2,'0') + '/' + datePieces[0];
+  }
+
   async function fetchClosed(){
     try{
       const res = await fetch(window.CIERRE_LIST_URL);
@@ -10,8 +20,11 @@ document.addEventListener('DOMContentLoaded', function(){
       if(json.status !== 'success'){ showAlert(json.message || 'Error','danger'); return; }
       const tbody = document.querySelector('#closedPeriodsTable tbody'); tbody.innerHTML = '';
       json.data.forEach(function(r){
+        const monthLabel = r.month_name || r.month;
+        const closedByLabel = r.closed_by_name || r.closed_by || '';
+        const fechaLabel = formatDateDMY(r.closed_at);
         const tr = document.createElement('tr');
-        tr.innerHTML = '<td>'+r.year+'</td><td>'+r.month+'</td><td>'+(r.closed_by||'')+'</td><td>'+ (r.closed_at||'') +'</td><td>'+ (r.notes||'') +'</td><td><button class="btn btn-sm btn-outline-danger btn-unlock">Desbloquear</button></td>';
+        tr.innerHTML = '<td>'+r.year+'</td><td>'+monthLabel+'</td><td>'+closedByLabel+'</td><td>'+ fechaLabel +'</td><td>'+ (r.notes||'') +'</td><td><button class="btn btn-sm btn-outline-danger btn-unlock">Desbloquear</button></td>';
         tr.querySelector('.btn-unlock').addEventListener('click', function(){ unlockPeriod(r.year, r.month); });
         tbody.appendChild(tr);
       });

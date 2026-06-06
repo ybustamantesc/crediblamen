@@ -23,6 +23,7 @@ if (!isset($er_lines) || !is_array($er_lines) || !isset($bs_lines) || !is_array(
     }
 }
 ?>
+<?php $selectedType = isset($account->type) ? trim(strtolower($account->type)) : ''; ?>
 <div id="modalAccount" style="position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(3,7,18,0.6);display:flex;align-items:center;justify-content:center;z-index:99999;padding:20px;">
     <div style="width:100%;max-width:720px;background:#ffffff;padding:0;border-radius:12px;box-shadow:0 10px 30px rgba(15,23,42,0.12);overflow:hidden;color:#0b1220;border:1px solid rgba(2,6,23,0.04);">
         <div style="background:linear-gradient(135deg,#f0f9ff 0%,#fbf7ff 100%);padding:18px 22px;display:flex;align-items:center;justify-content:space-between;border-bottom:1px solid rgba(2,6,23,0.04);">
@@ -52,13 +53,13 @@ if (!isset($er_lines) || !is_array($er_lines) || !isset($bs_lines) || !is_array(
                     <div>
                         <label style="display:block;color:#143a63;font-weight:700;margin-bottom:6px;font-size:13px;">Tipo</label>
                         <select name="type" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(2,6,23,0.06);background:#fff;color:#0b1220;font-size:14px;">
-                            <option value="activo" <?php echo (isset($account) && $account->type=='activo') ? 'selected' : ''; ?>>Activo</option>
-                            <option value="pasivo" <?php echo (isset($account) && $account->type=='pasivo') ? 'selected' : ''; ?>>Pasivo</option>
-                            <option value="patrimonio" <?php echo (isset($account) && $account->type=='patrimonio') ? 'selected' : ''; ?>>Patrimonio</option>
-                            <option value="ingreso" <?php echo (isset($account) && $account->type=='ingreso') ? 'selected' : ''; ?>>Ingreso</option>
-                            <option value="gasto" <?php echo (isset($account) && $account->type=='gasto') ? 'selected' : ''; ?>>Gasto</option>
-                            <option value="contingente" <?php echo (isset($account) && $account->type=='contingente') ? 'selected' : ''; ?>>Contingente</option>
-                            <option value="orden" <?php echo (isset($account) && $account->type=='orden') ? 'selected' : ''; ?>>Orden</option>
+                            <option value="activo" <?php echo ($selectedType === 'activo') ? 'selected' : ''; ?>>Activo</option>
+                            <option value="pasivo" <?php echo ($selectedType === 'pasivo') ? 'selected' : ''; ?>>Pasivo</option>
+                            <option value="patrimonio" <?php echo ($selectedType === 'patrimonio') ? 'selected' : ''; ?>>Patrimonio</option>
+                            <option value="ingreso" <?php echo ($selectedType === 'ingreso') ? 'selected' : ''; ?>>Ingreso</option>
+                            <option value="gasto" <?php echo ($selectedType === 'gasto') ? 'selected' : ''; ?>>Gasto</option>
+                            <option value="contingente" <?php echo ($selectedType === 'contingente') ? 'selected' : ''; ?>>Contingente</option>
+                            <option value="orden" <?php echo ($selectedType === 'orden') ? 'selected' : ''; ?>>Orden</option>
                         </select>
                     </div>
                     <div>
@@ -102,7 +103,7 @@ if (!isset($er_lines) || !is_array($er_lines) || !isset($bs_lines) || !is_array(
 
                 <div style="margin-bottom:12px;">
                         <label style="display:block;color:#143a63;font-weight:700;margin-bottom:6px;font-size:13px;">Cuenta Padre</label>
-                    <select name="parent_id" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(2,6,23,0.06);background:#fff;color:#0b1220;font-size:14px;"><option value="">-- Ninguna --</option></select>
+                    <select name="parent_id" data-selected-parent-id="<?php echo isset($account->parent_id) ? intval($account->parent_id) : ''; ?>" style="width:100%;padding:10px;border-radius:8px;border:1px solid rgba(2,6,23,0.06);background:#fff;color:#0b1220;font-size:14px;"><option value="">-- Ninguna --</option></select>
                 </div>
 
                 <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;">

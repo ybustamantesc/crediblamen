@@ -2,337 +2,404 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Resumen Análisis Financiero Comerciante</title>
+    <title>Resumen Análisis Financiero Asalariado</title>
     <style>
-        @page { margin: 16mm 12mm; }
-        body {
-            font-family: Arial, sans-serif;
-            font-size: 10.5px;
-            color: #1f2937;
-            background: #ffffff;
-        }
+        body { font-family: Arial, sans-serif; font-size: 9.5px; color: #222; }
         .pdf-titulo-principal {
             font-family: 'Courier New', Courier, monospace;
-            color: #175a9e;
-            font-size: 44px;
+            color: #1760a3;
+            font-size: 26px;
             font-weight: bold;
-            letter-spacing: 1.4px;
-            margin-bottom: 1px;
-            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 2px;
         }
         .pdf-titulo-sub {
             font-family: 'Courier New', Courier, monospace;
-            color: #175a9e;
-            font-size: 16px;
+            color: #1760a3;
+            font-size: 18px;
             font-weight: bold;
-            letter-spacing: 0.8px;
-            margin-top: 0;
+            letter-spacing: 1px;
+            margin-top: 2px;
         }
         .pdf-titulo-fecha {
             font-family: 'Courier New', Courier, monospace;
-            color: #175a9e;
-            font-size: 12px;
+            color: #1760a3;
+            font-size: 15px;
             font-weight: bold;
-            margin-top: 1px;
+            margin-top: 2px;
         }
-        table {
-            width: 100%;
-            border-collapse: collapse;
-            margin-top: 8px;
-            margin-bottom: 10px;
-            font-size: 11px;
-        }
-        th, td {
-            border: 1px solid #cfd6de;
-            padding: 5px 8px;
-            text-align: left;
-            vertical-align: middle;
-        }
-        th {
-            background: #e8edf3;
-            color: #111827;
-            font-weight: bold;
-        }
-        .section-title {
-            margin-top: 14px;
-            margin-bottom: 0;
-            padding: 6px 8px;
-            font-size: 14px;
-            font-weight: bold;
-            color: #ffffff;
-            background: #073a5b;
-            text-transform: uppercase;
-        }
-        .value-col {
-            width: 210px;
-            text-align: right;
-            font-weight: bold;
-            color: #111827;
-        }
-        .cliente-nombre {
-            font-size: 16px;
-            font-weight: bold;
-            color: #175a9e;
-            margin-bottom: 3px;
-            text-transform: uppercase;
-        }
-        .total-row td {
-            background: #f4f8fc;
-            font-weight: bold;
-        }
-        .subtle-row td {
-            background: #fbfdff;
-        }
+        table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 9.5px; }
+        th, td { border: 1px solid #e6e6e6; padding: 3px 4px; text-align: left; }
+        th { background: #f5f5f5; }
+        .cliente-nombre { font-size: 13px; font-weight: bold; color: #1760a3; margin-bottom: 6px; }
     </style>
 </head>
 <body>
-    <div style="width:100%; text-align:center; margin-top: 8px; margin-bottom: 6px;">
+    <?php
+    $decode_array_field = function ($value) {
+        if (is_array($value)) {
+            return $value;
+        }
+        if (is_string($value) && $value !== '') {
+            $decoded = json_decode($value, true);
+            if (json_last_error() === JSON_ERROR_NONE && is_array($decoded)) {
+                return $decoded;
+            }
+            return [$value];
+        }
+        return [];
+    };
+
+    $build_obligaciones = function ($fechas, $cuotas, $instituciones, $saldos) {
+        $rows = [];
+        $count = max(count($fechas), count($cuotas), count($instituciones), count($saldos));
+        for ($i = 0; $i < $count; $i++) {
+            $fecha = trim((string)($fechas[$i] ?? ''));
+            $cuota = trim((string)($cuotas[$i] ?? ''));
+            $institucion = trim((string)($instituciones[$i] ?? ''));
+            $saldo = trim((string)($saldos[$i] ?? ''));
+            if ($fecha === '' && $cuota === '' && $institucion === '' && $saldo === '') {
+                continue;
+            }
+            $rows[] = [
+                'fecha' => $fecha,
+                'cuota' => $cuota,
+                'institucion' => $institucion,
+                'saldo' => $saldo,
+            ];
+        }
+        return $rows;
+    };
+
+    $olp_rows = $build_obligaciones(
+        $decode_array_field($analisis['olp_fecha'] ?? []),
+        $decode_array_field($analisis['olp_cuota'] ?? []),
+        $decode_array_field($analisis['olp_instituciones'] ?? []),
+        $decode_array_field($analisis['olp_saldo'] ?? [])
+    );
+    $ocp_rows = $build_obligaciones(
+        $decode_array_field($analisis['ocp_fecha'] ?? []),
+        $decode_array_field($analisis['ocp_cuota'] ?? []),
+        $decode_array_field($analisis['ocp_instituciones'] ?? []),
+        $decode_array_field($analisis['ocp_saldo'] ?? [])
+    );
+    ?>
+    <div style="width:100%; text-align:center; margin-bottom: 10px;">
         <div class="cliente-nombre">
-            <?= htmlspecialchars(trim(($analisis['nombres'] ?? '') . ' ' . ($analisis['apellidos'] ?? ''))) ?>
+            <?= isset($analisis['nombres']) || isset($analisis['apellidos']) ? htmlspecialchars(($analisis['nombres'] ?? '') . ' ' . ($analisis['apellidos'] ?? '')) : '' ?>
         </div>
-        <div class="pdf-titulo-principal">ANÁLISIS ESTADOS FINANCIEROS - ASALARIADO</div>
+        <div class="pdf-titulo-principal">ANÁLISIS ESTADOS FINANCIEROS - COMERCIANTE</div>
         <div class="pdf-titulo-sub">Balance del Solicitante</div>
         <div class="pdf-titulo-fecha"><?= date('d/m/Y') ?></div>
     </div>
-
-    <?php
-    $money = function ($value) {
-        return 'C$ ' . number_format((float)$value, 2);
-    };
-    $money_or_dash = function ($value) use ($money) {
-        return ((float)$value) > 0 ? $money($value) : '-';
-    };
-    $money_or_currency_dash = function ($value) use ($money) {
-        return ((float)$value) > 0 ? $money($value) : 'C$ -';
-    };
-    $percent = function ($value) {
-        if (is_string($value)) {
-            $value = str_replace('%', '', trim($value));
-        }
-        $num = (float)$value;
-        if ($num > 0 && $num <= 1) {
-            $num = $num * 100;
-        }
-        return number_format($num, 2) . '%';
-    };
-    ?>
-
-    <div class="section-title">Flujo Mensual</div>
-    <table>
-        <thead>
-            <tr>
-                <th>Concepto</th>
-                <th class="value-col">Valores C$</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="total-row">
-                <td><b>(1) TOTAL INGRESOS (A+B+C+D+E)</b></td>
-                <td class="value-col"><?= $money($analisis['total_ingresos'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>A. Sueldo Neto (restadas las deducciones INSS e IR)</td>
-                <td class="value-col"><?= $money($analisis['ingreso_sueldo_neto'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>B. Comisiones</td>
-                <td class="value-col"><?= $money_or_dash($analisis['ingreso_comisiones'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>C. Bonificaciones</td>
-                <td class="value-col"><?= $money_or_dash($analisis['ingreso_bonificaciones'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>D. Remesas</td>
-                <td class="value-col"><?= $money_or_dash($analisis['ingreso_remesas'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>E. Otros ingresos</td>
-                <td class="value-col"><?= $money_or_dash($analisis['ingreso_otros'] ?? 0) ?></td>
-            </tr>
-        </tbody>
+    <table style="width:100%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+        <tr>
+            <th colspan="3" style="background:#e9ecef; text-align:center;">ACTIVO CIRCULANTE O CORRIENTE</th>
+            <th colspan="3" style="background:#e9ecef; text-align:center;">PASIVO CIRCULANTE O CORRIENTE</th>
+        </tr>
+        <tr>
+            <td colspan="3"><b>(2) DISPONIBLE (A+B)</b></td>
+            <td colspan="3"><b>(1) CUENTAS POR PAGAR</b> C$ <?= number_format($analisis['cuentas_pagar_proveedores'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td>A, Efectivo o Caja</td>
+            <td colspan="2">C$ <?= number_format($analisis['efectivo_caja'] ?? 0, 2) ?></td>
+            <td>Cuentas por pagar a proveedores</td>
+            <td colspan="2">C$ <?= number_format($analisis['cuentas_pagar_proveedores'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td>B, Dinero ahorrado o Banco</td>
+            <td colspan="2">C$ <?= number_format($analisis['dinero_banco'] ?? $analisis['dinero_ahorrado'] ?? 0, 2) ?></td>
+            <td>B, Cuentas por pagar crédito corto plazo</td>
+            <td colspan="2">C$ <?= number_format($analisis['cuentas_pagar_credito'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td colspan="3"><b>(3) CUENTAS POR COBRAR</b></td>
+            <td colspan="3"><b>(2) PASIVO NO CORRIENTE (mayor de 12 meses)</b></td>
+        </tr>
+        <tr>
+            <td colspan="3">C$ <?= number_format($analisis['cuentas_cobrar'] ?? 0, 2) ?></td>
+            <td colspan="3">C$ <?= number_format($analisis['pasivo_no_corriente'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td colspan="3"><b>(4) INVENTARIOS</b></td>
+            <td colspan="3"><b>(3) TOTAL PASIVO (1+2)</b> C$ <?= number_format($analisis['total_pasivo'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td>A, Inventario de mercadería</td>
+            <td colspan="2">C$ <?= number_format($analisis['inventario_mercaderia'] ?? 0, 2) ?></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td>B, Productos en proceso</td>
+            <td colspan="2">C$ <?= number_format($analisis['productos_proceso'] ?? 0, 2) ?></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td>C, Productos terminados</td>
+            <td colspan="2">C$ <?= number_format($analisis['productos_terminados'] ?? 0, 2) ?></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td colspan="3"><b>(5) TOTAL ACTIVOS FIJOS O</b> C$ <?= number_format($analisis['total_activos_fijos'] ?? 0, 2) ?></td>
+            <td colspan="3"><b>(4) TOTAL PATRIMONIO</b> C$ <?= number_format($analisis['total_patrimonio'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td>A, Bienes muebles (equipos)</td>
+            <td colspan="2">C$ <?= number_format($analisis['bienes_muebles'] ?? 0, 2) ?></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td>B, Propiedades (casa, finca, etc.)</td>
+            <td colspan="2">C$ <?= number_format($analisis['propiedades'] ?? 0, 2) ?></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td>C, Otros Activos</td>
+            <td colspan="2">C$ <?= number_format($analisis['otros_activos'] ?? 0, 2) ?></td>
+            <td colspan="3"></td>
+        </tr>
+        <tr>
+            <td colspan="3"><b>(6) TOTAL ACTIVOS (1+5)</b> C$ <?= number_format($analisis['total_activos'] ?? 0, 2) ?></td>
+            <td colspan="3"><b>TOTAL PASIVO + PATRIMONIO (3+4)</b> C$ <?= number_format($analisis['total_pasivo_patrimonio'] ?? 0, 2) ?></td>
+        </tr>
+    </table>
+    <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Estado Financiero y Flujo de Caja Mensual</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr>
+            <th colspan="3" style="background:#e9ecef; text-align:center;">ESTADO DE RESULTADO MENSUAL</th>
+            <th colspan="3" style="background:#e9ecef; text-align:center;">FLUJO DE CAJA MENSUAL</th>
+        </tr>
+        <tr>
+            <td colspan="2"><b>(1) VENTAS TOTALES (A+B)</b></td>
+            <td>C$ <?= number_format($analisis['ventas_totales'] ?? 0, 2) ?></td>
+            <td>1. Ventas al contado</td>
+            <td colspan="2">C$ <?= number_format($analisis['fcm_ventas_contado'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td>A, Ventas al contado</td>
+            <td colspan="1"></td>
+            <td>C$ <?= number_format($analisis['ventas_contado'] ?? 0, 2) ?></td>
+            <td>2. Recuperación ventas al crédito</td>
+            <td colspan="2">C$ <?= number_format($analisis['fcm_recuperacion_credito'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td>B, Ventas al crédito</td>
+            <td colspan="1"></td>
+            <td>C$ <?= number_format($analisis['ventas_credito'] ?? 0, 2) ?></td>
+            <td>3. Compras al contado</td>
+            <td colspan="2">C$ <?= number_format($analisis['fcm_compras_contado'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td><b>(2) COSTOS DE VENTA</b></td>
+            <td colspan="1"></td>
+            <td>C$ <?= number_format($analisis['costos_venta'] ?? 0, 2) ?></td>
+            <td>4. Gastos Generales</td>
+            <td colspan="2">C$ <?= number_format($analisis['fcm_gastos_generales'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td><b>(3) MARGEN BRUTO (1-2)</b></td>
+            <td colspan="1"></td>
+            <td>C$ <?= number_format($analisis['margen_bruto'] ?? 0, 2) ?></td>
+            <td><b>Flujo del negocio (1+2-3-4)</b></td>
+            <?php
+                $flujo_val = null;
+                if (isset($analisis['flujo_negocio']) && $analisis['flujo_negocio'] !== null) {
+                    $flujo_val = (float)$analisis['flujo_negocio'];
+                } else {
+                    $f1 = isset($analisis['fcm_ventas_contado']) ? (float)$analisis['fcm_ventas_contado'] : 0;
+                    $f2 = isset($analisis['fcm_recuperacion_credito']) ? (float)$analisis['fcm_recuperacion_credito'] : 0;
+                    $f3 = isset($analisis['fcm_compras_contado']) ? (float)$analisis['fcm_compras_contado'] : 0;
+                    $f4 = isset($analisis['fcm_gastos_generales']) ? (float)$analisis['fcm_gastos_generales'] : 0;
+                    $flujo_val = $f1 + $f2 - $f3 - $f4;
+                }
+            ?>
+            <td colspan="2">C$ <?= number_format($flujo_val ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td><b>(4) GASTOS GENERALES</b></td>
+            <td colspan="1"></td>
+            <td>C$ <?= number_format($analisis['gastos_generales'] ?? 0, 2) ?></td>
+            <td>5. Otros ingresos de la unidad familiar</td>
+            <td colspan="2">C$ <?= number_format($analisis['fcm_otros_ingresos'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td><b>(5) UTILIDAD OPERATIVA (3-4)</b></td>
+            <td colspan="1"></td>
+            <td>C$ <?= number_format($analisis['utilidad_operativa'] ?? 0, 2) ?></td>
+            <td>6. Gastos consumo familiar<br><span style="font-size:11px; color:#555;">(costo mínimo de vida en función canasta básica y cantidad de personas que dependen del titular)</span></td>
+            <td colspan="2">C$ <?php
+                $valor_canasta = isset($analisis['fcm_valor_canasta_basica']) ? floatval($analisis['fcm_valor_canasta_basica']) : 0;
+                $cant_personas = isset($analisis['fcm_cant_personas_dep']) ? floatval($analisis['fcm_cant_personas_dep']) : 0;
+                $gasto_consumo = ($valor_canasta > 0 && $cant_personas > 0) ? ($valor_canasta / 6 * $cant_personas) : ($analisis['fcm_gastos_consumo'] ?? 0);
+                echo number_format($gasto_consumo, 2);
+            ?></td>
+        </tr>
+        <tr>
+            <td colspan="3"></td>
+            <td>7. Otros gastos (pagos de cuotas y otras transacciones financieras)</td>
+            <td colspan="2">C$ <?= number_format($analisis['fcm_otros_gastos'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td colspan="3"></td>
+            <td><b>FLUJO NETO DISPONIBLE (1+2-3-4+5-6-7)</b></td>
+            <td colspan="2"><b>C$ <?= number_format($analisis['flujo_neto_disponible'] ?? 0, 2) ?></b></td>
+        </tr>
+    </table>
+    <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Gastos Fijos Mensuales</h3>
+    <table style="width:60%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+        <tr><th style="background:#e9ecef;">Concepto</th><th style="background:#e9ecef;">Valor C$</th></tr>
+        <tr><td>Local o casa propia/Alquiler</td><td>C$ <?= number_format($analisis['gasto_local_alquiler'] ?? 0, 2) ?></td></tr>
+        <tr><td>Servicio de energía eléctrica</td><td>C$ <?= number_format($analisis['gasto_energia'] ?? 0, 2) ?></td></tr>
+        <tr><td>Servicio de agua potable</td><td>C$ <?= number_format($analisis['gasto_agua'] ?? 0, 2) ?></td></tr>
+        <tr><td>Internet residencial/Plan</td><td>C$ <?= number_format($analisis['gasto_internet'] ?? 0, 2) ?></td></tr>
+        <tr><td style="background:yellow;">Seguridad:</td><td style="background:yellow;">C$ <?= number_format($analisis['gasto_seguridad'] ?? 0, 2) ?></td></tr>
+        <tr><td style="background:yellow;">Limpieza y mantenimiento:</td><td style="background:yellow;">C$ <?= number_format($analisis['gasto_limpieza'] ?? 0, 2) ?></td></tr>
+        <tr><td>Gastos personales básicos:</td><td>C$ <?= number_format($analisis['gasto_personal'] ?? 0, 2) ?></td></tr>
+        <tr><th>Total</th><th>C$ <?= number_format(
+            ($analisis['gasto_local_alquiler'] ?? 0) +
+            ($analisis['gasto_energia'] ?? 0) +
+            ($analisis['gasto_agua'] ?? 0) +
+            ($analisis['gasto_internet'] ?? 0) +
+            ($analisis['gasto_seguridad'] ?? 0) +
+            ($analisis['gasto_limpieza'] ?? 0) +
+            ($analisis['gasto_personal'] ?? 0)
+        , 2) ?></th></tr>
+    </table>
+    <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Costos de Operación Directos</h3>
+    <table style="width:60%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+        <tr><th style="background:#e9ecef;">Concepto</th><th style="background:#e9ecef;">Valor C$</th></tr>
+        <tr><td>Salario ayudante/empleado</td><td>C$ <?= number_format($analisis['gasto_salario_ayudante'] ?? $analisis['costo_salario_ayudante'] ?? 0, 2) ?></td></tr>
+        <tr><td>Transporte</td><td>C$ <?= number_format($analisis['costo_transporte'] ?? 0, 2) ?></td></tr>
+        <tr><th>Total</th><th>C$ <?= number_format((($analisis['gasto_salario_ayudante'] ?? $analisis['costo_salario_ayudante'] ?? 0) + ($analisis['costo_transporte'] ?? 0)), 2) ?></th></tr>
     </table>
 
-    <table>
-        <tbody>
-            <tr class="total-row">
-                <td><b>(2) GASTOS FAMILIARES TOTAL (F+G+H+I+J+K+L)</b></td>
-                <td class="value-col"><?= $money($analisis['total_gastos_familiares'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>F. Gastos en alimentación</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['gastos_alimentacion'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>G. Servicios básicos (agua, luz, Internet Fijo.)</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['gastos_servicios'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>H. Vestuario</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['gastos_vestuario'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>I. Gastos educativos</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['gastos_educativos'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>J. Gastos en transporte</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['gastos_transporte'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>K. Gastos en alquiler o arriendo vivienda</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['gastos_alquiler'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>L. Salud / Medicinas</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['pago_empleado_viatico'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>P. Entretenimiento (incluye gastos derivados del uso celulares e internet)</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['p_entretenimiento'] ?? 0) ?></td>
-            </tr>
-            <tr class="subtle-row">
-                <td>Q. Otros Gastos (Especifique)</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['otros_gastos'] ?? 0) ?></td>
-            </tr>
-            <tr class="total-row">
-                <td><b>(3) OTRAS OBLIGACIONES (M+N+O)</b></td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['total_otras_obligaciones'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>M. Abono o cuotas de prestamos o deudas con instituciones financieras, casas comerciales o particulares.</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['cuotas_prestamos'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>N. Pension alimenticia o similares</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['pension_alimenticia'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>O. Otros</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['otras_obligaciones'] ?? 0) ?></td>
-            </tr>
-            <tr class="total-row">
-                <td><b>(4) TOTAL EGRESOS (2+3)</b></td>
-                <td class="value-col"><?= $money($analisis['total_egresos'] ?? 0) ?></td>
-            </tr>
-            <tr class="total-row">
-                <td><b>(5) FLUJO NETO MENSUAL DISPONIBLE (1-4)</b></td>
-                <td class="value-col"><?= $money($analisis['flujo_neto_mensual'] ?? 0) ?></td>
-            </tr>
-            <tr class="total-row">
-                <td><b>Valor de la cuota periódica de pago estimada C$</b></td>
-                <td class="value-col"><?= $money($analisis['cuota_periodica'] ?? 0) ?></td>
-            </tr>
-        </tbody>
+
+
+    <table style="width:60%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+        <tr>
+            <td colspan="2" style="background:#e86c1a; color:#fff; font-family:'Courier New', Courier, monospace; font-size:16px; font-weight:bold;">Valor Canasta básica</td>
+            <td style="background:#e86c1a; color:#fff; font-family:'Courier New', Courier, monospace; font-size:16px; font-weight:bold; text-align:right;">C$ <?= number_format($analisis['fcm_valor_canasta_basica'] ?? 0, 2) ?></td>
+        </tr>
+        <tr>
+            <td colspan="2">Cantidad de personas dep</td>
+            <td style="text-align:right;"><?= (int)($analisis['fcm_cant_personas_dep'] ?? 0) ?></td>
+        </tr>
+        <tr>
+            <td colspan="2" style="background:#073048; color:#fff; font-weight:bold;">% MARGEN</td>
+            <td style="text-align:right; font-weight:bold;">
+                <?php
+                $margen = isset($analisis['porcentaje_margen']) ? floatval($analisis['porcentaje_margen']) : 0;
+                if ($margen > 0 && $margen <= 1) {
+                    $margen = $margen * 100;
+                }
+                echo number_format($margen, 2) . '%';
+                ?>
+            </td>
+        </tr>
+    </table>
+    <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Obligaciones a largo plazo</h3>
+    <table style="width:80%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+        <tr style="background:#d9d9d9; color:#000;">
+            <th>Fecha</th><th>Cuota</th><th>Instituciones</th><th>Saldo</th>
+        </tr>
+        <?php if (!empty($olp_rows)): ?>
+            <?php foreach ($olp_rows as $obl): ?>
+                <tr>
+                    <td><?= htmlspecialchars($obl['fecha'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($obl['cuota'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($obl['institucion'] ?? '') ?></td>
+                    <td><?= number_format($obl['saldo'] ?? 0, 2) ?></td>
+                </tr>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <tr><td colspan="4" style="text-align:center;">Sin datos</td></tr>
+        <?php endif; ?>
+        <tr>
+            <td colspan="3" style="background:#e86c1a; color:#fff; text-align:right; font-weight:bold;">Total</td>
+            <td style="background:#e86c1a; color:#fff; font-weight:bold;">C$ <?= number_format($analisis['subtotal_olp_saldo'] ?? $analisis['subtotal_oblig_largo_plazo'] ?? 0, 2) ?></td>
+        </tr>
     </table>
 
-    <div class="section-title">Canasta Basica</div>
-    <table>
-        <tbody>
-            <tr>
-                <td><b>Canasta basica C$</b></td>
-                <td class="value-col"><?= $money($analisis['canasta_basica'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td><b>Cantidad promedio</b></td>
-                <td class="value-col"><?= number_format((float)($analisis['cantidad_promedio'] ?? 0), 0) ?></td>
-            </tr>
-            <tr>
-                <td><b>Monto por persona</b></td>
-                <td class="value-col"><?= $money($analisis['monto_por_persona'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td><b>Cantidad de personas dependientes</b></td>
-                <td class="value-col"><?= number_format((float)($analisis['personas_dependientes'] ?? 0), 0) ?></td>
-            </tr>
-            <tr>
-                <td><b>Gastos de alimentación</b></td>
-                <td class="value-col"><?= $money($analisis['gastos_alimentacion_canasta'] ?? 0) ?></td>
-            </tr>
-        </tbody>
+    <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Obligaciones a corto plazo</h3>
+    <table style="width:80%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+        <tr style="background:#d9d9d9; color:#000;">
+            <th>Fecha</th><th>Cuota</th><th>Instituciones</th><th>Saldo</th>
+        </tr>
+        <?php if (!empty($ocp_rows)): ?>
+            <?php foreach ($ocp_rows as $obl): ?>
+                <tr>
+                    <td><?= htmlspecialchars($obl['fecha'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($obl['cuota'] ?? '') ?></td>
+                    <td><?= htmlspecialchars($obl['institucion'] ?? '') ?></td>
+                    <td><?= number_format($obl['saldo'] ?? 0, 2) ?></td>
+                </tr>
+            <?php endforeach; ?>
+        <?php else: ?>
+            <tr><td colspan="4" style="text-align:center;">Sin datos</td></tr>
+        <?php endif; ?>
+        <tr>
+            <td colspan="2"></td>
+            <td style="background:#e86c1a; color:#fff; text-align:right; font-weight:bold;">Total</td>
+            <td style="background:#e86c1a; color:#fff; font-weight:bold;">C$ <?= number_format($analisis['subtotal_ocp_saldo'] ?? $analisis['subtotal_oblig_corto_plazo'] ?? 0, 2) ?></td>
+        </tr>
     </table>
-
-    <div class="section-title">Tipo De Transporte</div>
-    <table>
-        <tbody>
-            <tr>
-                <td><b>Tipo de transporte</b></td>
-                <td class="value-col"><b>Valores C$</b></td>
-            </tr>
-            <tr>
-                <td>Transporte urbano colectivo</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['transporte_urbano'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>Servicio individual ( taxi,caponera)</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['transporte_individual'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>Transporte interurbano</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['transporte_interurbano'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>Recorrido laboral</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['recorrido_laboral'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>Vehículo particular de uso personal</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['vehiculo_particular'] ?? 0) ?></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="section-title">Gastos De Vivienda</div>
-    <table>
-        <tbody>
-            <tr>
-                <td><b>Gastos de vivienda</b></td>
-                <td class="value-col"><b>Valores C$</b></td>
-            </tr>
-            <tr>
-                <td>Alquiler</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['alquiler'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td>Casa propia</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['casa_propia'] ?? 0) ?></td>
-            </tr>
-        </tbody>
-    </table>
-
-    <div class="section-title">7.2. Indicadores</div>
-    <table>
-        <thead>
-            <tr>
-                <th>Indicadores</th>
-                <th class="value-col">Resultado Actual</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr class="total-row">
-                <td>Nivel de endeudamiento = ((3) Otras Obligaciones + Total de Deuda a Creditar) / (1) Total Ingresos</td>
-                <td class="value-col">
-                    <?php
-                    $pdt = isset($analisis['porcentaje_deuda_total']) ? $analisis['porcentaje_deuda_total'] : null;
-                    if ($pdt === null || $pdt === '' || (float)$pdt === 0.0) {
-                        $otras = (float)($analisis['total_otras_obligaciones'] ?? 0);
-                        $deudaAcreditar = (float)($analisis['total_deuda_acreditar'] ?? 0);
-                        $ingresos = (float)($analisis['total_ingresos'] ?? 0);
-                        $pdt = $ingresos > 0 ? (($otras + $deudaAcreditar) / $ingresos) * 100 : 0;
-                    }
-                    echo $percent($pdt);
-                    ?>
-                </td>
-            </tr>
-            <tr class="total-row">
-                <td>Cobertura de la deuda con capacidad de pago = (Flujo neto disponible /cuota). Máxima porción a comprometer del flujo=25%</td>
-                <td class="value-col"><?= $percent($analisis['cobertura_deuda'] ?? 0) ?></td>
-            </tr>
-            <tr class="total-row">
-                <td>Cobertura de garantía (150%)</td>
-                <td class="value-col"><?= $percent($analisis['cobertura_garantia'] ?? 0) ?></td>
-            </tr>
-        </tbody>
+    <h3 style="background:#073048; color:#fff; text-align:left; padding:6px; margin-top:30px;">Indicadores</h3>
+    <table style="width:100%; border-collapse:collapse; font-size:13px;">
+        <tr>
+            <th style="background:#e9ecef;">Indicadores</th>
+            <th style="background:#e9ecef;">Resultado Actual</th>
+        </tr>
+        <tr>
+            <td>Nivel de Endeudamiento = (Total Pasivo + Monto Crédito Solicitado / Total Activos)</td>
+            <td style="background:yellow; text-align:center; font-weight:bold;">
+                <?php
+                $val = isset($analisis['nivel_endeudamiento']) ? floatval($analisis['nivel_endeudamiento']) : (isset($analisis['indicador_endeudamiento']) ? floatval($analisis['indicador_endeudamiento']) : 0);
+                if ($val > 0 && $val <= 1) {
+                    $val = $val * 100;
+                }
+                echo number_format($val, 2) . '%';
+                ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Capital de trabajo Neto (Activo Corriente - Pasivo Corriente)</td>
+            <td style="background:yellow; text-align:center; font-weight:bold;">
+                C$ <?= number_format($analisis['capital_trabajo_neto'] ?? 0, 2) ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Cobertura de la deuda capacidad de pago = (Cuota / Flujo neto disponible)<br>Máxima porción a comprometer del flujo = 25%</td>
+            <td style="background:yellow; text-align:center; font-weight:bold;">
+                <?php
+                $val = isset($analisis['cobertura_deuda']) ? floatval($analisis['cobertura_deuda']) : 0;
+                if ($val > 0 && $val <= 1) {
+                    $val = $val * 100;
+                } elseif ($val < 0 && $val >= -1) {
+                    $val = $val * 100;
+                }
+                echo number_format($val, 2) . '%';
+                ?>
+            </td>
+        </tr>
+        <tr>
+            <td>Cobertura de garantía (150%)</td>
+            <td style="background:yellow; text-align:center; font-weight:bold;">
+                <?php
+                $cg_raw = isset($analisis['cobertura_garantia']) ? $analisis['cobertura_garantia'] : 0;
+                if (is_string($cg_raw)) {
+                    $cg_raw = str_replace('%', '', $cg_raw);
+                    $cg_raw = trim($cg_raw);
+                }
+                $cg = floatval($cg_raw);
+                if ($cg > 0 && $cg <= 1) {
+                    $cg = $cg * 100;
+                }
+                echo number_format($cg, 2) . '%';
+                ?>
+            </td>
+        </tr>
     </table>
 </body>
 </html>
+

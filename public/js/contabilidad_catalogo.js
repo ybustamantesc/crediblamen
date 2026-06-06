@@ -166,6 +166,21 @@ document.addEventListener('DOMContentLoaded', function(){
             });
         }
 
+        function formatAccountType(type) {
+            if (!type) return '';
+            const value = type.toString().trim().toLowerCase();
+            const labels = {
+                activo: 'Activo',
+                pasivo: 'Pasivo',
+                patrimonio: 'Patrimonio',
+                ingreso: 'Ingreso',
+                gasto: 'Gasto',
+                contingente: 'Contingente',
+                orden: 'Orden'
+            };
+            return labels[value] || type.toString().trim();
+        }
+
         // render rows
         tbody.innerHTML = '';
         paginated.forEach(a=>{
@@ -174,11 +189,21 @@ document.addEventListener('DOMContentLoaded', function(){
             const indent = Math.max(0, a.depth) * 18;
             const codeTd = document.createElement('td'); codeTd.innerHTML = '<strong>'+ (a.code||'') +'</strong>';
             const nameTd = document.createElement('td'); nameTd.innerHTML = '<div style="padding-left:'+indent+'px">'+ (a.name||'') +'</div>';
-            const typeTd = document.createElement('td'); typeTd.textContent = a.type || '';
+            const typeTd = document.createElement('td'); typeTd.textContent = formatAccountType(a.type || '');
             typeTd.className = 'text-muted';
             
-            // Agrupación (report_bs) column
-            const groupTd = document.createElement('td'); groupTd.textContent = a.report_bs || '';
+            // Agrupación (report_bs/report_is) column
+            const groupTd = document.createElement('td');
+            const typeLower = (a.type || '').toString().toLowerCase();
+            let groupText = '';
+            if (a.agrupador_estado && a.agrupador_estado.toString().trim() !== '') {
+                groupText = a.agrupador_estado;
+            } else if (['activo','pasivo','patrimonio'].includes(typeLower)) {
+                groupText = a.report_bs || '';
+            } else {
+                groupText = a.report_is || '';
+            }
+            groupTd.textContent = groupText;
             groupTd.style.fontWeight = '600'; groupTd.style.color = '#2a5298';
 
             // Naturaleza column
@@ -393,12 +418,18 @@ document.addEventListener('DOMContentLoaded', function(){
         fetch(base_url+'contabilidad/accounts').then(r=>r.json()).then(json=>{
             const list = json.data || [];
             const sel = modal.querySelector('select[name="parent_id"]');
+            const selectedParentId = sel ? sel.dataset.selectedParentId || '' : '';
+            const currentAccountId = modal.querySelector('input[name="id"]').value;
             if (sel) {
                 sel.innerHTML = '<option value="">-- Ninguna --</option>';
                 list.forEach(a=>{
-                    const opt = document.createElement('option'); opt.value = a.id; opt.text = (a.code ? a.code + ' - ' : '') + a.name;
-                    // si editando, marcar seleccionado
-                    if (modal.querySelector('input[name="id"]').value == a.id) return; // no permitir seleccionar a si misma
+                    if (currentAccountId && String(currentAccountId) === String(a.id)) return; // no permitir seleccionar a si misma
+                    const opt = document.createElement('option');
+                    opt.value = a.id;
+                    opt.text = (a.code ? a.code + ' - ' : '') + a.name;
+                    if (selectedParentId && String(a.id) === String(selectedParentId)) {
+                        opt.selected = true;
+                    }
                     sel.appendChild(opt);
                 });
             }

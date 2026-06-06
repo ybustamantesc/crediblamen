@@ -299,8 +299,39 @@ class Tesoreria extends CI_Controller {
         // AJAX: Obtener movimientos filtrados
         public function get_movimientos_ajax() {
             $cuenta_id = $this->input->get('cuenta_id');
+            $desde = trim((string)$this->input->get('desde'));
+            $hasta = trim((string)$this->input->get('hasta'));
+            $tipo = trim((string)$this->input->get('tipo'));
+
             $this->db->from('teso_movimientos');
             if ($cuenta_id) $this->db->where('cuenta_id', $cuenta_id);
+
+            // Filtrar por tipo (opciones desde la UI)
+            if ($tipo !== '') {
+                $tipoLower = strtolower($tipo);
+                if ($tipoLower === 'cheque') {
+                    $this->db->where('UPPER(forma_pago) =', 'CHEQUE');
+                } elseif ($tipoLower === 'transferencia') {
+                    $this->db->where('UPPER(forma_pago) =', 'TRANSFERENCIA');
+                } elseif ($tipoLower === 'efectivo') {
+                    $this->db->where('UPPER(forma_pago) =', 'EFECTIVO');
+                } elseif ($tipoLower === 'traslado') {
+                    $this->db->where('LOWER(tipo_transferencia) =', 'traslado');
+                } elseif ($tipoLower === 'otros') {
+                    $this->db->where("UPPER(forma_pago) NOT IN ('CHEQUE','TRANSFERENCIA','EFECTIVO')");
+                }
+            }
+
+            // Filtrar por rango de fechas (fecha_registro)
+            if ($desde !== '' && $hasta !== '') {
+                $this->db->where('fecha_registro >=', $desde);
+                $this->db->where('fecha_registro <=', $hasta);
+            } elseif ($desde !== '' && $hasta === '') {
+                $this->db->where('fecha_registro >=', $desde);
+            } elseif ($desde === '' && $hasta !== '') {
+                $this->db->where('fecha_registro <=', $hasta);
+            }
+
             $this->db->order_by('fecha_registro', 'desc');
             $movs = $this->db->get()->result_array();
 
@@ -376,6 +407,15 @@ class Tesoreria extends CI_Controller {
                         }
                     }
                 }
+                // Formatear fechas para presentación (dd-mm-aaaa) sin modificar los valores originales
+                $formatDate = function($val){
+                    if ($val === null || $val === '') return '';
+                    $ts = strtotime($val);
+                    if ($ts === false) return $val;
+                    return date('d-m-Y', $ts);
+                };
+                $m['fecha_registro_display'] = $formatDate(isset($m['fecha_registro']) ? $m['fecha_registro'] : '');
+                $m['fecha_aplicacion_display'] = $formatDate(isset($m['fecha_aplicacion']) ? $m['fecha_aplicacion'] : '');
             }
             header('Content-Type: application/json');
             echo json_encode(['status'=>true, 'movimientos'=>$movs]);

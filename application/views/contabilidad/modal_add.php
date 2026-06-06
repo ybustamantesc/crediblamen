@@ -1,5 +1,5 @@
 <?php // modal_add.php - Enhanced modern modal ?>
-<div id="modalAddEntry" style="position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;overflow-y:auto;padding:20px;">
+<div id="modalAddEntry" style="position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.5);display:flex;align-items:center;justify-content:center;z-index:99999;overflow-y:visible;padding:20px;">
     <div style="width:98%;max-width:1600px;background:#fff;padding:0;border-radius:12px;box-shadow:0 8px 32px rgba(0,0,0,.3);max-height:90vh;display:flex;flex-direction:column;">
         <!-- Header -->
         <div style="background:#1e3c72;padding:24px 32px;border-radius:12px 12px 0 0;color:#fff;">
@@ -185,7 +185,7 @@
 }
 
 .entry-line {
-    overflow-x: auto;
+    overflow-x: visible;
 }
 
 .entry-line + .entry-line {
@@ -195,7 +195,7 @@
 }
 
 #linesWrapper {
-    overflow-x: auto;
+    overflow-x: visible;
 }
 
 

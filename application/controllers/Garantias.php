@@ -247,9 +247,27 @@ class Garantias extends CI_Controller {
             }
         }
 
+        $codigo_solicitud = '';
+        if (isset($sol->codigo) && trim((string)$sol->codigo) !== '') {
+            $codigo_solicitud = trim((string)$sol->codigo);
+        } else {
+            $codigo_solicitud = 'SOL-' . str_pad((int)$sol->idsolicitud, 4, '0', STR_PAD_LEFT);
+        }
+
+        $cliente_nombre = '';
+        if (isset($sol->cliente_nombre) && trim((string)$sol->cliente_nombre) !== '') {
+            $cliente_nombre = trim((string)$sol->cliente_nombre);
+        } elseif (isset($sol->nombre_completo) && trim((string)$sol->nombre_completo) !== '') {
+            $cliente_nombre = trim((string)$sol->nombre_completo);
+        } else {
+            $cliente_nombre = trim(((string)($sol->nombres ?? '')) . ' ' . ((string)($sol->apellidos ?? '')));
+        }
+
         $data = [
             'titulo' => 'Formato de Garantía',
             'solicitud_id' => $solicitud_id,
+            'cliente_nombre' => $cliente_nombre,
+            'codigo_solicitud' => $codigo_solicitud,
             'garantias' => $garantias,
             'photos_map' => $photos_map
         ];
@@ -1601,10 +1619,26 @@ class Garantias extends CI_Controller {
         $verificaciones = array();
         if (! empty($v->solicitud_id)) {
             $solicitud = $this->core_model->get_by_id('tb_solicitudes', array('idsolicitud' => $v->solicitud_id));
+
+            // Only include verification rows whose garantia_id belongs to this solicitud
+            $validGarantias = array();
+            $garantias = $this->Garantia_model->get_all_by_solicitud($v->solicitud_id);
+            foreach ($garantias as $garantia) {
+                if (! empty($garantia->id)) {
+                    $validGarantias[intval($garantia->id)] = isset($garantia->nombre) ? trim((string)$garantia->nombre) : '';
+                }
+            }
+
             $all_verificaciones = $this->Garantia_verificacion_model->get_by_solicitud($v->solicitud_id);
             foreach ($all_verificaciones as $record) {
                 if (! empty($record->garantia_id)) {
-                    $verificaciones[] = $record;
+                    $garantiaId = intval($record->garantia_id);
+                    if (isset($validGarantias[$garantiaId])) {
+                        if (empty($record->nombre_garantia) && isset($validGarantias[$garantiaId])) {
+                            $record->nombre_garantia = $validGarantias[$garantiaId];
+                        }
+                        $verificaciones[] = $record;
+                    }
                 }
             }
         }

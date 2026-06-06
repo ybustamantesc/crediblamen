@@ -40,6 +40,20 @@
 
     /* small adjustments for dompdf compatibility */
     img.logo-img { max-height:60px; }
+     /* Page-break helpers for dompdf */
+    .pdf-section { display:block; }
+    .whole-section { page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; }
+    .keep-with-next { page-break-after: avoid; break-after: avoid; }
+    .start-on-new-page { page-break-before: always; break-before: always; }
+    .section-heading { background:#0b3d91;color:#fff;padding:8px 10px;font-weight:700;font-size:13px; display:block; }
+    /* Keep header and following content together */
+    .section-heading { page-break-after: avoid; break-after: avoid; page-break-inside: avoid; break-inside: avoid; display:block; }
+    .section-heading + div { page-break-before: avoid; break-before: avoid; page-break-inside: avoid; break-inside: avoid; display:block; }
+    .section-block { display: table; width:100%; page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; page-break-before: avoid; break-before: avoid; }
+    .section-content { page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; page-break-before: avoid; break-before: avoid; display: table-row-group; orphans: 2; widows: 2; }
+    .section-intro { page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; page-break-after: avoid; break-after: avoid; page-break-before: avoid; break-before: avoid; display:block; orphans: 2; widows: 2; }
+    .section-head-block { page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; page-break-before: avoid; break-before: avoid; display:block; orphans: 2; widows: 2; }
+    .no-break { page-break-inside: avoid; break-inside: avoid; -webkit-column-break-inside: avoid; display:block; }
   </style>
   <?php
     // prepare logo data URI for more reliable embedding in dompdf
@@ -219,17 +233,20 @@
 
         <?php if (!$is_asalariado_conami): ?>
         <!-- INFORMACIÓN DEL NEGOCIO (CLIENTE COMERCIANTE O EMPRESARIO) -->
-        <div style="margin:14px 6px 6px 6px;">
-          <div style="background:#0b3d91;color:#fff;padding:8px 10px;font-weight:700;font-size:13px;">INFORMACIÓN DEL NEGOCIO (CLIENTE COMERCIANTE O EMPRESARIO)</div>
-          <div style="border:1px solid #e6e6e6;padding:10px;font-size:11px;margin-top:6px;">
-            <div style="margin-bottom:6px;"><strong>Nombre del negocio:</strong> <?php echo htmlspecialchars($solicitud->nombre_negocio ?? ''); ?></div>
-            <div style="margin-bottom:6px;"><strong>Actividad económica principal:</strong> <?php echo htmlspecialchars($solicitud->actividad_economica ?? ''); ?></div>
-            <div style="margin-bottom:6px;"><strong>Ubicación del negocio:</strong> <?php echo nl2br(htmlspecialchars($solicitud->ubicacion_negocio ?? '')); ?></div>
-            <div style="margin-bottom:6px;"><strong>Teléfono del negocio:</strong> <?php echo htmlspecialchars($solicitud->telefono_negocio ?? ''); ?></div>
-            <div style="margin-bottom:6px;"><strong>Tiempo de operación:</strong> <?php echo htmlspecialchars($solicitud->tiempo_operacion_anios ?? ''); ?> años / <?php echo htmlspecialchars($solicitud->tiempo_operacion_meses ?? ''); ?> meses &nbsp; 
-            </div>
+        <div class="pdf-section no-break" style="margin:14px 6px 6px 6px; page-break-before: always; break-before: page;">
+          <div class="section-block whole-section no-break" style="page-break-inside:avoid; break-inside:avoid; -webkit-column-break-inside:avoid; display:block;">
+            <div class="section-heading">INFORMACIÓN DEL NEGOCIO (CLIENTE COMERCIANTE O EMPRESARIO)</div>
+            <div class="section-content no-break" style="border:1px solid #e6e6e6;padding:10px;font-size:11px;margin-top:6px; page-break-inside:avoid; break-inside:avoid; -webkit-column-break-inside:avoid; display:block;">
+              <div class="section-intro no-break">
+                <div style="margin-bottom:6px;"><strong>Nombre del negocio:</strong> <?php echo htmlspecialchars($solicitud->nombre_negocio ?? ''); ?></div>
+                <div style="margin-bottom:6px;"><strong>Actividad económica principal:</strong> <?php echo htmlspecialchars($solicitud->actividad_economica ?? ''); ?></div>
+                <div style="margin-bottom:6px;"><strong>Ubicación del negocio:</strong> <?php echo nl2br(htmlspecialchars($solicitud->ubicacion_negocio ?? '')); ?></div>
+                <div style="margin-bottom:6px;"><strong>Teléfono del negocio:</strong> <?php echo htmlspecialchars($solicitud->telefono_negocio ?? ''); ?></div>
+                <div style="margin-bottom:6px;"><strong>Tiempo de operación:</strong> <?php echo htmlspecialchars($solicitud->tiempo_operacion_anios ?? ''); ?> años / <?php echo htmlspecialchars($solicitud->tiempo_operacion_meses ?? ''); ?> meses &nbsp; 
+                </div>
+              </div>
 
-            <div style="margin-top:8px; font-weight:600;">Ingresos y Ventas</div>
+              <div style="margin-top:8px; font-weight:600;">Ingresos y Ventas</div>
             <?php
               $bmask = intval($solicitud->ventas_dias_buenos_mask ?? 0);
               $mmask = intval($solicitud->ventas_dias_malos_mask ?? 0);
@@ -290,6 +307,7 @@
               </div>
             </div>
 
+            </div>
           </div>
         </div>
 
@@ -311,21 +329,21 @@
           <div style="margin-bottom:6px; font-weight:600;">Gastos Transporte: C$ <?php echo htmlspecialchars(number_format((float)($solicitud->gastos_transporte ?? 0),2,'.',',')); ?></div>
           <div style="border-bottom:1px solid #ddd; height:12px; margin:6px 0;"></div>
               <?php if (!empty($propuestas) && is_array($propuestas)): ?>
-                <?php foreach ($propuestas as $p): ?>
+                <!-- <?php foreach ($propuestas as $p): ?>
                   <div style="margin-bottom:6px;">
                     <?php
-                      $parts = array();
-                      if (isset($p->nombre)) $parts[] = $p->nombre;
-                      if (isset($p->clasificacion)) $parts[] = '(' . $p->clasificacion . ')';
-                      $meta = array();
-                      if (isset($p->tasa_mensual)) $meta[] = 'Tasa: ' . rtrim(rtrim(number_format((float)$p->tasa_mensual * ( ($p->tasa_mensual>1)?1:100), 2, '.', ''), '0'), '.');
-                      if (isset($p->comision_desembolso)) $meta[] = 'Comisión: ' . rtrim(rtrim(number_format((float)$p->comision_desembolso * ( ($p->comision_desembolso>1)?1:100), 2, '.', ''), '0'), '.');
-                      if (isset($p->plazo_max)) $meta[] = 'Plazo: ' . $p->plazo_max;
-                      if (!empty($meta)) $parts[] = '[' . implode(' | ', $meta) . ']';
-                      echo htmlspecialchars(implode(' ', $parts));
+                      // $parts = array();
+                      // if (isset($p->nombre)) $parts[] = $p->nombre;
+                      // if (isset($p->clasificacion)) $parts[] = '(' . $p->clasificacion . ')';
+                      // $meta = array();
+                      // if (isset($p->tasa_mensual)) $meta[] = 'Tasa: ' . rtrim(rtrim(number_format((float)$p->tasa_mensual * ( ($p->tasa_mensual>1)?1:100), 2, '.', ''), '0'), '.');
+                      // if (isset($p->comision_desembolso)) $meta[] = 'Comisión: ' . rtrim(rtrim(number_format((float)$p->comision_desembolso * ( ($p->comision_desembolso>1)?1:100), 2, '.', ''), '0'), '.');
+                      // if (isset($p->plazo_max)) $meta[] = 'Plazo: ' . $p->plazo_max;
+                      // if (!empty($meta)) $parts[] = '[' . implode(' | ', $meta) . ']';
+                      // echo htmlspecialchars(implode(' ', $parts));
                     ?>
                   </div>
-                <?php endforeach; ?>
+                <?php endforeach; ?> -->
               <?php else: ?>
                 <?php if (!empty($solicitud->producto_lines) && is_array($solicitud->producto_lines)): ?>
                   <?php foreach ($solicitud->producto_lines as $pl): ?>
@@ -350,15 +368,15 @@
       </div>
 
       <!-- 4. DECLARACIÓN DEL CLIENTE -->
-      <div style="margin:14px 6px 6px 6px;">
-          <div style="background:#0b3d91;color:#fff;padding:8px 10px;font-weight:700;font-size:13px;">DECLARACIÓN DEL CLIENTE</div>
+      <div class="pdf-section start-on-new-page whole-section" style="margin:14px 6px 6px 6px;">
+          <div class="section-heading">DECLARACIÓN DEL CLIENTE</div>
         <div style="border:1px solid #e6e6e6;padding:10px;font-size:11px;margin-top:6px;">
           <div style="margin-bottom:8px; text-align:justify;">
             Declaro que la información proporcionada es verídica y autorizo a Crediblame S.A. a verificar mis datos en las fuentes necesarias para fines de análisis crediticio y cumplimiento regulatorio, así mismo acepto y autorizo el cobro por cargo de comisión por desembolso del <strong><?php echo htmlspecialchars((float)($solicitud->comision_desembolso ?? '')); ?>%</strong>.
           </div>
           <div style="margin-top:6px;">
             <div style="display:inline-block; width:48%; vertical-align:top;"><strong>Firma del solicitante:</strong>
-            <?php echo htmlspecialchars(trim((isset($solicitud->nombre_completo) && $solicitud->nombre_completo!='') ? $solicitud->nombre_completo : trim((($solicitud->nombres ?? '') . ' ' . ($solicitud->apellidos ?? ''))))); 
+            <?php echo '_____________________'; 
             ?></div>
             <div style="display:inline-block; width:24%; vertical-align:top;"><strong>Fecha:</strong>
             <?php

@@ -37,6 +37,10 @@
                                     </select>
                                 </div>
                             </div>
+                            <div style="display:flex;gap:12px;align-items:center;margin-bottom:18px;flex-wrap:wrap;">
+                                <span style="color:#444;font-size:13px;">Tasa de cambio actual: <strong><?php echo isset($current_exchange_rate) ? number_format($current_exchange_rate, 2, '.', ',') : 'N/A'; ?></strong></span>
+                                <a href="<?php echo base_url('tasacambio'); ?>" class="btn btn-sm btn-outline-info">Ir a Tasa de Cambio</a>
+                            </div>
 
                             <div id="auxSelected" style="margin-bottom:10px;color:#444;font-size:13px;">Cuentas seleccionadas: <span id="auxCount">0</span></div>
 

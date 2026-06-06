@@ -10,6 +10,7 @@
         // new: single month selector (YYYY-MM) -> compute start/end
         var m = document.getElementById('resMonth').value;
         var ac = document.getElementById('resAcumulado') ? document.getElementById('resAcumulado').checked : false;
+        var currency = document.getElementById('resCurrency') ? document.getElementById('resCurrency').value : 'local';
         if(!m) return null;
         var parts = m.split('-');
         if(parts.length !== 2) return null;
@@ -18,7 +19,7 @@
         // compute last day of month
         var last = new Date(y, parseInt(mm), 0).getDate();
         var end = y + '-' + mm + '-' + (last < 10 ? '0' + last : last);
-        return {start: start, end: end, acumulado: ac, year: y, month: mm};
+        return {start: start, end: end, acumulado: ac, year: y, month: mm, currency: currency};
     }
 
     function load(){
@@ -27,12 +28,12 @@
         if (typeof base_url === 'undefined') {
             window.base_url = window.location.origin + '/servicredit/';
         }
-        var urlMonth = base_url + 'contabilidad/resultados_data?start_date='+encodeURIComponent(params.start)+'&end_date='+encodeURIComponent(params.end);
+        var urlMonth = base_url + 'contabilidad/resultados_data?start_date='+encodeURIComponent(params.start)+'&end_date='+encodeURIComponent(params.end)+'&currency='+encodeURIComponent(params.currency);
 
         if (params.acumulado) {
             // fetch both month and acumulado (year start -> month end) in parallel
             var startAc = params.year + '-01-01';
-            var urlAcum = base_url + 'contabilidad/resultados_data?start_date='+encodeURIComponent(startAc)+'&end_date='+encodeURIComponent(params.end);
+            var urlAcum = base_url + 'contabilidad/resultados_data?start_date='+encodeURIComponent(startAc)+'&end_date='+encodeURIComponent(params.end)+'&currency='+encodeURIComponent(params.currency);
             Promise.all([fetch(urlMonth).then(function(r){return r.json();}), fetch(urlAcum).then(function(r){return r.json();})])
             .then(function(results){
                 var m = results[0], a = results[1];
@@ -60,9 +61,11 @@
         // set year from month selector and show if acumulado
         var mval = document.getElementById('resMonth') ? document.getElementById('resMonth').value : '';
         var acChecked = document.getElementById('resAcumulado') ? document.getElementById('resAcumulado').checked : false;
+        var currency = document.getElementById('resCurrency') ? document.getElementById('resCurrency').value : 'local';
+        var currencyLabel = (currency === 'usd') ? 'Dólares' : 'Córdobas';
         var year = '';
         if (mval) { var p = mval.split('-'); if(p.length===2) year = p[0]; }
-        var ry = document.getElementById('reportYear'); if(ry) ry.textContent = (acChecked && year ? ('Acumulado ' + year) : year);
+        var ry = document.getElementById('reportYear'); if(ry) ry.textContent = (acChecked && year ? ('Acumulado ' + year + ' - ' + currencyLabel) : (year ? (year + ' - ' + currencyLabel) : currencyLabel));
 
         // If server returned the structured estado de resultados, render by grupos
         // Support combined rendering when `data` contains `{ current:..., acumulado:... }`
@@ -175,7 +178,7 @@
             body.appendChild(prov);
 
             // Margen financiero neto
-            var mfn = document.createElement('div'); mfn.className = 'r-row r-total'; mfn.innerHTML = '<div class="desc">Margen Financiero Bruto</div><div class="amt">' + fmt(data.margen_financiero_neto || 0) + '</div>';
+            var mfn = document.createElement('div'); mfn.className = 'r-row r-total'; mfn.innerHTML = '<div class="desc">Margen Financiero Neto</div><div class="amt">' + fmt(data.margen_financiero_neto || 0) + '</div>';
             body.appendChild(mfn);
 
             // Operativos
@@ -256,6 +259,7 @@
         if (typeof base_url === 'undefined') { window.base_url = window.location.origin + '/servicredit/'; }
         var q = '?start_date='+encodeURIComponent(params.start)+'&end_date='+encodeURIComponent(params.end);
         if (params.acumulado) q += '&acumulado=1';
+        q += '&currency='+encodeURIComponent(params.currency);
         window.location = base_url + 'contabilidad/resultados_export' + q;
     }
 
@@ -264,6 +268,7 @@
         if (typeof base_url === 'undefined') { window.base_url = window.location.origin + '/servicredit/'; }
         var q = '?start_date='+encodeURIComponent(params.start)+'&end_date='+encodeURIComponent(params.end);
         if (params.acumulado) q += '&acumulado=1';
+        q += '&currency='+encodeURIComponent(params.currency);
         // Use location to trigger download of generated XLSX
         window.location = base_url + 'contabilidad/resultados_pdf' + q;
     }
@@ -273,6 +278,7 @@
         if (typeof base_url === 'undefined') { window.base_url = window.location.origin + '/servicredit/'; }
         var q = '?start_date='+encodeURIComponent(params.start)+'&end_date='+encodeURIComponent(params.end);
         if (params.acumulado) q += '&acumulado=1';
+        q += '&currency='+encodeURIComponent(params.currency);
         window.open(base_url + 'contabilidad/resultados_pdf_real' + q, '_blank');
     }
 

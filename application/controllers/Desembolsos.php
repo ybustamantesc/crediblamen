@@ -8,7 +8,8 @@ class Desembolsos extends CI_Controller {
         // Obtener todas las cuentas activas (igual que en movimientos)
         $cuentas = $this->db->order_by('name','asc')->get_where('teso_accounts', "estado = 1")->result();
         $data = [
-            'cuentas' => $cuentas
+            'cuentas' => $cuentas,
+            'titulo' => 'Desembolsos Programados'
         ];
         $this->load->view('desembolsos/index', $data);
     }
@@ -221,10 +222,9 @@ class Desembolsos extends CI_Controller {
                 . ' | Comisión: ' . number_format($comision_pct, 2, '.', '') . '%'
                 . ' | Plazo: ' . $plazo;
 
-            $descripcion = 'Inicio crédito: ' . $fecha_desembolso
-                . ' | Monto de cuota: ' . number_format($monto_cuota, 2, '.', '');
-            if ($total_renovacion > 0) {
-                $descripcion .= ' | Renovación: ' . number_format($total_renovacion, 2, '.', '');
+            $descripcion = 'Solicitud de desembolso';
+            if (!empty($referencia1)) {
+                $descripcion .= ' (' . $referencia1 . ')';
             }
 
             $costos_aplicados = [];

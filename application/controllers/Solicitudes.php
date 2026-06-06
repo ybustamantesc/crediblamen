@@ -277,7 +277,7 @@ class Solicitudes extends CI_Controller
             // note: product helper fields are written into existing fields (eg. propuesta_tipos)
             // do NOT attempt to persist product_* columns unless DB has them
             'ventas_promedio_diarios','ventas_promedio_mensual','ventas_dias_buenos','ventas_dias_malos','ventas_dias_buenos_mask','ventas_dias_malos_mask','ventas_al_credito','margen_comercial',
-            'detalle_inventario','nombre_negocio','actividad_economica','ubicacion_negocio','numero_empleados','cuentas_por_cobrar_amount','cuentas_por_cobrar_evidencia','caja_amount','banco_amount',
+            'detalle_inventario','nombre_negocio','actividad_economica','ubicacion_negocio','numero_empleados','cuentas_por_cobrar_amount','cuentas_por_cobrar_evidencia','caja_amount','banco_amount','monto_total_inventario',
             'pago_alquiler','pago_trabajadores','energia','agua','internet','gastos_fijos','gastos_operativos','otros_gastos','gastos_personales','gastos_transporte','otros_ingresos_detalle',
             // fields matching view names (ensure posted keys pass whitelist)
             'energia_electrica','agua_potable','internet_telefonia','declaro_verificacion','firma_solicitante','fecha_firma','ddc_investigacion_campo','nombre_promotor','fecha_recepcion_solicitud',
@@ -492,7 +492,7 @@ class Solicitudes extends CI_Controller
                     'ventas_promedio_diarios', 'ventas_promedio_mensual', 'ventas_dias_buenos', 'ventas_dias_malos', 'ventas_buenos_amount', 'ventas_malos_amount', 'ventas_promedio_mensual', 'ventas_al_credito', 'margen_comercial',
                     'ventas_dias_buenos_mask', 'ventas_dias_malos_mask', 'margen_comercial', 'numero_empleados', 'numero_dependientes', 'edad',
                     'tiempo_residir_anios','tiempo_residir_meses', 'tiempo_empleo_anios','tiempo_empleo_meses','ingreso_mensual_neto','ingresos_conyuge', 'tiempo_operacion_anios','tiempo_operacion_meses',
-                    'cuentas_por_cobrar_amount', 'caja_amount', 'banco_amount', 'pago_alquiler', 'pago_trabajadores',
+                    'cuentas_por_cobrar_amount', 'caja_amount', 'banco_amount', 'monto_total_inventario', 'pago_alquiler', 'pago_trabajadores',
                         'energia', 'agua', 'internet', 'gastos_fijos', 'gastos_operativos', 'gastos_personales', 'gastos_transporte',
                         // accept numeric inputs coming from the view names as well
                         'energia_electrica','agua_potable','internet_telefonia'
@@ -1245,7 +1245,7 @@ class Solicitudes extends CI_Controller
             $normalize_numeric($data, array(
                 'monto_solicitado', 'plazo_meses', 'comision_desembolso', 'ventas_dias_buenos', 'ventas_dias_malos', 'ventas_al_credito',
                 'ventas_dias_buenos_mask', 'ventas_dias_malos_mask', 'numero_empleados', 'numero_dependientes', 'edad', 'tiempo_residir_anios','tiempo_residir_meses', 'tiempo_empleo_anios','tiempo_empleo_meses','ingreso_mensual_neto', 'tiempo_operacion_anios','tiempo_operacion_meses','ventas_buenos_amount','ventas_malos_amount','ventas_promedio_mensual','margen_comercial','otros_ingresos_1_amount','otros_ingresos_1_margin','otros_ingresos_2_amount','otros_ingresos_2_margin','otros_ingresos_3_amount','otros_ingresos_3_margin', 'cuentas_por_cobrar_amount', 'caja_amount',
-                'banco_amount', 'pago_alquiler', 'pago_trabajadores', 'energia', 'agua', 'internet', 'gastos_fijos', 'gastos_operativos'
+                'banco_amount', 'monto_total_inventario', 'pago_alquiler', 'pago_trabajadores', 'energia', 'agua', 'internet', 'gastos_fijos', 'gastos_operativos'
             ));
             $normalize_dates($data, array('fecha_nacimiento', 'fecha_recepcion', 'fecha_firma', 'fecha_recepcion_solicitud', 'fecha_solicitud'));
 

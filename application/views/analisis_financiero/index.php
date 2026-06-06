@@ -17,28 +17,30 @@
                     </div>
                 </div>
             </div>
-            <div class="row mb-3">
-                <div class="col-md-3">
-                    <label>Estado</label>
-                    <select id="filtro_estado" class="form-control">
-                        <option value="all" <?php if($filtro_estado=='all') echo 'selected'; ?>>Todos</option>
-                        <option value="pending" <?php if($filtro_estado=='pending') echo 'selected'; ?>>Pendiente</option>
-                        <option value="completed" <?php if($filtro_estado=='completed') echo 'selected'; ?>>Completado</option>
-                        <option value="annulled" <?php if($filtro_estado=='annulled') echo 'selected'; ?>>Anulado</option>
-                    </select>
+            <form id="formFiltros" method="GET" action="<?php echo base_url('analisis_financiero'); ?>">
+                <div class="row mb-3">
+                    <div class="col-md-3">
+                        <label>Estado</label>
+                        <select id="filtro_estado" name="estado" class="form-control">
+                            <option value="all" <?php if($filtro_estado=='all') echo 'selected'; ?>>Todos</option>
+                            <option value="pending" <?php if($filtro_estado=='pending') echo 'selected'; ?>>Pendiente</option>
+                            <option value="completed" <?php if($filtro_estado=='completed') echo 'selected'; ?>>Completado</option>
+                            <option value="annulled" <?php if($filtro_estado=='annulled') echo 'selected'; ?>>Anulado</option>
+                        </select>
+                    </div>
+                    <div class="col-md-3">
+                        <label>Desde</label>
+                        <input type="date" id="filtro_start_date" name="start_date" class="form-control" value="<?php echo $filtro_start_date; ?>">
+                    </div>
+                    <div class="col-md-3">
+                        <label>Hasta</label>
+                        <input type="date" id="filtro_end_date" name="end_date" class="form-control" value="<?php echo $filtro_end_date; ?>">
+                    </div>
+                    <div class="col-md-3 d-flex align-items-end">
+                        <button type="submit" class="btn btn-primary w-100" id="btnFiltrar">Filtrar</button>
+                    </div>
                 </div>
-                <div class="col-md-3">
-                    <label>Desde</label>
-                    <input type="date" id="filtro_start_date" class="form-control" value="<?php echo $filtro_start_date; ?>">
-                </div>
-                <div class="col-md-3">
-                    <label>Hasta</label>
-                    <input type="date" id="filtro_end_date" class="form-control" value="<?php echo $filtro_end_date; ?>">
-                </div>
-                <div class="col-md-3 d-flex align-items-end">
-                    <button class="btn btn-primary w-100" id="btnFiltrar">Filtrar</button>
-                </div>
-            </div>
+            </form>
             <div class="row">
                 <div class="col-md-12">
                     <div class="card">
@@ -79,8 +81,8 @@
                                                     <?php if($s->aprob_status=='annulled'): ?>
                                                         <span class="text-muted">Crédito anulado</span>
                                                     <?php else: ?>
-                                                        <button class="btn btn-sm btn-info btn-asalariado" data-id="<?php echo $s->idsolicitud; ?>"><i class="fa fa-user-tie"></i> Comerciante</button>
-                                                        <button class="btn btn-sm btn-warning btn-comerciante" data-id="<?php echo $s->idsolicitud; ?>"><i class="fa fa-store"></i> Asalariado</button>
+                                                        <button class="btn btn-sm btn-info btn-comerciante" data-id="<?php echo $s->idsolicitud; ?>" data-tipo="comerciante"><i class="fa fa-user-tie"></i> Comerciante</button>
+                                                        <button class="btn btn-sm btn-warning btn-asalariado" data-id="<?php echo $s->idsolicitud; ?>" data-tipo="asalariado"><i class="fa fa-store"></i> Asalariado</button>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
@@ -97,7 +99,7 @@
 </div>
 <!-- Modal para definir análisis financiero (campos dinámicos después) -->
 <div class="modal fade" id="modalAnalisisFinanciero" tabindex="-1" role="dialog" aria-labelledby="modalAnalisisLabel" aria-hidden="true">
-    <div class="modal-dialog modal-xl" role="document">
+    <div class="modal-dialog modal-lg" role="document">
         <div class="modal-content">
             <div class="modal-header">
                 <h5 class="modal-title" id="modalAnalisisLabel">Definir Análisis Financiero</h5>
@@ -116,31 +118,67 @@
             <div class="modal-footer">
                 <button type="button" class="btn btn-secondary" data-dismiss="modal">Cancelar</button>
                 <button type="button" class="btn btn-primary" id="btnGuardarAnalisis">Guardar</button>
-                <button type="button" class="btn btn-success d-none" id="btnDescargarPDFAsalariado">Descargar PDF Asalariado</button>
-                <button type="button" class="btn btn-success d-none" id="btnDescargarPDFComerciante">Descargar PDF Comerciante</button>
+                <button type="button" class="btn btn-success d-none" id="btnDescargarPDFAsalariado" data-pdf-url="">Descargar PDF Asalariado</button>
+                <button type="button" class="btn btn-success d-none" id="btnDescargarPDFComerciante" data-pdf-url="">Descargar PDF Comerciante</button>
             </div>
         </div>
     </div>
 </div>
+<style>
+    #modalAnalisisFinanciero .modal-dialog {
+        max-width: 860px;
+        width: 100%;
+        margin: 1.75rem auto;
+    }
+    #modalAnalisisFinanciero .modal-content {
+        border-radius: 0.65rem;
+    }
+    #modalAnalisisFinanciero .modal-header,
+    #modalAnalisisFinanciero .modal-footer {
+        padding: 1rem 1.5rem;
+    }
+    #modalAnalisisFinanciero .modal-body {
+        padding: 1.5rem;
+        max-height: calc(100vh - 180px);
+        overflow-y: auto;
+    }
+    #modalAnalisisFinanciero .modal-body .row > [class*="col-"] {
+        min-width: 0;
+    }
+</style>
 <?php $this->load->view('layout/footer'); ?>
 <script>
 // Mostrar botón de descarga PDF según tipo
 function mostrarBotonDescargaPDF(tipo, idsolicitud) {
+    var pdfAsalariadoUrl = base_url + 'analisis_financiero/descargar_pdf_asalariado/' + idsolicitud;
+    var pdfComercianteUrl = base_url + 'analisis_financiero/descargar_pdf_comerciante/' + idsolicitud;
+
     if (tipo === 'asalariado') {
-        $('#btnDescargarPDFAsalariado').removeClass('d-none').off('click').on('click', function() {
-            window.open(base_url + 'analisis_financiero/descargar_pdf_asalariado/' + idsolicitud, '_blank');
-        });
-        $('#btnDescargarPDFComerciante').addClass('d-none');
+        $('#btnDescargarPDFAsalariado')
+            .data('pdf-url', pdfAsalariadoUrl)
+            .removeClass('d-none');
+        $('#btnDescargarPDFComerciante')
+            .data('pdf-url', '')
+            .addClass('d-none');
     } else if (tipo === 'comerciante') {
-        $('#btnDescargarPDFComerciante').removeClass('d-none').off('click').on('click', function() {
-            window.open(base_url + 'analisis_financiero/descargar_pdf_comerciante/' + idsolicitud, '_blank');
-        });
-        $('#btnDescargarPDFAsalariado').addClass('d-none');
+        $('#btnDescargarPDFComerciante')
+            .data('pdf-url', pdfComercianteUrl)
+            .removeClass('d-none');
+        $('#btnDescargarPDFAsalariado')
+            .data('pdf-url', '')
+            .addClass('d-none');
     } else {
-        $('#btnDescargarPDFAsalariado').addClass('d-none');
-        $('#btnDescargarPDFComerciante').addClass('d-none');
+        $('#btnDescargarPDFAsalariado').data('pdf-url', '').addClass('d-none');
+        $('#btnDescargarPDFComerciante').data('pdf-url', '').addClass('d-none');
     }
 }
+
+$(document).on('click', '#btnDescargarPDFAsalariado, #btnDescargarPDFComerciante', function() {
+    var url = $(this).data('pdf-url');
+    if (url) {
+        window.open(url, '_blank');
+    }
+});
 
 // Calcular Total Gastos Fijos Mensuales automáticamente
 function calcularTotalGastosFijos() {
@@ -152,6 +190,8 @@ function calcularTotalGastosFijos() {
 }
 // Vincular el cálculo a los eventos de input
 $(document).on('input', '.suma-gastos-fijos', calcularTotalGastosFijos);
+// Sincronizar COSTOS DE OPERACIÓN cuando cambian GASTOS FIJOS
+$(document).on('input', '#gasto_salario_ayudante, #gasto_transporte', calcularSumas);
 // Calcular al cargar por si hay valores precargados
 $(document).ready(function() {
     calcularTotalGastosFijos();
@@ -160,11 +200,12 @@ $(document).ready(function() {
 // Abrir modal y setear tipo según botón
 $(document).on('click', '.btn-asalariado, .btn-comerciante', function() {
     var id = $(this).data('id');
-    var tipo = $(this).hasClass('btn-asalariado') ? 'asalariado' : 'comerciante';
+    var tipo = $(this).data('tipo') || ($(this).hasClass('btn-asalariado') ? 'asalariado' : 'comerciante');
     $('#idsolicitud_modal').val(id);
     $('#tipo_analisis').val(tipo);
     if (tipo === 'asalariado') {
         renderCamposAsalariado();
+        $('#modalAnalisisLabel').text('Análisis Financiero Asalariado');
         // Cargar datos guardados si existen
         $.ajax({
             url: base_url + 'analisis_financiero/get_asalariado/' + id,
@@ -202,10 +243,24 @@ $(document).on('click', '.btn-asalariado, .btn-comerciante', function() {
                             var $el = $('[name="'+k+'"]');
                             if ($el.length) {
                                 // Si es indicador, formatear como porcentaje
-                                if (k === 'indicador_endeudamiento' || k === 'cobertura_deuda' || k === 'porcentaje_margen' || k === 'porcentaje_deuda_total') {
+                                if (k === 'indicador_endeudamiento' || k === 'porcentaje_margen' || k === 'porcentaje_deuda_total') {
                                     var val = parseFloat(resp.data[k]);
                                     if (!isNaN(val)) {
                                         $el.val((val * 100).toFixed(1) + ' %');
+                                    } else {
+                                        $el.val('0.0 %');
+                                    }
+                                } else if (k === 'cobertura_deuda') {
+                                    var val = resp.data[k];
+                                    if (typeof val === 'string') {
+                                        val = val.replace('%', '').replace(',', '.').trim();
+                                    }
+                                    val = parseFloat(val);
+                                    if (!isNaN(val)) {
+                                        if (val > 0 && val <= 1) {
+                                            val = val * 100;
+                                        }
+                                        $el.val(val.toFixed(1) + ' %');
                                     } else {
                                         $el.val('0.0 %');
                                     }
@@ -223,22 +278,50 @@ $(document).on('click', '.btn-asalariado, .btn-comerciante', function() {
                             }
                         }
                     }
+                    calcularTotalTransporte();
+                    calcularTotalGastosVivienda();
+                    calcularCoberturaDeuda();
                 }
             }
         });
-        $('#modalAnalisisLabel').text('Definir Análisis Financiero');
     } else {
         renderCamposComerciante();
-        $('#modalAnalisisLabel').text('Analisis Financiero Asalariado');
-        // Cargar datos guardados/sugeridos de comerciante
+        $('#modalAnalisisLabel').text('Análisis Financiero Comerciante');
+        // Cargar datos guardados si existen
         $.ajax({
             url: base_url + 'analisis_financiero/get_comerciante/' + id,
             method: 'GET',
             dataType: 'json',
             success: function(resp) {
                 if (resp && resp.status && resp.data) {
+                    // Reusar helper para campos que vienen como arrays (olp_*, ocp_*, etc.)
+                    function setArrayField(fieldName, rawValue) {
+                        var arr = rawValue;
+                        if (typeof rawValue === 'string') {
+                            try {
+                                arr = JSON.parse(rawValue);
+                            } catch (e) {
+                                arr = [rawValue];
+                            }
+                        }
+                        if (!Array.isArray(arr)) {
+                            arr = [arr];
+                        }
+                        var $arrEls = $('[name="' + fieldName + '[]"]');
+                        if ($arrEls.length) {
+                            $arrEls.each(function(idx) {
+                                $(this).val((arr[idx] !== undefined && arr[idx] !== null) ? arr[idx] : '');
+                            });
+                            return true;
+                        }
+                        return false;
+                    }
+
                     for (var k in resp.data) {
                         if (resp.data.hasOwnProperty(k)) {
+                            if (setArrayField(k, resp.data[k])) {
+                                continue;
+                            }
                             var $el = $('[name="'+k+'"]');
                             if ($el.length) {
                                 // Si es cobertura de garantía, formatear con %
@@ -262,8 +345,6 @@ $(document).on('click', '.btn-asalariado, .btn-comerciante', function() {
                             }
                         }
                     }
-                    // Recalcular totales automáticos luego de cargar datos
-                    $('.suma-ingresos, .suma-gastos-familiares, .suma-otras-obligaciones, .canasta-campo, #personas_dependientes, .transporte-campo').trigger('input');
                     calcularSumas();
                 }
             }
@@ -284,7 +365,7 @@ $('#btnGuardarAnalisis').on('click', function() {
         return isNaN(n) ? 0 : n;
     };
     // Limpiar campos de porcentaje antes de serializar
-    ['indicador_endeudamiento','porcentaje_margen','porcentaje_deuda_total'].forEach(function(campo) {
+    ['indicador_endeudamiento','porcentaje_margen','porcentaje_deuda_total','cobertura_garantia'].forEach(function(campo) {
         var $el = $('[name="'+campo+'"]');
         if ($el.length) {
             var val = $el.val();
@@ -292,7 +373,11 @@ $('#btnGuardarAnalisis').on('click', function() {
                 val = val.replace('%','').replace(',','.').replace(/\s/g,'');
                 var num = parseFloat(val);
                 if (!isNaN(num)) {
-                    $el.val((num/100).toFixed(6));
+                    if (campo === 'indicador_endeudamiento' || campo === 'porcentaje_margen' || campo === 'porcentaje_deuda_total') {
+                        $el.val((num/100).toFixed(6));
+                    } else {
+                        $el.val(num.toFixed(6));
+                    }
                 } else {
                     $el.val('0');
                 }
@@ -311,6 +396,8 @@ $('#btnGuardarAnalisis').on('click', function() {
     // Convertir a decimal (ej: 12.5% -> 0.125)
     coberturaNum = coberturaNum / 100;
     $('[name="cobertura_deuda"]').val(coberturaNum.toFixed(6));
+    // Asegurar que COSTOS DE OPERACIÓN estén sincronizados antes de guardar
+    calcularSumas();
     var datos = form.serialize();
     var url = '';
     if (tipo === 'comerciante') {
@@ -368,7 +455,7 @@ $('#btnGuardarAnalisis').on('click', function() {
     });
 });
 
-function renderCamposComerciante() {
+function renderCamposAsalariado() {
     let html = `
     <div class="container-fluid">
         <div class="row">
@@ -681,6 +768,7 @@ function renderCamposComerciante() {
         $('#cobertura_deuda').val(cobertura.toFixed(1) + ' %');
     }
     $('#cuota_periodica').on('input', calcularCoberturaDeuda);
+    $('.suma-ingresos, .suma-gastos-familiares, .suma-otras-obligaciones').on('input', calcularCoberturaDeuda);
     calcularCoberturaDeuda();
 
     // Nivel de endeudamiento = ((3) Otras Obligaciones + Total de Deuda a Creditar) / (1) Total Ingresos
@@ -709,7 +797,7 @@ function renderCamposComerciante() {
     calcularSueldoNeto();
 }
 
-function renderCamposAsalariado() {
+function renderCamposComerciante() {
         // Subtotal de saldos obligaciones largo plazo (asalariado)
         function calcularSubtotalAsalOlp() {
             let total = 0;
@@ -978,33 +1066,74 @@ function renderCamposAsalariado() {
             </div>
         </div>
         <hr/>
-        <h5 class='mt-4 mb-2'>OBLIGACIONES A LARGO PLAZO 1</h5>
-        <div class="row">
-            <div class="col-md-3 mb-2">
-                <label>Fecha</label>
-                <input type="date" class="form-control" name="olp_fecha[]">
+        <div class="largo-plazo-section">
+            <h5 class='mt-4 mb-2'>OBLIGACIONES A LARGO PLAZO 1</h5>
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <label>Fecha</label>
+                    <input type="date" class="form-control" name="olp_fecha[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Cuota</label>
+                    <input type="number" min="0" step="any" class="form-control" name="olp_cuota[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Instituciones</label>
+                    <input type="text" class="form-control" name="olp_instituciones[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Saldo</label>
+                    <input type="number" min="0" step="any" class="form-control olp-saldo" name="olp_saldo[]">
+                </div>
             </div>
-            <div class="col-md-3 mb-2">
-                <label>Cuota</label>
-                <input type="number" min="0" step="any" class="form-control" name="olp_cuota[]">
+            <h5 class='mt-4 mb-2'>OBLIGACIONES A LARGO PLAZO 2</h5>
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <label>Fecha</label>
+                    <input type="date" class="form-control" name="olp_fecha[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Cuota</label>
+                    <input type="number" min="0" step="any" class="form-control" name="olp_cuota[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Instituciones</label>
+                    <input type="text" class="form-control" name="olp_instituciones[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Saldo</label>
+                    <input type="number" min="0" step="any" class="form-control olp-saldo" name="olp_saldo[]">
+                </div>
             </div>
-            <div class="col-md-3 mb-2">
-                <label>Instituciones</label>
-                <input type="text" class="form-control" name="olp_instituciones[]">
+            <h5 class='mt-4 mb-2'>OBLIGACIONES A LARGO PLAZO 3</h5>
+            <div class="row">
+                <div class="col-md-3 mb-2">
+                    <label>Fecha</label>
+                    <input type="date" class="form-control" name="olp_fecha[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Cuota</label>
+                    <input type="number" min="0" step="any" class="form-control" name="olp_cuota[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Instituciones</label>
+                    <input type="text" class="form-control" name="olp_instituciones[]">
+                </div>
+                <div class="col-md-3 mb-2">
+                    <label>Saldo</label>
+                    <input type="number" min="0" step="any" class="form-control olp-saldo" name="olp_saldo[]">
+                </div>
             </div>
-            <div class="col-md-3 mb-2">
-                <label>Saldo</label>
-                <input type="number" min="0" step="any" class="form-control olp-saldo" name="olp_saldo[]">
+            <div class="row">
+                <div class="col-md-3 mb-2"></div>
+                <div class="col-md-3 mb-2"></div>
+                <div class="col-md-3 mb-2 text-right"><label><b>Subtotal Saldo Obligaciones Largo Plazo</b></label></div>
+                <div class="col-md-3 mb-2">
+                    <input type="number" class="form-control" id="subtotal_olp_saldo" name="subtotal_olp_saldo" readonly>
+                </div>
             </div>
         </div>
-        <div class="row">
-            <div class="col-md-3 mb-2"></div>
-            <div class="col-md-3 mb-2"></div>
-            <div class="col-md-3 mb-2 text-right"><label><b>Subtotal Saldo Obligaciones</b></label></div>
-            <div class="col-md-3 mb-2">
-                <input type="number" class="form-control" id="subtotal_olp_saldo" name="subtotal_olp_saldo" readonly>
-            </div>
-        </div>
+        <hr/>
         <h5 class='mt-4 mb-2'>OBLIGACIONES A CORTO PLAZO 1</h5>
         <div class="row">
             <div class="col-md-3 mb-2">
@@ -1075,54 +1204,15 @@ function renderCamposAsalariado() {
         <div class="row">
             <div class="col-md-4 mb-2">
                 <label>Salario ayudante/empleado</label>
-                <input type="number" min="0" step="any" class="form-control" name="costo_salario_ayudante" id="costo_salario_ayudante">
+                <input type="number" min="0" step="any" class="form-control" name="costo_salario_ayudante" id="costo_salario_ayudante" readonly>
             </div>
             <div class="col-md-4 mb-2">
                 <label>Transporte</label>
-                <input type="number" min="0" step="any" class="form-control" name="costo_transporte" id="costo_transporte">
+                <input type="number" min="0" step="any" class="form-control" name="costo_transporte" id="costo_transporte" readonly>
             </div>
             <div class="col-md-4 mb-2">
                 <label><b>Total</b></label>
-                <input type="number" min="0" step="any" class="form-control" name="costo_total_operacion" id="costo_total_operacion">
-            </div>
-        </div>
-        <hr/>
-        <h5 class='mt-4 mb-2'>OBLIGACIONES A LARGO PLAZO 2</h5>
-        <div class="row">
-            <div class="col-md-3 mb-2">
-                <label>Fecha</label>
-                <input type="date" class="form-control" name="olp_fecha[]">
-            </div>
-            <div class="col-md-3 mb-2">
-                <label>Cuota</label>
-                <input type="number" min="0" step="any" class="form-control" name="olp_cuota[]">
-            </div>
-            <div class="col-md-3 mb-2">
-                <label>Instituciones</label>
-                <input type="text" class="form-control" name="olp_instituciones[]">
-            </div>
-            <div class="col-md-3 mb-2">
-                <label>Saldo</label>
-                <input type="number" min="0" step="any" class="form-control" name="olp_saldo[]">
-            </div>
-        </div>
-        <h5 class='mt-4 mb-2'>OBLIGACIONES A LARGO PLAZO 3</h5>
-        <div class="row">
-            <div class="col-md-3 mb-2">
-                <label>Fecha</label>
-                <input type="date" class="form-control" name="olp_fecha[]">
-            </div>
-            <div class="col-md-3 mb-2">
-                <label>Cuota</label>
-                <input type="number" min="0" step="any" class="form-control" name="olp_cuota[]">
-            </div>
-            <div class="col-md-3 mb-2">
-                <label>Instituciones</label>
-                <input type="text" class="form-control" name="olp_instituciones[]">
-            </div>
-            <div class="col-md-3 mb-2">
-                <label>Saldo</label>
-                <input type="number" min="0" step="any" class="form-control" name="olp_saldo[]">
+                <input type="number" min="0" step="any" class="form-control" name="costo_total_operacion" id="costo_total_operacion" readonly>
             </div>
         </div>
         <hr/>
@@ -1159,6 +1249,30 @@ function renderCamposAsalariado() {
     `;
     $('#campos_dinamicos').html(html);
     calcularSumas();
+    function calcularSubtotalOlp() {
+        let total = 0;
+        $('.olp-saldo').each(function() {
+            total += parseFloat($(this).val()) || 0;
+        });
+        $('#subtotal_olp_saldo').val(total.toFixed(2));
+    }
+    function calcularSubtotalOcp() {
+        let total = 0;
+        $('.ocp-saldo').each(function() {
+            total += parseFloat($(this).val()) || 0;
+        });
+        $('#subtotal_ocp_saldo').val(total.toFixed(2));
+    }
+    $('.olp-saldo').on('input', function() {
+        calcularSubtotalOlp();
+        calcularSumas();
+    });
+    $('.ocp-saldo').on('input', function() {
+        calcularSubtotalOcp();
+        calcularSumas();
+    });
+    calcularSubtotalOlp();
+    calcularSubtotalOcp();
     $('.suma-disponible').on('input', calcularSumas);
     $('.suma-inventarios').on('input', calcularSumas);
     $('.suma-activos-fijos').on('input', calcularSumas);
@@ -1177,6 +1291,14 @@ function renderCamposAsalariado() {
 }
 
 function calcularSumas() {
+    // Sincronizar COSTOS DE OPERACIÓN DIRECTOS desde GASTOS FIJOS MENSUALES
+    let salario_ayudante = parseFloat($('#gasto_salario_ayudante').val()) || 0;
+    let transporte = parseFloat($('#gasto_transporte').val()) || 0;
+    $('#costo_salario_ayudante').val(salario_ayudante.toFixed(2));
+    $('#costo_transporte').val(transporte.toFixed(2));
+    let total_costos_operacion = salario_ayudante + transporte;
+    $('#costo_total_operacion').val(total_costos_operacion.toFixed(2));
+
     // Disponible
     let efectivo = parseFloat($('#efectivo_caja').val()) || 0;
     let banco = parseFloat($('#dinero_banco').val()) || 0;
@@ -1230,6 +1352,16 @@ function calcularSumas() {
     $('#capital_trabajo_neto').val(capital_trabajo_neto);
     // Cobertura de la deuda capacidad de pago = (Cuota / Flujo neto disponible)
     let cuota = parseFloat($('#cuota_periodica').val()) || 0;
+    let total_olp = 0;
+    $('.olp-saldo').each(function() {
+        total_olp += parseFloat($(this).val()) || 0;
+    });
+    $('#subtotal_olp_saldo').val(total_olp.toFixed(2));
+    let total_ocp = 0;
+    $('.ocp-saldo').each(function() {
+        total_ocp += parseFloat($(this).val()) || 0;
+    });
+    $('#subtotal_ocp_saldo').val(total_ocp.toFixed(2));
     let cobertura_deuda = null;
     // FLUJO DE CAJA MENSUAL (1+2-3-4+5-6-7)
     let fcm_ventas_contado = parseFloat($('#fcm_ventas_contado').val()) || 0; // 1

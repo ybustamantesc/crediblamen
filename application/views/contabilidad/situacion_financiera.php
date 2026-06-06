@@ -35,6 +35,17 @@
                                 </li>
                             </ul>
 
+                            <div class="row mb-3">
+                                <div class="col-md-12">
+                                    <div class="form-inline justify-content-end">
+                                        <label class="mr-2">Moneda:</label>
+                                        <select id="currency_select" class="form-control form-control-sm mr-2" style="min-width:160px;">
+                                            <option value="NIO" selected>Córdobas</option>
+                                            <option value="USD">USD</option>
+                                        </select>
+                                    </div>
+                                </div>
+                            </div>
                             <div class="tab-content" id="situacionTabContent">
                                 <!-- MENSUAL TAB -->
                                 <div class="tab-pane fade show active" id="mensual" role="tabpanel">
@@ -43,12 +54,12 @@
                                             <p class="text-muted">Reporte de situación financiera al cierre de un período específico.</p>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="form-inline justify-content-end">
-                                                <label class="mr-2">Mes:</label>
-                                                <input id="mes_select" type="month" class="form-control form-control-sm mr-2" value="<?php echo date('Y-m'); ?>">
-                                                <button id="btn_refresh_mensual" class="btn btn-primary btn-sm mr-1">Actualizar</button>
-                                                <button id="btn_export_mensual" class="btn btn-success btn-sm mr-1">Excel</button>
-                                                <button id="btn_print_mensual" class="btn btn-secondary btn-sm">Imprimir</button>
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <label class="mr-2 mb-2">Mes:</label>
+                                                <input id="mes_select" type="month" class="form-control form-control-sm mr-2 mb-2" style="min-width:170px;" value="<?php echo date('Y-m'); ?>">
+                                                <button id="btn_refresh_mensual" class="btn btn-primary btn-sm mr-1 mb-2">Actualizar</button>
+                                                <button id="btn_export_mensual" class="btn btn-success btn-sm mr-1 mb-2">Excel</button>
+                                                <button id="btn_pdf_mensual" class="btn btn-secondary btn-sm mb-2">PDF</button>
                                             </div>
                                         </div>
                                     </div>
@@ -67,16 +78,16 @@
                                             <p class="text-muted">Reporte consolidado de todos los meses del año seleccionado.</p>
                                         </div>
                                         <div class="col-md-4">
-                                            <div class="form-inline justify-content-end">
-                                                <label class="mr-2">Año:</label>
-                                                <select id="anio_select" class="form-control form-control-sm mr-2">
+                                            <div class="d-flex flex-wrap align-items-center">
+                                                <label class="mr-2 mb-2">Año:</label>
+                                                <select id="anio_select" class="form-control form-control-sm mr-2 mb-2" style="min-width:120px;">
                                                     <?php for($y = date('Y'); $y >= 2020; $y--): ?>
                                                         <option value="<?php echo $y; ?>" <?php echo $y == date('Y') ? 'selected' : ''; ?>><?php echo $y; ?></option>
                                                     <?php endfor; ?>
                                                 </select>
-                                                <button id="btn_refresh_anual" class="btn btn-primary btn-sm mr-1">Actualizar</button>
-                                                <button id="btn_export_anual" class="btn btn-success btn-sm mr-1">Excel</button>
-                                                <button id="btn_print_anual" class="btn btn-secondary btn-sm">Imprimir</button>
+                                                <button id="btn_refresh_anual" class="btn btn-primary btn-sm mr-1 mb-2">Actualizar</button>
+                                                <button id="btn_export_anual" class="btn btn-success btn-sm mr-1 mb-2">Excel</button>
+                                                <button id="btn_pdf_anual" class="btn btn-secondary btn-sm mb-2">PDF</button>
                                             </div>
                                         </div>
                                     </div>

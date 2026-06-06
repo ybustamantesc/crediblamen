@@ -6,29 +6,28 @@
         var footer = document.getElementById('balanzaFooter');
         var exportBtn = document.getElementById('balanzaExport');
         var exportAllBtn = document.getElementById('balanzaExportAll');
+        var currencySel = document.getElementById('balanzaCurrency');
 
         function format(n){ return parseFloat(n||0).toLocaleString(undefined, {minimumFractionDigits: 2, maximumFractionDigits: 2}); }
 
         function render(data){
             tbody.innerHTML = '';
-            if (!data || !data.rows) { tbody.innerHTML = '<tr><td colspan="9">Sin datos</td></tr>'; return; }
+            if (!data || !data.rows) { tbody.innerHTML = '<tr><td colspan="6">Sin datos</td></tr>'; return; }
             // filter out internal adjustment account 9999 (should also be excluded server-side)
             var rows = data.rows.filter(function(rr){ return (rr.code||'').toString().trim() !== '9999'; });
-            if (!rows || rows.length === 0) { tbody.innerHTML = '<tr><td colspan="9">Sin datos</td></tr>'; return; }
+            if (!rows || rows.length === 0) { tbody.innerHTML = '<tr><td colspan="6">Sin datos</td></tr>'; return; }
             rows.forEach(function(r){
                 var tr = document.createElement('tr');
-                var closing_deudor = parseFloat(r.closing_deudor || 0);
-                var closing_acreedor = parseFloat(r.closing_acreedor || 0);
-                var balance_final = closing_deudor - closing_acreedor;
+                var saldo_anterior = parseFloat(r.opening_deudor || 0) - parseFloat(r.opening_acreedor || 0);
+                var cargos = parseFloat(r.debits || 0);
+                var abonos = parseFloat(r.credits || 0);
+                var saldo_actual = saldo_anterior + cargos - abonos;
                 tr.innerHTML = '<td>' + (r.code||'') + '</td>' +
                                '<td>' + (r.name||'') + '</td>' +
-                               '<td class="text-right">' + format(r.opening_deudor || 0) + '</td>' +
-                               '<td class="text-right">' + format(r.opening_acreedor || 0) + '</td>' +
-                               '<td class="text-right">' + format(r.debits || 0) + '</td>' +
-                               '<td class="text-right">' + format(r.credits || 0) + '</td>' +
-                               '<td class="text-right">' + format(closing_deudor) + '</td>' +
-                               '<td class="text-right">' + format(closing_acreedor) + '</td>' +
-                               '<td class="text-right">' + format(balance_final) + '</td>';
+                               '<td class="text-right">' + format(saldo_anterior) + '</td>' +
+                               '<td class="text-right">' + format(cargos) + '</td>' +
+                               '<td class="text-right">' + format(abonos) + '</td>' +
+                               '<td class="text-right">' + format(saldo_actual) + '</td>';
                 tbody.appendChild(tr);
                 // highlight negative numbers defensively (if any cell contains negative value)
                 try {
@@ -41,22 +40,33 @@
                 } catch(e){ /* ignore */ }
             });
             // compute totals client-side from filtered rows to ensure 9999 excluded
-            var tot_open_deudor = 0, tot_open_acreedor = 0, tot_debits = 0, tot_credits = 0, tot_close_deudor = 0, tot_close_acreedor = 0;
+            var tot_saldo_anterior = 0, tot_cargos = 0, tot_abonos = 0, tot_saldo_actual = 0;
+            var group = document.getElementById('balanzaGroup');
+            var isDetalleView = group && group.value === 'detalle';
+            var mayorParentIds = new Set();
             rows.forEach(function(rr){
-                tot_open_deudor += parseFloat(rr.opening_deudor || 0);
-                tot_open_acreedor += parseFloat(rr.opening_acreedor || 0);
-                tot_debits += parseFloat(rr.debits || 0);
-                tot_credits += parseFloat(rr.credits || 0);
-                tot_close_deudor += parseFloat(rr.closing_deudor || 0);
-                tot_close_acreedor += parseFloat(rr.closing_acreedor || 0);
+                if (rr.parent_id !== null && rr.parent_id !== undefined && rr.parent_id !== '') {
+                    mayorParentIds.add(String(rr.parent_id));
+                }
             });
-            document.getElementById('tot_open_deudor').innerText = format(tot_open_deudor);
-            document.getElementById('tot_open_acreedor').innerText = format(tot_open_acreedor);
-            document.getElementById('tot_debits').innerText = format(tot_debits);
-            document.getElementById('tot_credits').innerText = format(tot_credits);
-            document.getElementById('tot_close_deudor').innerText = format(tot_close_deudor);
-            document.getElementById('tot_close_acreedor').innerText = format(tot_close_acreedor);
-            document.getElementById('tot_balance_final').innerText = format(tot_close_deudor - tot_close_acreedor);
+            rows.forEach(function(rr){
+                var isMayorRow = rr.is_mayor === 1 || rr.is_mayor === '1' || rr.is_mayor === true || mayorParentIds.has(String(rr.id));
+                if (isDetalleView && isMayorRow) {
+                    return;
+                }
+                var saldo_anterior = parseFloat(rr.opening_deudor || 0) - parseFloat(rr.opening_acreedor || 0);
+                var cargos = parseFloat(rr.debits || 0);
+                var abonos = parseFloat(rr.credits || 0);
+                var saldo_actual = saldo_anterior + cargos - abonos;
+                tot_saldo_anterior += saldo_anterior;
+                tot_cargos += cargos;
+                tot_abonos += abonos;
+                tot_saldo_actual += saldo_actual;
+            });
+            document.getElementById('tot_saldo_anterior').innerText = format(tot_saldo_anterior);
+            document.getElementById('tot_cargos').innerText = format(tot_cargos);
+            document.getElementById('tot_abonos').innerText = format(tot_abonos);
+            document.getElementById('tot_saldo_actual').innerText = format(tot_saldo_actual);
             footer.innerText = 'Cuentas: ' + rows.length;
         }
 
@@ -78,6 +88,8 @@
             if (mr) { qs += 'start_date=' + encodeURIComponent(mr.start) + '&end_date=' + encodeURIComponent(mr.end) + '&'; }
             // always include zero-movement accounts
             qs += 'include_zero=1&';
+            // currency selection
+            try { if (currencySel && currencySel.value) qs += 'currency=' + encodeURIComponent(currencySel.value) + '&'; } catch(e) {}
             // grouping / scope: if 'mayor' selected request only_mayor filter
             try {
                 var group = document.getElementById('balanzaGroup');
@@ -100,6 +112,8 @@
             if (mr) { params.push('start_date=' + encodeURIComponent(mr.start)); params.push('end_date=' + encodeURIComponent(mr.end)); }
             // always include zero-movement accounts
             params.push('include_zero=1');
+            // currency selection
+            try { if (currencySel && currencySel.value) params.push('currency=' + encodeURIComponent(currencySel.value)); } catch(e) {}
             // grouping options
             try {
                 var g = document.getElementById('balanzaGroup');
@@ -116,6 +130,8 @@
             if (mr) { params.push('start_date=' + encodeURIComponent(mr.start)); params.push('end_date=' + encodeURIComponent(mr.end)); }
             // always include zero-movement accounts
             params.push('include_zero=1');
+            // currency selection
+            try { if (currencySel && currencySel.value) params.push('currency=' + encodeURIComponent(currencySel.value)); } catch(e) {}
             // grouping options
             try {
                 var g2 = document.getElementById('balanzaGroup');
@@ -126,7 +142,16 @@
             window.location = base_url + 'contabilidad/balanza_export' + qs;
         });
         var pdfBtn = document.getElementById('balanzaPdf');
-        if (pdfBtn) pdfBtn.addEventListener('click', function(ev){ ev.preventDefault(); var qs = '?'; var mr = monthRange(monthInput && monthInput.value ? monthInput.value : null); if (mr) qs += 'start_date=' + encodeURIComponent(mr.start) + '&end_date=' + encodeURIComponent(mr.end) + '&'; qs += 'include_zero=1&'; window.open(base_url + 'contabilidad/balanza_pdf' + qs, '_blank'); });
+        if (pdfBtn) pdfBtn.addEventListener('click', function(ev){
+            ev.preventDefault();
+            var qs = '?';
+            var mr = monthRange(monthInput && monthInput.value ? monthInput.value : null);
+            if (mr) qs += 'start_date=' + encodeURIComponent(mr.start) + '&end_date=' + encodeURIComponent(mr.end) + '&';
+            qs += 'include_zero=1&';
+            try { if (currencySel && currencySel.value) qs += 'currency=' + encodeURIComponent(currencySel.value) + '&'; } catch(e) {}
+            try { var g = document.getElementById('balanzaGroup'); if (g && g.value === 'mayor') qs += 'group=mayor&'; } catch(e) {}
+            window.open(base_url + 'contabilidad/balanza_pdf' + qs, '_blank');
+        });
         var pdfBgBtn = document.getElementById('balanzaPdfBg');
         if (pdfBgBtn) pdfBgBtn.addEventListener('click', function(ev){
             ev.preventDefault();
@@ -134,6 +159,8 @@
             var mr = monthRange(monthInput && monthInput.value ? monthInput.value : null);
             if (mr) qs += 'start_date=' + encodeURIComponent(mr.start) + '&end_date=' + encodeURIComponent(mr.end) + '&';
             qs += 'include_zero=1&';
+            // currency selection
+            try { if (currencySel && currencySel.value) qs += 'currency=' + encodeURIComponent(currencySel.value) + '&'; } catch(e) {}
             try { var g3 = document.getElementById('balanzaGroup'); if (g3 && g3.value === 'mayor') qs += 'only_mayor=1&'; } catch(e) {}
             // start DB-backed job
             fetch(base_url + 'contabilidad/balanza_pdf_job' + qs, { method: 'GET' })

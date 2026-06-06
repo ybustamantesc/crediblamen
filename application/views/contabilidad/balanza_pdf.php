@@ -11,8 +11,8 @@
         .period { font-size: 10px; color: #555; margin-bottom: 10px; }
         table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 9px; }
         th, td { border: 1px solid #000; padding: 4px 6px; }
-        thead th { background: #0070C0; color: #fff; font-weight: 700; text-align: center; }
-        tfoot th { background: #0070C0; color: #fff; font-weight: 700; }
+        thead th { background: #EAEAEA; color: #000; font-weight: 700; text-align: center; }
+        tfoot th { background: #EAEAEA; color: #000; font-weight: 700; }
         .text-right { text-align: right; }
         .text-left { text-align: left; }
         .negative { color: #c00; }
@@ -24,10 +24,14 @@
 </head>
 <body>
     <div class="header">
-            <div class="title" style="font-size:16px;font-weight:700;">Balanza de Comprobación</div>
+            <div class="title" style="font-size:13px;font-weight:700;">CREDIBLAMEN, S.A.</div>
+            <div class="title" style="font-size:13px;font-weight:700; margin-top:6px;">Balanza de Comprobación</div>
         <div class="period">
             Período: <?php echo ($start ? date('d/m/Y', strtotime($start)) : 'Inicio'); ?> 
             al <?php echo ($end ? date('d/m/Y', strtotime($end)) : 'Final'); ?>
+        </div>
+        <div style="font-size:10px; color:#555; margin-top:4px;">
+            <?php echo (isset($currency) && $currency === 'usd') ? '(Expresado en Dólares)' : '(Expresado en Córdobas)'; ?>
         </div>
     </div>
 
@@ -36,7 +40,7 @@
             <tr>
                 <th style="width:12%">Código</th>
                 <th style="width:40%">Denominación</th>
-                <th style="width:12%" class="text-right">Mayor</th>
+                <th style="width:12%" class="text-right">Saldo Anterior</th>
                 <th style="width:12%" class="text-right">Cargos</th>
                 <th style="width:12%" class="text-right">Abonos</th>
                 <th style="width:12%" class="text-right">Saldo Actual</th>
@@ -44,13 +48,13 @@
         </thead>
         <tbody>
             <?php if (!empty($data['rows'])): foreach ($data['rows'] as $r): 
-                $mayor = $r['opening_deudor'] - $r['opening_acreedor'];
-                $saldo_actual = $mayor + $r['debits'] - $r['credits'];
+                $saldo_anterior = $r['opening_deudor'] - $r['opening_acreedor'];
+                $saldo_actual = $saldo_anterior + $r['debits'] - $r['credits'];
             ?>
             <tr>
                 <td class="text-left"><?php echo htmlspecialchars($r['code']); ?></td>
                 <td class="text-left"><?php echo htmlspecialchars($r['name']); ?></td>
-                <td class="text-right"><?php echo number_format($mayor, 2); ?></td>
+                <td class="text-right"><?php echo number_format($saldo_anterior, 2); ?></td>
                 <td class="text-right"><?php echo number_format($r['debits'], 2); ?></td>
                 <td class="text-right"><?php echo number_format($r['credits'], 2); ?></td>
                 <td class="text-right <?php echo $saldo_actual < 0 ? 'negative' : ''; ?>"><?php echo number_format($saldo_actual, 2); ?></td>
@@ -61,14 +65,14 @@
         </tbody>
         <tfoot>
             <?php 
-                $total_mayor = $data['totals']['opening_deudor'] - $data['totals']['opening_acreedor'];
+                $total_saldo_anterior = $data['totals']['opening_deudor'] - $data['totals']['opening_acreedor'];
                 $total_cargos = $data['totals']['debits'];
                 $total_abonos = $data['totals']['credits'];
-                $total_saldo = $total_mayor + $total_cargos - $total_abonos;
+                $total_saldo = $total_saldo_anterior + $total_cargos - $total_abonos;
             ?>
             <tr>
                 <th colspan="2" class="text-left">TOTALES</th>
-                <th class="text-right"><?php echo number_format($total_mayor, 2); ?></th>
+                <th class="text-right"><?php echo number_format($total_saldo_anterior, 2); ?></th>
                 <th class="text-right"><?php echo number_format($total_cargos, 2); ?></th>
                 <th class="text-right"><?php echo number_format($total_abonos, 2); ?></th>
                 <th class="text-right"><?php echo number_format($total_saldo, 2); ?></th>
@@ -81,53 +85,53 @@
         $financieroSignature = isset($signatures['financiero']) ? $signatures['financiero'] : '';
         $gerenteSignature = isset($signatures['gerente']) ? $signatures['gerente'] : '';
     ?>
-    <div style="margin-top:18px; width:100%; page-break-inside: avoid;">
-        <div style="width:100%; text-align:center;">
-            <div style="display:inline-block; width:33.333%; vertical-align:top; padding:0 8px; box-sizing:border-box; text-align:center;">
-                <table style="width:100%; border-collapse:collapse; border:0;">
+    <div style="margin-top:18px; width:100%; page-break-inside: avoid; font-size:0;">
+        <div style="width:100%; text-align:center; font-size:0;">
+            <div style="display:inline-block; width:32%; min-width:160px; vertical-align:top; padding:0 4px; box-sizing:border-box; text-align:center; page-break-inside: avoid; font-size:12px;">
+                <table style="width:100%; border-collapse:collapse; border:0; page-break-inside: avoid;">
                     <tr>
-                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0;">
+                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0; page-break-inside: avoid;">
                             <?php if ($contadorSignature): ?>
                                 <img src="<?php echo $contadorSignature; ?>" style="max-width:160px; max-height:150px; display:inline-block;" alt="Firma Contador General" />
                             <?php endif; ?>
                         </td>
                     </tr>
                     <tr>
-                        <td style="text-align:center; padding-top:4px; border:0;">
+                        <td style="text-align:center; padding-top:4px; border:0; page-break-inside: avoid;">
                             <div style="border-top:1px solid #000; width:75%; margin:0 auto 2px;"></div>
                             <div style="font-weight:700; font-size:9px; margin-top:2px;">Contador General</div>
                         </td>
                     </tr>
                 </table>
             </div>
-            <div style="display:inline-block; width:33.333%; vertical-align:top; padding:0 8px; box-sizing:border-box; text-align:center;">
-                <table style="width:100%; border-collapse:collapse; border:0;">
+            <div style="display:inline-block; width:32%; min-width:160px; vertical-align:top; padding:0 4px; box-sizing:border-box; text-align:center; page-break-inside: avoid; font-size:12px;">
+                <table style="width:100%; border-collapse:collapse; border:0; page-break-inside: avoid;">
                     <tr>
-                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0;">
+                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0; page-break-inside: avoid;">
                             <?php if ($financieroSignature): ?>
                                 <img src="<?php echo $financieroSignature; ?>" style="max-width:160px; max-height:150px; display:inline-block;" alt="Firma Gerente Financiero" />
                             <?php endif; ?>
                         </td>
                     </tr>
                     <tr>
-                        <td style="text-align:center; padding-top:4px; border:0;">
+                        <td style="text-align:center; padding-top:4px; border:0; page-break-inside: avoid;">
                             <div style="border-top:1px solid #000; width:75%; margin:0 auto 2px;"></div>
                             <div style="font-weight:700; font-size:9px; margin-top:2px;">Gerente Financiero</div>
                         </td>
                     </tr>
                 </table>
             </div>
-            <div style="display:inline-block; width:33.333%; vertical-align:top; padding:0 8px; box-sizing:border-box; text-align:center;">
-                <table style="width:100%; border-collapse:collapse; border:0;">
+            <div style="display:inline-block; width:32%; min-width:160px; vertical-align:top; padding:0 4px; box-sizing:border-box; text-align:center; page-break-inside: avoid; font-size:12px;">
+                <table style="width:100%; border-collapse:collapse; border:0; page-break-inside: avoid;">
                     <tr>
-                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0;">
+                        <td style="text-align:center; vertical-align:bottom; padding-bottom:4px; border:0; page-break-inside: avoid;">
                             <?php if ($gerenteSignature): ?>
                                 <img src="<?php echo $gerenteSignature; ?>" style="max-width:160px; max-height:150px; display:inline-block;" alt="Firma Gerente General" />
                             <?php endif; ?>
                         </td>
                     </tr>
                     <tr>
-                        <td style="text-align:center; padding-top:4px; border:0;">
+                        <td style="text-align:center; padding-top:4px; border:0; page-break-inside: avoid;">
                             <div style="border-top:1px solid #000; width:75%; margin:0 auto 2px;"></div>
                             <div style="font-weight:700; font-size:9px; margin-top:2px;">Gerente General</div>
                         </td>

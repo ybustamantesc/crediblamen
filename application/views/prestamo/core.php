@@ -4,15 +4,6 @@
     <div class="main-content">
         <div class="container-fluid mt-3">
 
-            <style>
-            /* Página específica: estirar el contenido principal para usar todo el ancho disponible. */
-            .app-sidebar { width: 160px !important; }
-            .page-wrap .main-content { margin-left: 160px !important; padding-right: 12px; }
-            .page-wrap .main-content .container-fluid,
-            .page-wrap .main-content .container { max-width: 100% !important; width: calc(100% - 160px) !important; padding-left: 18px; padding-right: 18px; }
-            @media (max-width: 991px) { .app-sidebar{width:140px!important} .page-wrap .main-content{margin-left:140px!important} }
-            </style>
-
             <div class="page-header">
                 <div class="row align-items-end">
                     <div class="col-lg-8">

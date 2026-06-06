@@ -28,7 +28,7 @@
                 <div class="row align-items-end">
                     <div class="col-lg-8">
                         <div class="page-header-title">
-                            <i class="fa fa-money bg-blue"></i>
+                            <i class="fas fa-money-check-alt bg-blue"></i>
                             <div class="d-inline">
                                 <h5>Desembolsos Programados</h5>
                                 <span>Lista de desembolsos pendientes por ejecutar</span>

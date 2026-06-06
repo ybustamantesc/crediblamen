@@ -269,8 +269,53 @@ class Analisis_financiero extends CI_Controller
             echo json_encode(['status' => false, 'msg' => 'Solicitud no especificada']);
             return;
         }
+        if (isset($data['tipo'])) {
+            unset($data['tipo']);
+        }
         foreach ($data as $k => $v) {
-            if (is_numeric($v)) $data[$k] = (float)$v;
+            if ($k === 'tipo') {
+                continue;
+            }
+            if (is_string($v)) {
+                // Normalizar valores numéricos con formato de texto como "12,5 %" o "C$ 1,234.50"
+                $clean = str_replace(array('C$', '%', ' '), '', $v);
+                $clean = str_replace(',', '', $clean);
+                if (is_numeric($clean)) {
+                    $data[$k] = (float)$clean;
+                }
+            } elseif (is_numeric($v)) {
+                $data[$k] = (float)$v;
+            }
+        }
+
+        // Normalizar cobertura_deuda si viene formateada con porcentaje o texto.
+        if (isset($data['cobertura_deuda'])) {
+            $data['cobertura_deuda'] = $this->_to_float($data['cobertura_deuda']);
+        }
+
+        // Si los totales de transporte o vivienda no se recibieron, recalcularlos desde sus campos base.
+        if (!isset($data['total_transporte']) || $data['total_transporte'] === null) {
+            $total_transporte = 0;
+            $total_transporte += $this->_to_float(isset($data['transporte_urbano']) ? $data['transporte_urbano'] : 0);
+            $total_transporte += $this->_to_float(isset($data['transporte_individual']) ? $data['transporte_individual'] : 0);
+            $total_transporte += $this->_to_float(isset($data['transporte_interurbano']) ? $data['transporte_interurbano'] : 0);
+            $total_transporte += $this->_to_float(isset($data['recorrido_laboral']) ? $data['recorrido_laboral'] : 0);
+            $total_transporte += $this->_to_float(isset($data['vehiculo_particular']) ? $data['vehiculo_particular'] : 0);
+            $data['total_transporte'] = $total_transporte;
+        }
+
+        if (!isset($data['total_gastos_vivienda']) || $data['total_gastos_vivienda'] === null) {
+            $data['total_gastos_vivienda'] = $this->_to_float(isset($data['alquiler']) ? $data['alquiler'] : 0)
+                + $this->_to_float(isset($data['casa_propia']) ? $data['casa_propia'] : 0);
+        }
+
+        // Calcular cobertura_deuda desde flujo neto mensual y cuota periódica cuando hay datos disponibles.
+        $flujo_neto = $this->_to_float(isset($data['flujo_neto_mensual']) ? $data['flujo_neto_mensual'] : 0);
+        $cuota = $this->_to_float(isset($data['cuota_periodica']) ? $data['cuota_periodica'] : 0);
+        if ($cuota > 0) {
+            $data['cobertura_deuda'] = round($flujo_neto / $cuota, 4);
+        } elseif (!isset($data['cobertura_deuda']) || !is_numeric($data['cobertura_deuda'])) {
+            $data['cobertura_deuda'] = 0;
         }
 
         // Validación de negocio: cuota periódica no puede ser mayor al flujo neto mensual.
@@ -293,14 +338,27 @@ class Analisis_financiero extends CI_Controller
     public function guardar_comerciante() {
         $this->load->model('Analisis_financiero_comerciante_model', 'afc_model');
         $data = $this->input->post();
+        // Log payload for debugging: temporary
+        log_message('debug', 'guardar_comerciante payload: ' . var_export($data, true));
         // Asegurar idsolicitud
         if (empty($data['idsolicitud'])) {
             echo json_encode(['status' => false, 'msg' => 'Solicitud no especificada']);
             return;
         }
+        if (isset($data['tipo'])) {
+            unset($data['tipo']);
+        }
         // Limpiar y mapear campos numéricos
         foreach ($data as $k => $v) {
-            if (is_numeric($v)) $data[$k] = (float)$v;
+            if (is_string($v)) {
+                $clean = str_replace(array('C$', '%', ' '), '', $v);
+                $clean = str_replace(',', '', $clean);
+                if (is_numeric($clean)) {
+                    $data[$k] = (float)$clean;
+                }
+            } elseif (is_numeric($v)) {
+                $data[$k] = (float)$v;
+            }
         }
 
         // Validación de negocio: cuota periódica no puede ser mayor al flujo neto disponible.
@@ -437,8 +495,9 @@ class Analisis_financiero extends CI_Controller
             if ($estado && $estado != 'all' && $status != $estado) continue;
             // Filtro por fecha
             $fecha = isset($s->fecha_solicitud) ? $s->fecha_solicitud : (isset($s->fecha_recepcion) ? $s->fecha_recepcion : '');
-            if ($start_date && $fecha < $start_date) continue;
-            if ($end_date && $fecha > $end_date) continue;
+            $fecha_solo = $fecha ? date('Y-m-d', strtotime($fecha)) : '';
+            if ($start_date && $fecha_solo < $start_date) continue;
+            if ($end_date && $fecha_solo > $end_date) continue;
             $result[] = $s;
         }
         $data = array(

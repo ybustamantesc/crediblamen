@@ -5,14 +5,14 @@
     <?php $this->load->view('contabilidad/sidebar_contabilidad'); ?>
     <div class="main-content">
         <div class="container-fluid">
-            <div class="servicont-balanza-header" style="margin-bottom:18px;">
+            <div class="servicont-balanza-header">
                 <div class="d-flex align-items-center">
-                    <div style="width:40px;height:40px;background:rgba(0,0,0,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-right:12px;">
-                        <i class="fas fa-exchange-alt" style="color:#1e3c72;font-size:18px;"></i>
+                    <div class="servicont-header-icon">
+                        <i class="fas fa-exchange-alt"></i>
                     </div>
                     <div>
-                        <h1 style="margin:0;font-size:18px;font-weight:700;">Proceso: Revaluación por Tipo de Cambio</h1>
-                        <div style="color:#6b7280;font-size:13px;">Calcular diferencias por cuenta y generar asientos de ajuste</div>
+                        <h1 class="servicont-header-title">Proceso: Revaluación por Tipo de Cambio</h1>
+                        <p class="servicont-header-subtitle">Calcular diferencias por cuenta y generar asientos de ajuste</p>
                     </div>
                 </div>
             </div>

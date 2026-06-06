@@ -211,6 +211,10 @@ class Contabilidad_model extends CI_Model {
         if ($this->safe_field_exists('report_bs', $acct_fq)) {
             $reportCol .= ', ' . $a . 'report_bs';
         }
+        // Include agrupador_estado if present (import target)
+        if ($this->safe_field_exists('agrupador_estado', $acct_fq)) {
+            $reportCol .= ', ' . $a . 'agrupador_estado';
+        }
         
         return $a . "id, " . $a . "code, " . $a . $nameCol . " as name, " . $a . $typeCol . " as type" . $naturalezaCol . $reportCol . $levelCol . $isMayorCol . ", " . $a . "parent_id";
     }
@@ -254,6 +258,10 @@ class Contabilidad_model extends CI_Model {
         }
         if ($this->safe_field_exists('report_bs', $acct_fq)) {
             $reportCol .= ', report_bs';
+        }
+        // Include agrupador_estado if present (import target)
+        if ($this->safe_field_exists('agrupador_estado', $acct_fq)) {
+            $reportCol .= ', agrupador_estado';
         }
         
         return "id, code, " . $nameCol . " as name, " . $typeCol . " as type" . $naturalezaCol . $reportCol . $levelCol . $isMayorCol . ", parent_id";
@@ -597,6 +605,30 @@ class Contabilidad_model extends CI_Model {
         return $q->result();
     }
 
+    /**
+     * Return only non-mayor accounts for selectors and reports that must exclude mayor accounts.
+     */
+    public function get_accounts_non_mayor()
+    {
+        $accounts = $this->get_accounts();
+        if (empty($accounts)) {
+            return [];
+        }
+        $acct_fq = $this->account_table_fq();
+        if ($this->safe_field_exists('is_mayor', $acct_fq)) {
+            return array_values(array_filter($accounts, function($a) {
+                return !isset($a->is_mayor) || intval($a->is_mayor) === 0;
+            }));
+        }
+        $mayorIds = $this->_get_mayor_account_ids($accounts);
+        if (empty($mayorIds)) {
+            return $accounts;
+        }
+        return array_values(array_filter($accounts, function($a) use ($mayorIds) {
+            return !isset($mayorIds[intval($a->id)]);
+        }));
+    }
+
     // Obtener cuentas con saldo (balance = sum(debit - credit))
     public function get_accounts_with_balance()
     {
@@ -622,7 +654,8 @@ class Contabilidad_model extends CI_Model {
                 GROUP BY a.id
                 ORDER BY a.code ASC";
             $q = $this->db->query($sql);
-            return $q->result();
+            $rows = $q->result();
+            return array_values($this->aggregate_account_balances($rows));
         }
 
         // journal entries not available or corrupted: return accounts with zero balance.
@@ -632,6 +665,59 @@ class Contabilidad_model extends CI_Model {
         $sql2 = "SELECT " . $selectCols . " FROM " . $acct . " as a ORDER BY a.code ASC";
         $q2 = $this->db->query($sql2);
         return $q2->result();
+    }
+
+    /**
+     * Aggregate direct balances into parent accounts, so a parent shows the sum of its descendants.
+     * The input array must contain objects with id, parent_id, and balance.
+     * Returns a map indexed by account id.
+     */
+    protected function aggregate_account_balances($rows)
+    {
+        if (empty($rows) || !is_array($rows)) {
+            return [];
+        }
+
+        $accounts_map = [];
+        foreach ($rows as $row) {
+            $id = isset($row->id) ? intval($row->id) : null;
+            if ($id === null) {
+                continue;
+            }
+            $accounts_map[$id] = [
+                'parent_id' => isset($row->parent_id) && $row->parent_id ? intval($row->parent_id) : null,
+            ];
+        }
+
+        $aggregated = [];
+        foreach ($rows as $row) {
+            $id = intval($row->id);
+            $row->balance = isset($row->balance) ? floatval($row->balance) : 0.0;
+            $aggregated[$id] = $row;
+        }
+
+        foreach ($rows as $row) {
+            $amount = isset($row->balance) ? floatval($row->balance) : 0.0;
+            $current = intval($row->id);
+            $visited = [];
+            while (isset($accounts_map[$current]) && $accounts_map[$current]['parent_id']) {
+                $parent = $accounts_map[$current]['parent_id'];
+                if ($parent === null || isset($visited[$parent]) || $parent === $current) {
+                    break;
+                }
+                $visited[$parent] = true;
+                if (!isset($aggregated[$parent])) {
+                    $parentRow = new stdClass();
+                    $parentRow->id = $parent;
+                    $parentRow->balance = 0.0;
+                    $aggregated[$parent] = $parentRow;
+                }
+                $aggregated[$parent]->balance += $amount;
+                $current = $parent;
+            }
+        }
+
+        return $aggregated;
     }
 
     /**
@@ -662,10 +748,14 @@ class Contabilidad_model extends CI_Model {
                 LEFT JOIN tb_journal_entry e ON e.account_id = a.id
                 LEFT JOIN tb_journal j ON j.id = e.journal_id
                 GROUP BY a.id
-                ORDER BY a.code ASC
-                LIMIT ? OFFSET ?";
-            $q = $this->db->query($sql, array(intval($limit), intval($offset)));
-            $rows = $q->result();
+                ORDER BY a.code ASC";
+            $q = $this->db->query($sql);
+            $allRows = $q->result();
+            $aggregated = array_values($this->aggregate_account_balances($allRows));
+            usort($aggregated, function($a, $b) {
+                return strcmp(isset($a->code) ? $a->code : '', isset($b->code) ? $b->code : '');
+            });
+            $rows = array_slice($aggregated, intval($offset), intval($limit));
             return ['rows' => $rows, 'total' => intval($total)];
         }
 
@@ -697,20 +787,127 @@ class Contabilidad_model extends CI_Model {
 
         // Determine whether query looks like a code (digits, dots, dashes)
         $is_code = preg_match('/^[0-9\.\-]+$/', $q);
-        if ($is_code) {
-            // match code prefix for incremental typing (e.g. '14' matches '1408...')
-            $codeParam = $this->db->escape_like_str($q) . '%';
-            $nameParam = '%' . $this->db->escape_like_str($q) . '%';
-            $sql = "SELECT " . $this->account_select_cols('a') . ", 0 as balance FROM " . $acct_fq . " as a WHERE a.code LIKE ? OR a." . $nameCol . " LIKE ? ORDER BY a.code ASC LIMIT ?";
-            $qobj = $this->db->query($sql, array($codeParam, $nameParam, intval($limit)));
+        $isMayorPresent = $this->safe_field_exists('is_mayor', $acct_fq);
+        if ($this->db->table_exists('tb_journal_entry') && $this->safe_field_exists('debit', 'tb_journal_entry')) {
+            $selectCols = $this->account_select_cols('a');
+            $mayorCondition = $isMayorPresent ? ' AND a.is_mayor = 0' : '';
+            if ($is_code) {
+                // match code prefix for incremental typing (e.g. '14' matches '1408...')
+                $codeParam = $this->db->escape_like_str($q) . '%';
+                $nameParam = '%' . $this->db->escape_like_str($q) . '%';
+                $sql = "SELECT " . $selectCols . ", IFNULL(SUM(CASE WHEN j.posted = 1 AND (j.voided IS NULL OR j.voided = 0) THEN (e.debit - e.credit) ELSE 0 END),0) as balance"
+                    . " FROM " . $acct_fq . " as a"
+                    . " LEFT JOIN tb_journal_entry e ON e.account_id = a.id"
+                    . " LEFT JOIN tb_journal j ON j.id = e.journal_id"
+                    . " WHERE (a.code LIKE ? OR a." . $nameCol . " LIKE ?)" . $mayorCondition
+                    . " GROUP BY a.id"
+                    . " ORDER BY a.code ASC LIMIT ?";
+                $qobj = $this->db->query($sql, array($codeParam, $nameParam, intval($limit)));
+            } else {
+                // general text search: match anywhere in code or name
+                $param = '%' . $this->db->escape_like_str($q) . '%';
+                $sql = "SELECT " . $selectCols . ", IFNULL(SUM(CASE WHEN j.posted = 1 AND (j.voided IS NULL OR j.voided = 0) THEN (e.debit - e.credit) ELSE 0 END),0) as balance"
+                    . " FROM " . $acct_fq . " as a"
+                    . " LEFT JOIN tb_journal_entry e ON e.account_id = a.id"
+                    . " LEFT JOIN tb_journal j ON j.id = e.journal_id"
+                    . " WHERE (a.code LIKE ? OR a." . $nameCol . " LIKE ?)" . $mayorCondition
+                    . " GROUP BY a.id"
+                    . " ORDER BY a.code ASC LIMIT ?";
+                $qobj = $this->db->query($sql, array($param, $param, intval($limit)));
+            }
         } else {
-            // general text search: match anywhere in code or name
-            $param = '%' . $this->db->escape_like_str($q) . '%';
-            $sql = "SELECT " . $this->account_select_cols('a') . ", 0 as balance FROM " . $acct_fq . " as a WHERE a.code LIKE ? OR a." . $nameCol . " LIKE ? ORDER BY a.code ASC LIMIT ?";
-            $qobj = $this->db->query($sql, array($param, $param, intval($limit)));
+            if ($is_code) {
+                // match code prefix for incremental typing (e.g. '14' matches '1408...')
+                $codeParam = $this->db->escape_like_str($q) . '%';
+                $nameParam = '%' . $this->db->escape_like_str($q) . '%';
+                $mayorCondition = $isMayorPresent ? ' AND a.is_mayor = 0' : '';
+                $sql = "SELECT " . $this->account_select_cols('a') . ", 0 as balance FROM " . $acct_fq . " as a WHERE (a.code LIKE ? OR a." . $nameCol . " LIKE ?)" . $mayorCondition . " ORDER BY a.code ASC LIMIT ?";
+                $qobj = $this->db->query($sql, array($codeParam, $nameParam, intval($limit)));
+            } else {
+                // general text search: match anywhere in code or name
+                $param = '%' . $this->db->escape_like_str($q) . '%';
+                $mayorCondition = $isMayorPresent ? ' AND a.is_mayor = 0' : '';
+                $sql = "SELECT " . $this->account_select_cols('a') . ", 0 as balance FROM " . $acct_fq . " as a WHERE (a.code LIKE ? OR a." . $nameCol . " LIKE ?)" . $mayorCondition . " ORDER BY a.code ASC LIMIT ?";
+                $qobj = $this->db->query($sql, array($param, $param, intval($limit)));
+            }
         }
         if (!$qobj) return [];
         return $qobj->result();
+    }
+
+    /**
+     * Aggregate trial balance values from child accounts into their parent accounts.
+     * Takes the rows array (with opening_deudor, opening_acreedor, debits, credits, closing_deudor, closing_acreedor)
+     * and the accounts array, and sums descendant values up to parents.
+     */
+    protected function aggregate_trial_balance_rows($rows, $accounts)
+    {
+        if (empty($rows) || empty($accounts)) {
+            return $rows;
+        }
+
+        // Build map of account id -> parent_id for traversal
+        $accounts_map = [];
+        foreach ($accounts as $a) {
+            $id = intval($a->id);
+            $accounts_map[$id] = [
+                'parent_id' => isset($a->parent_id) && $a->parent_id ? intval($a->parent_id) : null,
+            ];
+        }
+
+        // Build indexed map of rows by account id
+        $rows_by_id = [];
+        foreach ($rows as $r) {
+            $rows_by_id[intval($r['id'])] = $r;
+        }
+
+        // For each child account, add its balance to all ancestors
+        foreach ($rows as $row) {
+            $current = intval($row['id']);
+            $visited = [];
+            
+            while (isset($accounts_map[$current]) && $accounts_map[$current]['parent_id']) {
+                $parent = $accounts_map[$current]['parent_id'];
+                
+                // Prevent infinite loops and duplicate additions
+                if ($parent === null || isset($visited[$parent]) || $parent === $current) {
+                    break;
+                }
+                $visited[$parent] = true;
+
+                // Create parent row if it doesn't exist
+                if (!isset($rows_by_id[$parent])) {
+                    $rows_by_id[$parent] = [
+                        'id' => $parent,
+                        'code' => '',
+                        'name' => '',
+                        'type' => 'activo',
+                        'opening_raw' => 0.0,
+                        'opening_deudor' => 0.0,
+                        'opening_acreedor' => 0.0,
+                        'debits' => 0.0,
+                        'credits' => 0.0,
+                        'closing_raw' => 0.0,
+                        'closing_deudor' => 0.0,
+                        'closing_acreedor' => 0.0
+                    ];
+                }
+
+                // Add child's balances to parent
+                $rows_by_id[$parent]['opening_raw'] += floatval($row['opening_raw'] ?? 0.0);
+                $rows_by_id[$parent]['opening_deudor'] += floatval($row['opening_deudor'] ?? 0.0);
+                $rows_by_id[$parent]['opening_acreedor'] += floatval($row['opening_acreedor'] ?? 0.0);
+                $rows_by_id[$parent]['debits'] += floatval($row['debits'] ?? 0.0);
+                $rows_by_id[$parent]['credits'] += floatval($row['credits'] ?? 0.0);
+                $rows_by_id[$parent]['closing_raw'] += floatval($row['closing_raw'] ?? 0.0);
+                $rows_by_id[$parent]['closing_deudor'] += floatval($row['closing_deudor'] ?? 0.0);
+                $rows_by_id[$parent]['closing_acreedor'] += floatval($row['closing_acreedor'] ?? 0.0);
+
+                $current = $parent;
+            }
+        }
+
+        return array_values($rows_by_id);
     }
 
     // Obtener balanza de comprobación (trial balance) por cuenta.
@@ -736,6 +933,42 @@ class Contabilidad_model extends CI_Model {
         $this->db->order_by('a.code', 'asc');
         $accounts = $this->db->get()->result();
 
+        // If only mayor accounts are requested, build a child lookup so parent balances include descendant movements.
+        $descendant_map = [];
+        if (!empty($only_mayor)) {
+            $all_accounts = $this->db->select('id,parent_id')->from($acct)->get()->result();
+            $children = [];
+            foreach ($all_accounts as $ac) {
+                $pid = isset($ac->parent_id) && $ac->parent_id ? intval($ac->parent_id) : null;
+                if ($pid) {
+                    if (!isset($children[$pid])) {
+                        $children[$pid] = [];
+                    }
+                    $children[$pid][] = intval($ac->id);
+                }
+            }
+            $get_descendants = function($id) use (&$get_descendants, &$children) {
+                $result = [];
+                if (!isset($children[$id])) {
+                    return $result;
+                }
+                foreach ($children[$id] as $child_id) {
+                    $result[] = $child_id;
+                    $result = array_merge($result, $get_descendants($child_id));
+                }
+                return $result;
+            };
+            foreach ($accounts as $a) {
+                $aid = intval($a->id);
+                $descendants = $get_descendants($aid);
+                if (!empty($descendants)) {
+                    $descendant_map[$aid] = array_merge([$aid], $descendants);
+                } else {
+                    $descendant_map[$aid] = [$aid];
+                }
+            }
+        }
+
         $rows = [];
         $totals = [
             'opening_deudor' => 0, 'opening_acreedor' => 0,
@@ -749,17 +982,25 @@ class Contabilidad_model extends CI_Model {
             if (isset($a->code) && trim($a->code) === '9999') {
                 continue;
             }
+
+            $account_ids = [$aid];
+            if (!empty($only_mayor) && isset($descendant_map[$aid])) {
+                $account_ids = $descendant_map[$aid];
+            }
+            $placeholders = implode(',', array_fill(0, count($account_ids), '?'));
+
             // opening: sum before start - ONLY POSTED ENTRIES
             if ($start) {
-                $sql = "SELECT IFNULL(SUM(e.debit - e.credit),0) as opening_raw FROM tb_journal_entry e JOIN tb_journal j ON j.id = e.journal_id WHERE e.account_id = ? AND j.date < ? AND j.posted = 1 AND (j.voided IS NULL OR j.voided = 0)";
-                $q = $this->db->query($sql, array($aid, $start));
+                $sql = "SELECT IFNULL(SUM(e.debit - e.credit),0) as opening_raw FROM tb_journal_entry e JOIN tb_journal j ON j.id = e.journal_id WHERE e.account_id IN ($placeholders) AND j.date < ? AND j.posted = 1 AND (j.voided IS NULL OR j.voided = 0)";
+                $params = array_merge($account_ids, array($start));
+                $q = $this->db->query($sql, $params);
                 $opening_raw = floatval($q->row()->opening_raw);
             } else {
                 $opening_raw = 0.0;
             }
             // period debits/credits - ONLY POSTED ENTRIES
-            $sql2 = "SELECT IFNULL(SUM(e.debit),0) as debits, IFNULL(SUM(e.credit),0) as credits FROM tb_journal_entry e JOIN tb_journal j ON j.id = e.journal_id WHERE e.account_id = ? AND j.posted = 1 AND (j.voided IS NULL OR j.voided = 0)";
-            $params = array($aid);
+            $sql2 = "SELECT IFNULL(SUM(e.debit),0) as debits, IFNULL(SUM(e.credit),0) as credits FROM tb_journal_entry e JOIN tb_journal j ON j.id = e.journal_id WHERE e.account_id IN ($placeholders) AND j.posted = 1 AND (j.voided IS NULL OR j.voided = 0)";
+            $params = $account_ids;
             if ($start) { $sql2 .= " AND j.date >= ?"; $params[] = $start; }
             if ($end) { $sql2 .= " AND j.date <= ?"; $params[] = $end; }
             $q2 = $this->db->query($sql2, $params);
@@ -795,6 +1036,8 @@ class Contabilidad_model extends CI_Model {
                 'code' => $a->code,
                 'name' => $a->name,
                 'type' => $a->type,
+                'parent_id' => isset($a->parent_id) ? intval($a->parent_id) : null,
+                'is_mayor' => isset($a->is_mayor) ? ($a->is_mayor ? 1 : 0) : 0,
                 'opening_raw' => $opening_raw,
                 'opening_deudor' => $opening_deudor,
                 'opening_acreedor' => $opening_acreedor,
@@ -812,6 +1055,24 @@ class Contabilidad_model extends CI_Model {
             $totals['credits'] += $credits;
             $totals['closing_deudor'] += $closing_deudor;
             $totals['closing_acreedor'] += $closing_acreedor;
+        }
+
+        // Aggregate child account balances into their parent accounts so parent shows total from descendants
+        $rows = $this->aggregate_trial_balance_rows($rows, $accounts);
+
+        // Recalculate totals from aggregated rows
+        $totals = [
+            'opening_deudor' => 0, 'opening_acreedor' => 0,
+            'debits' => 0, 'credits' => 0,
+            'closing_deudor' => 0, 'closing_acreedor' => 0
+        ];
+        foreach ($rows as $r) {
+            $totals['opening_deudor'] += floatval($r['opening_deudor'] ?? 0);
+            $totals['opening_acreedor'] += floatval($r['opening_acreedor'] ?? 0);
+            $totals['debits'] += floatval($r['debits'] ?? 0);
+            $totals['credits'] += floatval($r['credits'] ?? 0);
+            $totals['closing_deudor'] += floatval($r['closing_deudor'] ?? 0);
+            $totals['closing_acreedor'] += floatval($r['closing_acreedor'] ?? 0);
         }
 
         // If grouping requested, support two modes: 'prefix' (code prefix) and 'level' (ancestor level)
@@ -963,7 +1224,7 @@ class Contabilidad_model extends CI_Model {
      * $account_ids: array empty => all accounts
      * returns array of accounts: [ ['id', 'code','name','opening', 'lines' => [ {date,serie,document_no,descripcion,debit,credit,balance} ], 'final_balance'] ]
      */
-    public function get_auxiliares($account_ids = [], $start = null, $end = null)
+    public function get_auxiliares($account_ids = [], $start = null, $end = null, $exclude_mayor = false)
     {
         // fetch accounts to report (filter if provided)
         $acct_fq = $this->account_table_fq();
@@ -971,6 +1232,9 @@ class Contabilidad_model extends CI_Model {
         $this->db->from($acct_fq . ' as a');
         if (!empty($account_ids)) {
             $this->db->where_in('a.id', $account_ids);
+        }
+        if ($exclude_mayor && $this->safe_field_exists('is_mayor', $acct_fq)) {
+            $this->db->where('a.is_mayor', 0);
         }
         $this->db->order_by('a.code', 'asc');
         $accounts = $this->db->get()->result();
@@ -1156,7 +1420,7 @@ class Contabilidad_model extends CI_Model {
         // Use grouping by 'report_bs' (Estado de Situación Financiera) when available
         $activo = $this->_get_cuentas_por_tipo_grouped('activo', $fecha_fin);
         $pasivo = $this->_get_cuentas_por_tipo_grouped('pasivo', $fecha_fin);
-        $patrimonio = $this->_get_cuentas_por_tipo_grouped('patrimonio', $fecha_fin);
+        list($patrimonio, $patrimonio_extras) = $this->_get_patrimonio_groups($fecha_fin);
 
         $total_activo = 0; $total_pasivo = 0; $total_patrimonio = 0;
         foreach ($activo as $g) { $total_activo += floatval($g['total']); }
@@ -1167,6 +1431,7 @@ class Contabilidad_model extends CI_Model {
             'activo' => $activo,
             'pasivo' => $pasivo,
             'patrimonio' => $patrimonio,
+            'patrimonio_extras' => $patrimonio_extras,
             'total_activo' => $total_activo,
             'total_pasivo' => $total_pasivo,
             'total_patrimonio' => $total_patrimonio,
@@ -1182,20 +1447,25 @@ class Contabilidad_model extends CI_Model {
         $cuentas = [];
         
         // Get all accounts of types activo, pasivo, patrimonio
-        $this->db->select($this->account_select_cols_noalias());
+        $this->db->select($this->account_select_cols_noalias() . ', report_bs');
         $acct = $this->account_table_name();
         $this->db->from($acct);
         $this->db->where_in('type', ['activo', 'pasivo', 'patrimonio']);
         $this->db->order_by('code', 'asc');
         $accounts = $this->db->get()->result();
         
+        $mayorIds = $this->_get_mayor_account_ids($accounts);
+        $balanceRows = [];
+
         foreach ($accounts as $account) {
-            $meses = [];
-            
-            // Calculate balance for each month
+            $row = new stdClass();
+            $row->id = intval($account->id);
+            $row->parent_id = isset($account->parent_id) && $account->parent_id ? intval($account->parent_id) : null;
+            $row->type = strtolower($account->type);
+            $row->report_bs = trim($account->report_bs) !== '' ? trim($account->report_bs) : 'Otros';
+
             for ($mes = 1; $mes <= 12; $mes++) {
                 $fecha_fin = date('Y-m-t', strtotime($anio . '-' . str_pad($mes, 2, '0', STR_PAD_LEFT) . '-01'));
-                
                 $sql = "SELECT IFNULL(SUM(e.debit - e.credit),0) as bal 
                         FROM tb_journal_entry e 
                         JOIN tb_journal j ON j.id = e.journal_id 
@@ -1203,27 +1473,179 @@ class Contabilidad_model extends CI_Model {
                         AND j.posted = 1 
                         AND (j.voided IS NULL OR j.voided = 0)
                         AND j.date <= ?";
-                
                 $q = $this->db->query($sql, array($account->id, $fecha_fin));
                 $raw = floatval($q->row()->bal);
-                
-                // Normalize sign
-                $type = strtolower($account->type);
-                $factor = in_array($type, ['pasivo', 'patrimonio']) ? -1 : 1;
-                $meses[$mes] = abs($raw * $factor);
+                $factor = in_array($row->type, ['pasivo', 'patrimonio']) ? -1 : 1;
+                $row->{'month_' . $mes} = abs($raw * $factor);
             }
-            
+            $balanceRows[] = $row;
+        }
+
+        $aggregated = $this->aggregate_account_balances_multi($balanceRows, array_map(function($m){ return 'month_' . $m; }, range(1, 12)));
+
+        foreach ($accounts as $account) {
+            $aid = intval($account->id);
+            if (!isset($mayorIds[$aid])) {
+                continue;
+            }
+            $aggregatedRow = isset($aggregated[$aid]) ? $aggregated[$aid] : null;
+            if (!$aggregatedRow) {
+                continue;
+            }
+            $meses = [];
+            $hasNonZero = false;
+            for ($mes = 1; $mes <= 12; $mes++) {
+                $valor = isset($aggregatedRow->{'month_' . $mes}) ? floatval($aggregatedRow->{'month_' . $mes}) : 0.0;
+                $meses[$mes] = $valor;
+                if (abs($valor) > 0.01) {
+                    $hasNonZero = true;
+                }
+            }
+            if (!$hasNonZero) {
+                continue;
+            }
             $cuentas[] = [
                 'nombre' => $account->code . ' ' . $account->name,
                 'tipo' => $account->type,
-                'meses' => $meses
+                'meses' => $meses,
+                'report_bs' => trim($account->report_bs) !== '' ? trim($account->report_bs) : 'Otros'
             ];
         }
-        
+
+        $grupos = $this->_build_situacion_financiera_anual_groups($accounts, $mayorIds, $aggregated);
+        $totales = ['activo' => 0.0, 'pasivo' => 0.0, 'patrimonio' => 0.0, 'pasivo_patrimonio' => 0.0];
+        foreach (['activo', 'pasivo', 'patrimonio'] as $tipo) {
+            if (!empty($grupos[$tipo])) {
+                foreach ($grupos[$tipo] as $group) {
+                    $totales[$tipo] += floatval($group['total']);
+                }
+            }
+        }
+        $totales['pasivo_patrimonio'] = $totales['pasivo'] + $totales['patrimonio'];
+
         return [
             'cuentas' => $cuentas,
+            'grupos' => $grupos,
+            'totales' => $totales,
             'anio' => $anio
         ];
+    }
+
+    private function _build_situacion_financiera_anual_groups($accounts, $mayorIds, $aggregated)
+    {
+        $this->load->config('report_lines');
+        $orderList = isset($this->config->item('report_lines')['bs']) ? $this->config->item('report_lines')['bs'] : [];
+
+        $groupsByType = [
+            'activo' => [],
+            'pasivo' => [],
+            'patrimonio' => []
+        ];
+
+        foreach (array_keys($groupsByType) as $tipo) {
+            $tipoOrder = $this->_filter_bs_groups_by_type($tipo, $orderList);
+            foreach ($tipoOrder as $label) {
+                $groupsByType[$tipo][$label] = [
+                    'label' => $label,
+                    'items' => [],
+                    'total' => 0.0,
+                    'meses' => array_fill(1, 12, 0.0)
+                ];
+            }
+            if (!isset($groupsByType[$tipo]['Otros'])) {
+                $groupsByType[$tipo]['Otros'] = [
+                    'label' => 'Otros',
+                    'items' => [],
+                    'total' => 0.0,
+                    'meses' => array_fill(1, 12, 0.0)
+                ];
+            }
+        }
+
+        foreach ($accounts as $account) {
+            $aid = intval($account->id);
+            if (!isset($mayorIds[$aid])) {
+                continue;
+            }
+            $aggregatedRow = isset($aggregated[$aid]) ? $aggregated[$aid] : null;
+            if (!$aggregatedRow) {
+                continue;
+            }
+
+            $tipo = strtolower($account->type);
+            if (!isset($groupsByType[$tipo])) {
+                continue;
+            }
+
+            $meses = [];
+            $hasNonZero = false;
+            $itemTotal = 0.0;
+            for ($mes = 1; $mes <= 12; $mes++) {
+                $valor = isset($aggregatedRow->{'month_' . $mes}) ? floatval($aggregatedRow->{'month_' . $mes}) : 0.0;
+                $meses[$mes] = $valor;
+                if (abs($valor) > 0.01) {
+                    $hasNonZero = true;
+                }
+                $itemTotal += abs($valor);
+            }
+            if (!$hasNonZero) {
+                continue;
+            }
+
+            $groupKey = trim($account->report_bs) !== '' ? trim($account->report_bs) : 'Otros';
+            if (!isset($groupsByType[$tipo][$groupKey])) {
+                $groupsByType[$tipo][$groupKey] = [
+                    'label' => $groupKey,
+                    'items' => [],
+                    'total' => 0.0,
+                    'meses' => array_fill(1, 12, 0.0)
+                ];
+            }
+
+            $groupsByType[$tipo][$groupKey]['items'][] = [
+                'nombre' => $account->code . ' - ' . $account->name,
+                'meses' => $meses
+            ];
+
+            foreach ($meses as $mes => $valor) {
+                $groupsByType[$tipo][$groupKey]['meses'][$mes] += $valor;
+            }
+            $groupsByType[$tipo][$groupKey]['total'] += $itemTotal;
+        }
+
+        $orderedByType = [];
+        foreach (array_keys($groupsByType) as $tipo) {
+            $tipoOrder = $this->_filter_bs_groups_by_type($tipo, $orderList);
+            $ordered = [];
+
+            foreach ($tipoOrder as $label) {
+                if (isset($groupsByType[$tipo][$label])) {
+                    $ordered[] = $groupsByType[$tipo][$label];
+                    unset($groupsByType[$tipo][$label]);
+                }
+            }
+
+            $otros = null;
+            if (isset($groupsByType[$tipo]['Otros'])) {
+                $otros = $groupsByType[$tipo]['Otros'];
+                unset($groupsByType[$tipo]['Otros']);
+            }
+
+            if (!empty($groupsByType[$tipo])) {
+                ksort($groupsByType[$tipo]);
+                foreach ($groupsByType[$tipo] as $group) {
+                    $ordered[] = $group;
+                }
+            }
+
+            if ($otros !== null) {
+                $ordered[] = $otros;
+            }
+
+            $orderedByType[$tipo] = $ordered;
+        }
+
+        return $orderedByType;
     }
 
     /**
@@ -1287,17 +1709,17 @@ class Contabilidad_model extends CI_Model {
         // Load configured group order
         $this->load->config('report_lines');
         $orderList = isset($this->config->item('report_lines')['bs']) ? $this->config->item('report_lines')['bs'] : [];
+        $orderList = $this->_filter_bs_groups_by_type($tipo, $orderList);
 
         $groups = [];
         // Initialize groups from config to ensure they always appear (even with zero total)
         foreach ($orderList as $label) {
             $groups[$label] = ['label' => $label, 'items' => [], 'total' => 0.0];
         }
-        // Ensure 'Otros' exists for unmapped accounts
-        if (!isset($groups['Otros'])) {
-            $groups['Otros'] = ['label' => 'Otros', 'items' => [], 'total' => 0.0];
-        }
 
+        $mayorIds = $this->_get_mayor_account_ids($accounts);
+
+        $balanceRows = [];
         foreach ($accounts as $account) {
             $sql = "SELECT IFNULL(SUM(e.debit - e.credit),0) as bal 
                     FROM tb_journal_entry e 
@@ -1314,11 +1736,30 @@ class Contabilidad_model extends CI_Model {
             $factor = in_array(strtolower($tipo), ['pasivo', 'patrimonio']) ? -1 : 1;
             $saldo = abs($raw * $factor);
 
-            // Skip near-zero balances but still keep group entries (we don't add items with zero)
-            if ($saldo <= 0.01) continue;
+            $row = new stdClass();
+            $row->id = intval($account->id);
+            $row->parent_id = isset($account->parent_id) && $account->parent_id ? intval($account->parent_id) : null;
+            $row->balance = $saldo;
+            $balanceRows[] = $row;
+        }
+
+        $aggregated = $this->aggregate_account_balances($balanceRows);
+
+        foreach ($accounts as $account) {
+            $aid = intval($account->id);
+            if (!isset($mayorIds[$aid])) {
+                continue;
+            }
+
+            $saldo = isset($aggregated[$aid]) ? floatval($aggregated[$aid]->balance) : 0.0;
+            if ($saldo <= 0.01) {
+                continue;
+            }
 
             $groupKey = trim($account->report_bs);
-            if ($groupKey === '' || $groupKey === null) $groupKey = 'Otros';
+            if ($groupKey === '' || $groupKey === null) {
+                $groupKey = 'Otros';
+            }
 
             if (!isset($groups[$groupKey])) {
                 // create dynamic group if not in config
@@ -1355,6 +1796,163 @@ class Contabilidad_model extends CI_Model {
         }
 
         return $ordered;
+    }
+
+    /**
+     * Filtra las líneas de estado de situación financiera por tipo de cuenta.
+     * Activo sólo incluye grupos de activo; Pasivo sólo incluye grupos de pasivo;
+     * Patrimonio incluye grupos de patrimonio y mantiene las cuentas contingentes/orden al final.
+     */
+    private function _filter_bs_groups_by_type($tipo, $orderList)
+    {
+        $pattern = [
+            'activo' => ['start' => 'Fondos disponibles', 'end' => 'Otros activos, neto'],
+            'pasivo' => ['start' => 'Obligaciones financieras', 'end' => 'Deuda Subordinada y Obligaciones convertibles en acciones'],
+            'patrimonio' => ['start' => 'Capital social / Aportes', 'end' => 'Resultados del Ejercicio']
+        ];
+
+        if (!isset($pattern[$tipo])) {
+            return $orderList;
+        }
+
+        $filtered = [];
+        $include = false;
+        foreach ($orderList as $label) {
+            if ($label === $pattern[$tipo]['start']) {
+                $include = true;
+            }
+            if ($include) {
+                $filtered[] = $label;
+            }
+            if ($include && $label === $pattern[$tipo]['end']) {
+                break;
+            }
+        }
+
+        if ($tipo === 'patrimonio') {
+            foreach ($orderList as $label) {
+                if ($label === 'Cuentas contingentes' || $label === 'Cuentas de orden') {
+                    $filtered[] = $label;
+                }
+            }
+        }
+
+        return $filtered;
+    }
+
+    /**
+     * Determine which accounts should be treated as Mayor accounts.
+     * Prefers explicit is_mayor flag when available, otherwise uses accounts with children.
+     */
+    private function _get_mayor_account_ids($accounts)
+    {
+        $mayorIds = [];
+        $parentIds = [];
+
+        foreach ($accounts as $account) {
+            $id = isset($account->id) ? intval($account->id) : null;
+            if (!$id) {
+                continue;
+            }
+            if (isset($account->is_mayor) && intval($account->is_mayor) === 1) {
+                $mayorIds[$id] = true;
+            }
+            if (isset($account->parent_id) && $account->parent_id) {
+                $parentIds[intval($account->parent_id)] = true;
+            }
+        }
+
+        if (empty($mayorIds)) {
+            return $parentIds;
+        }
+
+        foreach ($parentIds as $pid => $_) {
+            $mayorIds[$pid] = true;
+        }
+
+        return $mayorIds;
+    }
+
+    /**
+     * Aggregate balances over multiple month keys into parent accounts.
+     */
+    protected function aggregate_account_balances_multi($rows, $monthKeys)
+    {
+        if (empty($rows) || !is_array($rows)) {
+            return [];
+        }
+
+        $accounts_map = [];
+        foreach ($rows as $row) {
+            $id = isset($row->id) ? intval($row->id) : null;
+            if ($id === null) {
+                continue;
+            }
+            $accounts_map[$id] = [
+                'parent_id' => isset($row->parent_id) && $row->parent_id ? intval($row->parent_id) : null,
+            ];
+        }
+
+        $aggregated = [];
+        foreach ($rows as $row) {
+            $id = intval($row->id);
+            $aggregated[$id] = $row;
+            foreach ($monthKeys as $key) {
+                if (!isset($aggregated[$id]->{$key})) {
+                    $aggregated[$id]->{$key} = 0.0;
+                }
+                $aggregated[$id]->{$key} = floatval($aggregated[$id]->{$key});
+            }
+        }
+
+        foreach ($rows as $row) {
+            $current = intval($row->id);
+            $visited = [];
+            while (isset($accounts_map[$current]) && $accounts_map[$current]['parent_id']) {
+                $parent = $accounts_map[$current]['parent_id'];
+                if ($parent === null || isset($visited[$parent]) || $parent === $current) {
+                    break;
+                }
+                $visited[$parent] = true;
+                if (!isset($aggregated[$parent])) {
+                    $parentRow = new stdClass();
+                    $parentRow->id = $parent;
+                    $parentRow->parent_id = $accounts_map[$parent]['parent_id'] ?? null;
+                    foreach ($monthKeys as $key) {
+                        $parentRow->{$key} = 0.0;
+                    }
+                    $aggregated[$parent] = $parentRow;
+                }
+                foreach ($monthKeys as $key) {
+                    $amount = isset($row->{$key}) ? floatval($row->{$key}) : 0.0;
+                    $aggregated[$parent]->{$key} += $amount;
+                }
+                $current = $parent;
+            }
+        }
+
+        return $aggregated;
+    }
+
+    /**
+     * Extrae los grupos de patrimonio que deben permanecer fuera del total
+     * y mostrarse después de Total Pasivo y Patrimonio.
+     */
+    private function _get_patrimonio_groups($fecha_fin)
+    {
+        $groups = $this->_get_cuentas_por_tipo_grouped('patrimonio', $fecha_fin);
+        $patrimonio = [];
+        $patrimonio_extras = [];
+
+        foreach ($groups as $group) {
+            if (in_array($group['label'], ['Cuentas contingentes', 'Cuentas de orden'])) {
+                $patrimonio_extras[] = $group;
+            } else {
+                $patrimonio[] = $group;
+            }
+        }
+
+        return [$patrimonio, $patrimonio_extras];
     }
 
     /**
@@ -1550,42 +2148,76 @@ class Contabilidad_model extends CI_Model {
                 $g_imp = [ 'Impuesto a la renta' ];
 
                 $ri = trim($account->report_is);
-                if (in_array($ri, $g_ingresos, true)) {
-                    $resultado['ingresos_financieros'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                $normalize = function($s) {
+                    $s = trim((string)$s);
+                    $s = preg_replace('/\s+/u', ' ', $s); // collapse whitespace
+                    return mb_strtolower($s);
+                };
+                $ri_norm = $normalize($ri);
+                $g_ingresos_norm = array_map($normalize, $g_ingresos);
+                $g_gastos_fin_norm = array_map($normalize, $g_gastos_fin);
+                $g_provisiones_norm = array_map($normalize, $g_provisiones);
+                $g_ing_oper_norm = array_map($normalize, $g_ing_oper);
+                $g_gas_oper_norm = array_map($normalize, $g_gas_oper);
+                $g_part_norm = array_map($normalize, $g_part);
+                $g_admin_norm = array_map($normalize, $g_admin);
+                $g_imp_norm = array_map($normalize, $g_imp);
+
+                if (in_array($ri_norm, $g_ingresos_norm, true)) {
+                    $idx = array_search($ri_norm, $g_ingresos_norm, true);
+                    $label = ($idx !== false && isset($g_ingresos[$idx])) ? $g_ingresos[$idx] : $ri;
+                    $resultado['ingresos_financieros'][] = ['nombre' => $label, 'monto' => abs($monto)];
                     $resultado['total_ingresos_financieros'] += abs($monto);
                     $clasificado = true;
-                } elseif (in_array($ri, $g_gastos_fin, true)) {
-                    $resultado['gastos_financieros'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                } elseif (in_array($ri_norm, $g_gastos_fin_norm, true)) {
+                    $idx = array_search($ri_norm, $g_gastos_fin_norm, true);
+                    $label = ($idx !== false && isset($g_gastos_fin[$idx])) ? $g_gastos_fin[$idx] : $ri;
+                    if ($ri_norm === 'diferencia cambiaria (gastos)') {
+                        $label = 'Diferencia Cambiaria';
+                    }
+                    $resultado['gastos_financieros'][] = ['nombre' => $label, 'monto' => abs($monto)];
                     $resultado['total_gastos_financieros'] += abs($monto);
                     $clasificado = true;
-                } elseif (in_array($ri, $g_provisiones, true)) {
-                    $resultado['provisiones'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                } elseif (in_array($ri_norm, $g_provisiones_norm, true)) {
+                    $idx = array_search($ri_norm, $g_provisiones_norm, true);
+                    $label = ($idx !== false && isset($g_provisiones[$idx])) ? $g_provisiones[$idx] : $ri;
+                    $resultado['provisiones'][] = ['nombre' => $label, 'monto' => abs($monto)];
                     $resultado['total_provisiones'] += abs($monto);
                     $clasificado = true;
-                } elseif (in_array($ri, $g_ing_oper, true)) {
-                    $resultado['ingresos_operativos'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                } elseif (in_array($ri_norm, $g_ing_oper_norm, true)) {
+                    $idx = array_search($ri_norm, $g_ing_oper_norm, true);
+                    $label = ($idx !== false && isset($g_ing_oper[$idx])) ? $g_ing_oper[$idx] : $ri;
+                    $resultado['ingresos_operativos'][] = ['nombre' => $label, 'monto' => abs($monto)];
                     $resultado['total_ingresos_operativos'] += abs($monto);
                     $clasificado = true;
-                } elseif (in_array($ri, $g_gas_oper, true)) {
-                    $resultado['gastos_operativos'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                } elseif (in_array($ri_norm, $g_gas_oper_norm, true)) {
+                    $idx = array_search($ri_norm, $g_gas_oper_norm, true);
+                    $label = ($idx !== false && isset($g_gas_oper[$idx])) ? $g_gas_oper[$idx] : $ri;
+                    $resultado['gastos_operativos'][] = ['nombre' => $label, 'monto' => abs($monto)];
                     $resultado['total_gastos_operativos'] += abs($monto);
                     $clasificado = true;
-                } elseif (in_array($ri, $g_part, true)) {
-                    $resultado['participacion_asociadas'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                } elseif (in_array($ri_norm, $g_part_norm, true)) {
+                    $idx = array_search($ri_norm, $g_part_norm, true);
+                    $label = ($idx !== false && isset($g_part[$idx])) ? $g_part[$idx] : $ri;
+                    $resultado['participacion_asociadas'][] = ['nombre' => $label, 'monto' => abs($monto)];
                     $clasificado = true;
-                } elseif (in_array($ri, $g_admin, true)) {
-                    $resultado['gastos_administracion'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                } elseif (in_array($ri_norm, $g_admin_norm, true)) {
+                    $idx = array_search($ri_norm, $g_admin_norm, true);
+                    $label = ($idx !== false && isset($g_admin[$idx])) ? $g_admin[$idx] : $ri;
+                    $resultado['gastos_administracion'][] = ['nombre' => $label, 'monto' => abs($monto)];
                     $resultado['total_gastos_administracion'] += abs($monto);
                     $clasificado = true;
-                } elseif (in_array($ri, $g_imp, true)) {
-                    $resultado['impuesto_renta'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                } elseif (in_array($ri_norm, $g_imp_norm, true)) {
+                    $idx = array_search($ri_norm, $g_imp_norm, true);
+                    $label = ($idx !== false && isset($g_imp[$idx])) ? $g_imp[$idx] : $ri;
+                    $resultado['impuesto_renta'][] = ['nombre' => $label, 'monto' => abs($monto)];
                     $resultado['total_impuesto'] += abs($monto);
                     $clasificado = true;
                 }
             }
             
             // INGRESOS FINANCIEROS (intereses, rendimientos)
-            if ($type === 'ingreso' && (
+            if (!$clasificado && $type === 'ingreso' && (
                 strpos($nombre_lower, 'interes') !== false ||
                 strpos($nombre_lower, 'interés') !== false ||
                 strpos($nombre_lower, 'rendimiento') !== false ||
@@ -1653,10 +2285,10 @@ class Contabilidad_model extends CI_Model {
                 $clasificado = true;
             }
             
-            // INGRESOS OPERATIVOS (comisiones, servicios, otros)
+            // DEFAULT FOR UNCLASSIFIED INCOME: place under Ingresos Financieros (Otros Ingresos Financieros)
             if (!$clasificado && $type === 'ingreso') {
-                $resultado['ingresos_operativos'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
-                $resultado['total_ingresos_operativos'] += abs($monto);
+                $resultado['ingresos_financieros'][] = ['nombre' => $nombre, 'monto' => abs($monto)];
+                $resultado['total_ingresos_financieros'] += abs($monto);
                 $clasificado = true;
             }
             
@@ -1827,10 +2459,14 @@ class Contabilidad_model extends CI_Model {
     // Create account
     public function create_account($data)
     {
+        $normalizedType = null;
+        if (isset($data['type']) && $data['type'] !== null && trim($data['type']) !== '') {
+            $normalizedType = ucfirst(strtolower(trim($data['type'])));
+        }
         $insert = [
             'code' => isset($data['code']) ? $data['code'] : null,
             'name' => isset($data['name']) ? $data['name'] : null,
-            'type' => isset($data['type']) ? $data['type'] : null,
+            'type' => $normalizedType,
             'parent_id' => isset($data['parent_id']) ? $data['parent_id'] : null,
             'created_at' => date('Y-m-d H:i:s'),
         ];
@@ -1865,10 +2501,14 @@ class Contabilidad_model extends CI_Model {
     // Update account
     public function update_account($id, $data)
     {
+        $normalizedType = null;
+        if (isset($data['type']) && $data['type'] !== null && trim($data['type']) !== '') {
+            $normalizedType = ucfirst(strtolower(trim($data['type'])));
+        }
         $update = [
             'code' => isset($data['code']) ? $data['code'] : null,
             'name' => isset($data['name']) ? $data['name'] : null,
-            'type' => isset($data['type']) ? $data['type'] : null,
+            'type' => $normalizedType,
             'parent_id' => isset($data['parent_id']) ? $data['parent_id'] : null,
         ];
         // Include optional report_type/report_is/report_bs if columns exist

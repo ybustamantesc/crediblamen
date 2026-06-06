@@ -113,6 +113,22 @@
         margin-right: 12px;
         font-size: 18px;
     }
+
+    .servicont-sidebar .nav-item.has-sub .submenu-content {
+        padding: 0 10px 10px;
+    }
+
+    .servicont-sidebar .nav-item.has-sub .submenu-content .menu-item {
+        display: block;
+        width: auto;
+        margin: 6px 15px;
+        padding: 12px 16px;
+        border-radius: 8px;
+        text-align: left;
+        white-space: normal;
+        overflow-wrap: anywhere;
+        line-height: 1.4;
+    }
 </style>
 
 <div class="app-sidebar colored servicont-sidebar">
@@ -180,6 +196,8 @@
                     <div class="submenu-content">
                         <a href="<?php echo base_url('contabilidad/situacion_financiera'); ?>" class="menu-item">Estado de Situación Financiera</a>
                         <a href="<?php echo base_url('contabilidad/resultados'); ?>" class="menu-item">Estado de Resultados</a>
+                        <!-- Enlace 'Desagregación de Cuentas' ocultado por solicitud del usuario -->
+                        <!-- <a href="<?php echo base_url('contabilidad/desagregacion_cuentas'); ?>" class="menu-item">Desagregación de Cuentas</a> -->
                         <!-- Enlace 'Flujo de Efectivo' ocultado por solicitud del usuario -->
                         <!-- <a href="<?php echo base_url('contabilidad/flujo'); ?>" class="menu-item">Flujo de Efectivo</a> -->
                     </div>

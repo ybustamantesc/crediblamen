@@ -6849,3 +6849,111 @@ CHECKPOINT 4: Processing row 1
 CHECKPOINT 5: Updated garantia_id=14
 DELETED garantia_id=16 because it was not present in posted data
 SAVE completed for solicitud_id=14
+=== GARANTIAS SAVE DEBUG 2026-06-05T13:28:17-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 16
+    [garantia_id] => Array
+        (
+            [0] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara profesional
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+        )
+
+    [marca] => Array
+        (
+            [0] => Negro
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 2
+        )
+
+    [costo] => Array
+        (
+            [0] => 4500
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Cuidado
+        )
+
+    [total] => 4500.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => pngtree-generic-manual-focus-photo-camera-lens-isolated-png-image_11511754.png
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/png
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpF8B5.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 37844
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 6: Inserted garantia_id=18
+SAVE completed for solicitud_id=16

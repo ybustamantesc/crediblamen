@@ -5,14 +5,14 @@
     <?php $this->load->view('contabilidad/sidebar_contabilidad'); ?>
     <div class="main-content">
         <div class="container-fluid">
-            <div class="servicont-balanza-header" style="margin-bottom:18px;">
+            <div class="servicont-balanza-header">
                 <div class="d-flex align-items-center">
-                    <div style="width:40px;height:40px;background:rgba(0,0,0,0.06);border-radius:8px;display:flex;align-items:center;justify-content:center;margin-right:12px;">
-                        <i class="fas fa-lock" style="color:#1e3c72;font-size:18px;"></i>
+                    <div class="servicont-header-icon">
+                        <i class="fas fa-lock"></i>
                     </div>
                     <div>
-                        <h1 style="margin:0;font-size:18px;font-weight:700;">Proceso: Cierre Mensual</h1>
-                        <div style="color:#6b7280;font-size:13px;">Cerrar y desbloquear meses para evitar modificaciones</div>
+                        <h1 class="servicont-header-title">Proceso: Cierre Mensual</h1>
+                        <p class="servicont-header-subtitle">Cerrar y desbloquear meses para evitar modificaciones</p>
                     </div>
                 </div>
             </div>
@@ -29,8 +29,25 @@
                             <div class="col-md-2">
                               <label class="form-label">Mes</label>
                               <select id="cierreMonth" class="form-control">
+                                <?php
+                                    $meses = [
+                                        1 => 'Enero',
+                                        2 => 'Febrero',
+                                        3 => 'Marzo',
+                                        4 => 'Abril',
+                                        5 => 'Mayo',
+                                        6 => 'Junio',
+                                        7 => 'Julio',
+                                        8 => 'Agosto',
+                                        9 => 'Septiembre',
+                                        10 => 'Octubre',
+                                        11 => 'Noviembre',
+                                        12 => 'Diciembre',
+                                    ];
+                                    $currentMonth = date('n');
+                                ?>
                                 <?php for($i=1;$i<=12;$i++): ?>
-                                  <option value="<?php echo $i; ?>"><?php echo strftime('%B', mktime(0,0,0,$i,1)); ?></option>
+                                  <option value="<?php echo $i; ?>" <?php echo ($i == $currentMonth) ? 'selected' : ''; ?>><?php echo $meses[$i]; ?></option>
                                 <?php endfor; ?>
                               </select>
                             </div>

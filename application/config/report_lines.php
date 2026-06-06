@@ -22,7 +22,7 @@ $config['report_lines'] = [
         'Gasto por provisión por incobrabilidad de la cartera de créditos directa',
         'DISMINUCION DE PROVISION PARA CARTERA DE CREDITOS',
         'Ingresos por recuperación de la cartera de creditos directa saneada',
-        'Gastos por deterioro de inversiones neto de ingresos por recuperaciones de inversiones',
+        'Gastos por deterioro de inversiones',
         'Gasto por saneamiento de ingresos financieros',
 
         'Ingresos operativos diversos',

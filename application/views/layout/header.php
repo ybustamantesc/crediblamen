@@ -9,7 +9,8 @@
 	<meta name="keywords" content="Prestamos, Creditos, Cuotas diarias, semanales, quincenales y mensuales, sistema cooperativas">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 
-	<link rel="icon" type="image/png" href="<?php echo base_url('public/src/img/favicon.png');?>">
+	<link rel="icon" type="image/png" sizes="32x32" href="<?php echo base_url('public/src/img/favicon.png');?>">
+	<link rel="shortcut icon" href="<?php echo base_url('public/src/img/favicon.png');?>">
 
 	<link href="https://fonts.googleapis.com/css?family=Nunito+Sans:300,400,600,700,800" rel="stylesheet">
 

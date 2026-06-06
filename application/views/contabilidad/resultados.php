@@ -22,7 +22,7 @@
                     <div class="card">
                         <div class="card-body">
                             <div class="form-row mb-3 align-items-end">
-                                <div class="col-md-3">
+                                <div class="col-md-2">
                                     <label>Mes</label>
                                     <input type="month" id="resMonth" class="form-control" />
                                 </div>
@@ -31,6 +31,13 @@
                                         <input class="form-check-input" type="checkbox" id="resAcumulado" />
                                         <label class="form-check-label" for="resAcumulado">Acumulado</label>
                                     </div>
+                                </div>
+                                <div class="col-md-2">
+                                    <label>Moneda</label>
+                                    <select id="resCurrency" class="form-control">
+                                        <option value="local">Córdobas</option>
+                                        <option value="usd">Dólares</option>
+                                    </select>
                                 </div>
                                 <div class="col-md-2">
                                     <button id="resRefresh" class="btn btn-primary btn-block">Actualizar</button>
@@ -51,12 +58,17 @@
                                     .report-header { display:flex; justify-content:space-between; align-items:flex-end; border-bottom:1px dotted #333; padding-bottom:8px; margin-bottom:10px; }
                                     .report-title { font-weight:700; font-size:16px; }
                                     .report-year { font-weight:700; font-size:16px; }
-                                    .report-body { margin-top:8px; }
-                                    .r-row { display:flex; justify-content:space-between; padding:4px 0; border-bottom:1px dotted #eee; }
-                                    .r-row .desc { width:78%; }
-                                    .r-row .amt { width:20%; text-align:right; font-variant-numeric: tabular-nums; }
-                                    .r-section { font-weight:700; padding-top:8px; padding-bottom:4px; }
-                                    .r-total { font-weight:700; border-top:2px solid #000; padding-top:6px; }
+                                    .report-body { margin-top:8px; border:1px solid #333; border-collapse:collapse; }
+                                    .r-row { display:grid; grid-template-columns: 1fr auto; border-bottom:1px solid #333; margin:0; }
+                                    .r-row > .desc { padding:6px 12px; border-right:1px solid #333; }
+                                    .r-row > .amt { padding:6px 12px; text-align:right; font-variant-numeric: tabular-nums; min-width:120px; }
+                                    .r-section { font-weight:700; background-color:#f5f5f5; grid-template-columns: 1fr auto; }
+                                    .r-section > .desc { padding:6px 12px; background-color:#f5f5f5; border-right:1px solid #333; }
+                                    .r-section > .amt { padding:6px 12px; background-color:#f5f5f5; }
+                                    .r-total { font-weight:700; border-top:2px solid #000; background-color:#f9f9f9; }
+                                    .r-total > .desc { background-color:#f9f9f9; }
+                                    .r-total > .amt { background-color:#f9f9f9; }
+                                    .report-totals { display:none; }
                                     .r-sign { margin-top:24px; display:flex; justify-content:space-between; }
                                     .r-sign .sig { width:30%; text-align:center; border-top:1px solid #000; padding-top:8px; }
                                 </style>
@@ -75,12 +87,6 @@
                                         <div class="r-row r-total"><div class="desc">Total Ingresos</div><div class="amt" id="tot_ingresos"></div></div>
                                         <div class="r-row r-total"><div class="desc">Total Gastos</div><div class="amt" id="tot_gastos"></div></div>
                                         <div class="r-row r-total"><div class="desc">Resultado Operativo</div><div class="amt" id="res_operativo"></div></div>
-                                    </div>
-
-                                    <div class="r-sign">
-                                        <div class="sig">Firma Responsable</div>
-                                        <div class="sig">Revisado</div>
-                                        <div class="sig">Aprobado</div>
                                     </div>
                                 </div>
                             </div>

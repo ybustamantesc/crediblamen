@@ -149,6 +149,86 @@
                                                                 </div>
                                                             </div>
                                                         </div>
+                                                        <!-- Modal Ver Info (Referencias y Descripción) -->
+                                                        <div class="modal fade" id="modalVerInfo" tabindex="-1" role="dialog" aria-labelledby="modalVerInfoLabel" aria-hidden="true">
+                                                            <div class="modal-dialog" role="document">
+                                                                <div class="modal-content">
+                                                                    <div class="modal-header bg-dark-custom text-white">
+                                                                        <div>
+                                                                            <h5 class="modal-title" id="modalVerInfoLabel">Información del Movimiento</h5>
+                                                                            <small class="subtitle-info" id="subtituloInfo" style="display:block; margin-top:5px; opacity:0.9;">-</small>
+                                                                        </div>
+                                                                        <button type="button" class="close text-white" data-dismiss="modal" aria-label="Close">
+                                                                            <span aria-hidden="true">&times;</span>
+                                                                        </button>
+                                                                    </div>
+                                                                    <div class="modal-body">
+                                                                        <div class="info-block">
+                                                                            <div class="info-row">
+                                                                                <label class="info-label">Referencia 1:</label>
+                                                                                <div class="info-value" id="infoRef1">-</div>
+                                                                            </div>
+                                                                            <div class="info-row">
+                                                                                <label class="info-label">Referencia 2:</label>
+                                                                                <div class="info-value" id="infoRef2">-</div>
+                                                                            </div>
+                                                                            <hr>
+                                                                            <div class="info-row">
+                                                                                <label class="info-label">Descripción:</label>
+                                                                            </div>
+                                                                            <div class="info-description" id="infoDesc">-</div>
+                                                                        </div>
+                                                                    </div>
+                                                                    <div class="modal-footer">
+                                                                        <button type="button" class="btn btn-secondary" data-dismiss="modal">Cerrar</button>
+                                                                    </div>
+                                                                </div>
+                                                            </div>
+                                                        </div>
+                                                        <style>
+                                                            .info-block {
+                                                                padding: 10px 0;
+                                                            }
+                                                            .info-row {
+                                                                margin-bottom: 15px;
+                                                            }
+                                                            .info-label {
+                                                                font-weight: 700;
+                                                                color: #1f2937;
+                                                                display: block;
+                                                                margin-bottom: 5px;
+                                                                font-size: 0.95rem;
+                                                            }
+                                                            .info-value {
+                                                                background: #f9fafb;
+                                                                border: 1px solid #e5e7eb;
+                                                                border-radius: 6px;
+                                                                padding: 10px 12px;
+                                                                color: #374151;
+                                                                word-break: break-word;
+                                                                line-height: 1.5;
+                                                            }
+                                                            .info-description {
+                                                                background: #f9fafb;
+                                                                border: 1px solid #e5e7eb;
+                                                                border-radius: 6px;
+                                                                padding: 12px;
+                                                                color: #374151;
+                                                                white-space: pre-wrap;
+                                                                word-break: break-word;
+                                                                line-height: 1.6;
+                                                                min-height: 80px;
+                                                                max-height: 300px;
+                                                                overflow-y: auto;
+                                                            }
+                                                            .bg-dark-custom {
+                                                                background-color: #1e3a5f !important;
+                                                            }
+                                                            .subtitle-info {
+                                                                font-size: 0.85rem;
+                                                                color: rgba(255, 255, 255, 0.9);
+                                                            }
+                                                        </style>
 <!-- Script para modal de anulación, debe ir al final para que cargarMovimientos esté definido -->
 <?php /* ...existing code... */ ?>
 <script>
@@ -209,7 +289,7 @@ $(document).ready(function(){
         $('#previewDetalleMontoCredito').text(formatearMoneda(info.montoCredito));
         $('#previewDetalleTasa').text(info.tasa || '-');
         $('#previewDetallePlazo').text(info.plazo ? info.plazo + ' cuotas' : '-');
-        $('#previewDetalleFecha').text(meta.fechaDesembolso || movimiento.fecha_registro || '-');
+        $('#previewDetalleFecha').text(meta.fechaDesembolso || movimiento.fecha_registro_display || movimiento.fecha_registro || '-');
         $('#previewDetallePrimerPago').text(meta.primerPago || '-');
         $('#previewDetalleCostosLegales').text(formatearMoneda(meta.costosLegales));
         $('#previewDetalleSeguros').text(formatearMoneda(meta.seguros));
@@ -230,8 +310,8 @@ $(document).ready(function(){
         $('#previewMovTipo').text(tipo || '-');
         $('#previewMovFormaPago').text(movimiento.forma_pago || '-');
         $('#previewMovMonto').text(formatearMoneda(movimiento.monto_total || 0));
-        $('#previewMovFechaRegistro').text(movimiento.fecha_registro || '-');
-        $('#previewMovFechaAplicacion').text(movimiento.fecha_aplicacion || '-');
+        $('#previewMovFechaRegistro').text(movimiento.fecha_registro_display || movimiento.fecha_registro || '-');
+        $('#previewMovFechaAplicacion').text(movimiento.fecha_aplicacion_display || movimiento.fecha_aplicacion || '-');
         $('#previewMovBeneficiario').text(movimiento.beneficiario || '-');
         $('#previewMovRef1').text(movimiento.referencia1 || '-');
         $('#previewMovRef2').text(movimiento.referencia2 || '-');
@@ -315,6 +395,33 @@ $(document).ready(function(){
         $('#anularMovId').val(id);
         $('#motivoAnulacion').val('');
         $('#modalAnularMov').modal('show');
+    });
+
+    $(document).on('click', '.btnVerInfo', function(){
+        var id = $(this).data('id');
+        $.get('<?php echo site_url('tesoreria/get_movimiento_ajax'); ?>', {id: id}, function(resp){
+            var j = (typeof resp === 'object') ? resp : JSON.parse(resp);
+            if (j && j.status && j.movimiento) {
+                var mov = j.movimiento;
+                $('#infoRef1').text(mov.referencia1 || '-');
+                $('#infoRef2').text(mov.referencia2 || '-');
+                
+                var desc = mov.descripcion || mov.concepto || 'Sin descripción';
+                if (mov.tipo === 'desembolso_preview' && desc.indexOf('Inicio crédito:') === 0) {
+                    desc = 'Solicitud de desembolso';
+                    if (mov.referencia1) {
+                        desc += ' (' + mov.referencia1 + ')';
+                    }
+                }
+                $('#infoDesc').text(desc);
+                $('#subtituloInfo').text('ID: ' + (mov.id || '-') + ' | Beneficiario: ' + (mov.beneficiario || '-'));
+                $('#modalVerInfo').modal('show');
+            } else {
+                alert('No se encontraron los datos del movimiento.');
+            }
+        }).fail(function(){
+            alert('Error al obtener los datos del movimiento.');
+        });
     });
 
     $(document).on('click', '#btnEjecutarDesembolsoPreview', function(){
@@ -425,7 +532,7 @@ $(document).ready(function(){
             <?php $this->load->view('tesoreria/partial_back'); ?>
 
             <div class="row">
-                        <div class="card-body">
+                        <div class="card-body col-12">
                             <div class="btn-group mb-3 movimientos-toolbar" role="group" aria-label="Tipos de movimiento">
                                 <button class="btn btn-outline-primary" id="btnMovTransferencia"><i class="fas fa-exchange-alt"></i> Transferencia</button>
                                 <button class="btn btn-outline-success" id="btnMovEfectivo"><i class="fas fa-money-bill-wave"></i> Efectivo</button>
@@ -556,92 +663,103 @@ $(document).ready(function(){
                                     }
                                     #tablaMovimientos th:nth-child(1),
                                     #tablaMovimientos td:nth-child(1) {
-                                        width: 42px;
+                                        width: 32px;
                                         text-align: center;
                                     }
                                     #tablaMovimientos th:nth-child(2),
                                     #tablaMovimientos td:nth-child(2) {
-                                        width: 112px;
+                                        width: 80px;
                                     }
                                     #tablaMovimientos th:nth-child(3),
                                     #tablaMovimientos td:nth-child(3) {
-                                        width: 72px;
+                                        width: 60px;
                                         text-align: center;
                                     }
                                     #tablaMovimientos th:nth-child(4),
                                     #tablaMovimientos td:nth-child(4) {
-                                        width: 96px;
+                                        width: 65px;
                                         text-align: center;
                                     }
                                     #tablaMovimientos th:nth-child(5),
                                     #tablaMovimientos td:nth-child(5),
                                     #tablaMovimientos th:nth-child(6),
                                     #tablaMovimientos td:nth-child(6) {
-                                        width: 92px;
+                                        width: 85px;
                                         text-align: center;
                                     }
                                     #tablaMovimientos th:nth-child(7),
                                     #tablaMovimientos td:nth-child(7) {
-                                        width: 112px;
+                                        width: 90px;
                                     }
                                     #tablaMovimientos th:nth-child(8),
                                     #tablaMovimientos td:nth-child(8) {
-                                        width: 90px;
+                                        width: 65px;
                                         text-align: right;
                                     }
                                     #tablaMovimientos th:nth-child(9),
                                     #tablaMovimientos td:nth-child(9) {
-                                        width: 112px;
+                                        width: 100px;
                                     }
+                                    /* Ocultar columnas de Referencias */
                                     #tablaMovimientos th:nth-child(10),
-                                    #tablaMovimientos td:nth-child(10) {
-                                        width: 92px;
-                                    }
+                                    #tablaMovimientos td:nth-child(10),
                                     #tablaMovimientos th:nth-child(11),
                                     #tablaMovimientos td:nth-child(11) {
-                                        width: 92px;
+                                        display: none;
                                     }
                                     #tablaMovimientos th:nth-child(12),
                                     #tablaMovimientos td:nth-child(12) {
-                                        width: 120px;
+                                        width: 90px;
                                     }
                                     #tablaMovimientos th:nth-child(13),
                                     #tablaMovimientos td:nth-child(13) {
-                                        width: 150px;
+                                        width: 75px;
                                     }
                                     #tablaMovimientos .mov-ref-cell {
-                                        white-space: nowrap;
-                                        overflow: hidden;
-                                        text-overflow: ellipsis;
+                                        white-space: normal;
+                                        overflow-wrap: break-word;
+                                        word-break: break-word;
+                                        max-width: none;
                                     }
                                     #tablaMovimientos .mov-desc-cell {
-                                        overflow: hidden;
-                                        text-overflow: ellipsis;
-                                        display: -webkit-box;
-                                        -webkit-line-clamp: 1;
-                                        -webkit-box-orient: vertical;
+                                        overflow: visible;
+                                        text-overflow: unset;
+                                        white-space: normal;
+                                        display: none !important;
+                                        min-width: 0;
+                                        word-break: break-word;
+                                        line-height: 1.3;
                                     }
                                     #tablaMovimientos .mov-user-cell {
-                                        white-space: nowrap;
-                                        overflow: hidden;
-                                        text-overflow: ellipsis;
+                                        white-space: normal;
+                                        overflow: visible;
+                                        text-overflow: unset;
+                                        word-break: break-word;
+                                        line-height: 1.2;
                                     }
                                     #tablaMovimientos .acciones-cell {
                                         display: flex;
-                                        flex-wrap: nowrap;
-                                        gap: 2px;
-                                        align-items: center;
-                                        white-space: nowrap;
+                                        flex-direction: column;
+                                        gap: 6px;
+                                        align-items: stretch;
+                                        white-space: normal;
                                         justify-content: flex-start;
+                                        min-width: 120px;
+                                        max-width: 240px;
+                                        overflow: visible;
                                     }
                                     #tablaMovimientos .acciones-cell .btn {
-                                        padding: .14rem .28rem;
-                                        font-size: .67rem;
+                                        padding: .32rem .4rem;
+                                        font-size: .75rem;
                                         margin: 0;
                                         min-width: 0;
-                                        border-radius: 8px;
+                                        width: 100%;
+                                        border-radius: 4px;
                                         font-weight: 600;
                                         border-width: 1px;
+                                        white-space: normal;
+                                        text-align: center;
+                                        line-height: 1;
                                     }
                                     #tablaMovimientos .texto-suave {
                                         color: #475569;
@@ -682,6 +800,11 @@ $(document).ready(function(){
                                         color: #17637a;
                                         border-color: #bee8f3;
                                     }
+                                    #tablaMovimientos .btn-mov-info {
+                                        background: #f0f1ff;
+                                        color: #4c5fd5;
+                                        border-color: #dfe1f5;
+                                    }
                                     #tablaMovimientos .btn-mov-anular {
                                         background: #fff1f3;
                                         color: #a2384f;
@@ -707,10 +830,11 @@ $(document).ready(function(){
                                             font-size: .82rem;
                                         }
                                         #tablaMovimientos .acciones-cell {
-                                            flex-wrap: wrap;
+                                            /* keep column layout on small screens */
+                                            flex-direction: column;
                                         }
                                         #tablaMovimientos .acciones-cell .btn {
-                                            width: auto;
+                                            width: 100%;
                                             min-width: 0;
                                         }
                                     }
@@ -727,9 +851,9 @@ $(document).ready(function(){
                                             <th>Beneficiario</th>
                                             <th class="text-right">Monto</th>
                                             <th>Ejecutado por</th>
-                                            <th>Referencia 1</th>
-                                            <th>Referencia 2</th>
-                                            <th>Descripción</th>
+                                            <th style="display:none;">Referencia 1</th>
+                                            <th style="display:none;">Referencia 2</th>
+                                            <th style="display:none;">Descripción</th>
                                             <th>Acciones</th>
                                         </tr>
                                     </thead>
@@ -977,8 +1101,10 @@ $(function(){
                     var esDesembolso = String(mov.tipo || '') === 'desembolso_preview' || String(mov.referencia2 || '').indexOf('p=') === 0;
                     if (mov.estado === 'previsualizacion') {
                         acciones = '<button class="btn btn-sm btn-mov-view btnVerCheque" data-id="'+mov.id+'" data-preview="1">Ver</button> ';
+                        acciones += '<button class="btn btn-sm btn-mov-info btnVerInfo" data-id="'+mov.id+'">Info</button> ';
                     } else if(mov.estado !== 'anulado') {
                         acciones = '<button class="btn btn-sm btn-mov-view btnVerCheque" data-id="'+mov.id+'">Ver</button> ';
+                        acciones += '<button class="btn btn-sm btn-mov-info btnVerInfo" data-id="'+mov.id+'">Info</button> ';
                         if (esDesembolso) {
                             acciones += '<button class="btn btn-sm btn-mov-muted" disabled style="pointer-events:none;opacity:0.75;">Anular bloqueado</button> ';
                         } else {
@@ -990,7 +1116,8 @@ $(function(){
                             acciones += '<button class="btn btn-sm btn-mov-conta btnContabilizarMov" data-id="'+mov.id+'">Contabilizar</button>';
                         }
                     } else {
-                        acciones = '<button class="btn btn-sm btn-mov-view btnVerCheque" data-id="'+mov.id+'">Ver</button> ' + motivoAnulacion;
+                        acciones = '<button class="btn btn-sm btn-mov-view btnVerCheque" data-id="'+mov.id+'">Ver</button> ';
+                        acciones += '<button class="btn btn-sm btn-mov-info btnVerInfo" data-id="'+mov.id+'">Info</button> ' + motivoAnulacion;
                     }
                     var badge = '';
                     if (mov.estado === 'previsualizacion') badge = '<span class="badge mov-badge mov-badge-preview">Solicitud</span>';
@@ -1001,14 +1128,20 @@ $(function(){
                     var ref1 = mov.referencia1 || '';
                     var ref2 = mov.referencia2 || '';
                     var desc = mov.descripcion || '';
+                    if (mov.tipo === 'desembolso_preview' && desc.indexOf('Inicio crédito:') === 0) {
+                        desc = 'Solicitud de desembolso';
+                        if (ref1) {
+                            desc += ' (' + ref1 + ')';
+                        }
+                    }
                     $tbody.append(
                         '<tr class="'+rowClass+'">'+
                         '<td>'+mov.id+'</td>'+
                         '<td>'+(mov.cuenta_nombre || mov.cuenta_id)+'</td>'+
                         '<td>'+badge+'</td>'+
                         '<td>'+mov.forma_pago+'</td>'+
-                        '<td>'+mov.fecha_registro+'</td>'+
-                        '<td>'+(mov.fecha_aplicacion || '')+'</td>'+
+                        '<td>'+(mov.fecha_registro_display || mov.fecha_registro || '')+'</td>'+
+                        '<td>'+(mov.fecha_aplicacion_display || mov.fecha_aplicacion || '')+'</td>'+
                         '<td>'+(mov.beneficiario || '')+'</td>'+
                         '<td class="text-right font-weight-bold">'+monto+'</td>'+
                         '<td class="texto-suave mov-user-cell" title="'+String(mov.ejecutado_por || '-').replace(/"/g,'&quot;')+'">'+(mov.ejecutado_por || '-')+'</td>'+

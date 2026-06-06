@@ -224,8 +224,8 @@ document.addEventListener('DOMContentLoaded', function(){
             } else {
                 url += '&all=1';
             }
-            // open in new tab
-            window.open(url, '_blank');
+            // trigger download
+            window.location = url;
         });
     }
 
@@ -257,13 +257,21 @@ document.addEventListener('DOMContentLoaded', function(){
         var currencyPrefix = currency === 'usd' ? '$' : 'C$';
         var html = '';
         payload.data.forEach(function(acc){
+            // Calculate totals for debit and credit
+            var totalDebit = 0;
+            var totalCredit = 0;
+            acc.lines.forEach(function(l){
+                totalDebit += (l.debit ? parseFloat(l.debit) : 0);
+                totalCredit += (l.credit ? parseFloat(l.credit) : 0);
+            });
+            
             html += '<div style="border:1px solid #ddd;margin-bottom:12px;padding:8px;overflow-x:auto;">';
             html += '<div style="font-weight:700;margin-bottom:6px;">' + (acc.code || '') + ' - ' + (acc.name || '') + '</div>';
                 html += '<table style="width:100%;border-collapse:collapse;font-size:12px;">';
-                html += '<thead><tr style="background:#f7f7f7;"><th style="padding:6px;border:1px solid #ddd;">Fecha</th><th style="padding:6px;border:1px solid #ddd;">Tipo Documento</th><th style="padding:6px;border:1px solid #ddd;">No Documento</th><th style="padding:6px;border:1px solid #ddd;">Centro Costo</th><th style="padding:6px;border:1px solid #ddd;">Descripción</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Débito' + currencyLabel + '</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Crédito' + currencyLabel + '</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Balance Final' + currencyLabel + '</th></tr></thead>';
+                html += '<thead><tr style="background:#f7f7f7;"><th style="padding:6px;border:1px solid #ddd;">Fecha</th><th style="padding:6px;border:1px solid #ddd;">Tipo Documento</th><th style="padding:6px;border:1px solid #ddd;">No Documento</th><th style="padding:6px;border:1px solid #ddd;">Centro Costo</th><th style="padding:6px;border:1px solid #ddd;">Descripción</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Débito' + currencyLabel + '</th><th style="padding:6px;border:1px solid #ddd;text-align:right;">Crédito' + currencyLabel + '</th></tr></thead>';
             html += '<tbody>';
             // opening
-                html += '<tr><td colspan="7" style="font-style:italic;padding:6px;border:1px solid #eee;">Saldo anterior</td><td style="text-align:right;padding:6px;border:1px solid #eee;">' + formatCurrency(acc.opening, currencyPrefix) + '</td></tr>';
+                html += '<tr><td colspan="6" style="font-style:italic;padding:6px;border:1px solid #eee;">Saldo anterior</td><td style="text-align:right;padding:6px;border:1px solid #eee;">' + formatCurrency(acc.opening, currencyPrefix) + '</td></tr>';
             acc.lines.forEach(function(l){
                 html += '<tr>';
                     html += '<td style="padding:6px;border:1px solid #eee;">' + (l.date || '') + '</td>';
@@ -273,10 +281,10 @@ document.addEventListener('DOMContentLoaded', function(){
                     html += '<td style="padding:6px;border:1px solid #eee;">' + (l.descripcion || '') + '</td>';
                         html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + (l.debit ? formatCurrency(l.debit, currencyPrefix) : '-') + '</td>';
                         html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + (l.credit ? formatCurrency(l.credit, currencyPrefix) : '-') + '</td>';
-                        html += '<td style="padding:6px;border:1px solid #eee;text-align:right;">' + formatCurrency(l.balance, currencyPrefix) + '</td>';
                 html += '</tr>';
             });
-                html += '<tr style="font-weight:700;"><td colspan="7" style="text-align:right;padding:6px;border-top:2px solid #000;">Balance Final</td><td style="text-align:right;padding:6px;border-top:2px solid #000;">' + formatCurrency(acc.final_balance, currencyPrefix) + '</td></tr>';
+                html += '<tr style="font-weight:700;background:#f0f0f0;"><td colspan="5" style="text-align:right;padding:6px;border-top:2px solid #000;border-bottom:2px solid #000;">Subtotal</td><td style="text-align:right;padding:6px;border-top:2px solid #000;border-bottom:2px solid #000;">' + formatCurrency(totalDebit, currencyPrefix) + '</td><td style="text-align:right;padding:6px;border-top:2px solid #000;border-bottom:2px solid #000;">' + formatCurrency(totalCredit, currencyPrefix) + '</td></tr>';
+                html += '<tr style="font-weight:700;"><td colspan="6" style="text-align:right;padding:6px;border-top:2px solid #000;">Balance de Cuenta</td><td style="text-align:right;padding:6px;border-top:2px solid #000;">' + formatCurrency(acc.final_balance, currencyPrefix) + '</td></tr>';
             html += '</tbody></table>';
             html += '</div>';
         });
