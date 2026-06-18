@@ -33,24 +33,178 @@ class Analisis_financiero extends CI_Controller
         $analisis = $analisis ? (array)$analisis : [];
         $solicitud = $solicitud ? (array)$solicitud : [];
         $analisis = $this->_normalizar_campos_obligaciones($analisis);
+        
+        // Detectar si es la primera vez (no hay análisis guardado con id válido)
+        // Es primera vez si:
+        // - array está vacío, o
+        // - tiene contenido pero el 'id' es null/0/empty
+        $es_primera_vez = count($analisis) === 0 || 
+                         !isset($analisis['id']) || 
+                         $analisis['id'] === null || 
+                         $analisis['id'] === 0 || 
+                         $analisis['id'] === '';
+        
+        $datos_cargados_desde_solicitud = false;
+        
         // Lista de campos que pueden mapearse desde la solicitud inicial (incluye campos de montos para análisis financiero)
         $campos_map = [
             'apellidos', 'nombres', 'direccion', 'telefono', 'estado_civil', 'fecha_nacimiento', 'numero_dependientes',
             'nombre_empresa', 'direccion_empresa', 'telefono_empresa', 'cargo_puesto', 'ingreso_mensual_neto', 'deducciones',
             'nombre_conyuge', 'dni_conyuge', 'ocupacion_conyuge', 'telefono_conyuge',
+            'tasa_interes', 'comision_desembolso',
             // Campos de montos para análisis financiero
             'ventas_promedio_mensual', 'cuentas_por_cobrar', 'caja_efectivo', 'banco', 'ventas_al_credito',
             'energia_electrica', 'agua_potable', 'internet_telefonia', 'gastos_personales', 'gastos_transporte', 'pago_trabajadores',
         ];
         foreach ($campos_map as $campo) {
-            if (!isset($analisis[$campo]) && isset($solicitud[$campo])) {
+            if ((!isset($analisis[$campo]) || $analisis[$campo] === '' || $analisis[$campo] === null) && isset($solicitud[$campo])) {
                 $analisis[$campo] = $solicitud[$campo];
             }
+        }
+        if ((!isset($analisis['tasa_interes']) || $analisis['tasa_interes'] === '' || $analisis['tasa_interes'] === null) && isset($solicitud['producto_tasa'])) {
+            $analisis['tasa_interes'] = $solicitud['producto_tasa'];
+        }
+        if ((!isset($analisis['comision_desembolso']) || $analisis['comision_desembolso'] === '' || $analisis['comision_desembolso'] === null) && isset($solicitud['producto_comision'])) {
+            $analisis['comision_desembolso'] = $solicitud['producto_comision'];
+        }
+
+        // Si es la primera vez, cargar datos calculados desde tb_solicitudes
+        if ($es_primera_vez && !empty($solicitud)) {
+            // Helper para verificar si hay al menos un valor no-null/no-vacío/positivo
+            $tiene_valores_positivos = function($valores) {
+                foreach ($valores as $v) {
+                    $v_float = (float)$v;
+                    if ($v !== null && $v !== '' && $v_float > 0) {
+                        return true;
+                    }
+                }
+                return false;
+            };
+            
+            // G. Servicios básicos = energia_electrica + agua_potable + internet_telefonia
+            $valores_servicios = [
+                isset($solicitud['energia_electrica']) ? $solicitud['energia_electrica'] : 0,
+                isset($solicitud['agua_potable']) ? $solicitud['agua_potable'] : 0,
+                isset($solicitud['internet_telefonia']) ? $solicitud['internet_telefonia'] : 0
+            ];
+            if ($tiene_valores_positivos($valores_servicios)) {
+                $servicios = (float)($valores_servicios[0] ?? 0) + 
+                            (float)($valores_servicios[1] ?? 0) + 
+                            (float)($valores_servicios[2] ?? 0);
+                $analisis['gastos_servicios'] = $servicios;
+                $datos_cargados_desde_solicitud = true;
+            }
+            
+            // E. Otros ingresos = otros_ingresos_1_amount + otros_ingresos_2_amount + otros_ingresos_3_amount
+            $valores_ingresos = [
+                isset($solicitud['otros_ingresos_1_amount']) ? $solicitud['otros_ingresos_1_amount'] : 0,
+                isset($solicitud['otros_ingresos_2_amount']) ? $solicitud['otros_ingresos_2_amount'] : 0,
+                isset($solicitud['otros_ingresos_3_amount']) ? $solicitud['otros_ingresos_3_amount'] : 0
+            ];
+            if ($tiene_valores_positivos($valores_ingresos)) {
+                $otros_ingresos = (float)($valores_ingresos[0] ?? 0) + 
+                                 (float)($valores_ingresos[1] ?? 0) + 
+                                 (float)($valores_ingresos[2] ?? 0);
+                $analisis['ingreso_otros'] = $otros_ingresos;
+                $datos_cargados_desde_solicitud = true;
+            }
+            
+            // Q. Otros Gastos = otros_gastos (puede ser texto, número, o JSON)
+            $otros_gastos_valor = isset($solicitud['otros_gastos']) ? $solicitud['otros_gastos'] : null;
+            if ($otros_gastos_valor !== null && $otros_gastos_valor !== '') {
+                $otros_gastos_num = (float)$otros_gastos_valor;
+                if ($otros_gastos_num > 0) {
+                    $analisis['otros_gastos'] = $otros_gastos_num;
+                    $datos_cargados_desde_solicitud = true;
+                }
+            }
+            
+            // R. Gastos Personales = gastos_personales
+            $gastos_personales_valor = isset($solicitud['gastos_personales']) ? $solicitud['gastos_personales'] : null;
+            if ($gastos_personales_valor !== null && $gastos_personales_valor !== '') {
+                $gastos_personales_num = (float)$gastos_personales_valor;
+                if ($gastos_personales_num > 0) {
+                    $analisis['gasto_personal'] = $gastos_personales_num;
+                    $datos_cargados_desde_solicitud = true;
+                }
+            }
+
+            // RECOMENDACIÓN DE CRÉDITO: cargar valores desde solicitud si no hay análisis guardado
+            if ((!isset($analisis['tipo_credito']) || $analisis['tipo_credito'] === '' || $analisis['tipo_credito'] === null) && isset($solicitud['destino_credito'])) {
+                $analisis['tipo_credito'] = $solicitud['destino_credito'];
+                $datos_cargados_desde_solicitud = true;
+            }
+            if ((!isset($analisis['monto_financiar']) || $analisis['monto_financiar'] === '' || $analisis['monto_financiar'] === null) && isset($solicitud['monto_solicitado'])) {
+                $analisis['monto_financiar'] = $solicitud['monto_solicitado'];
+                $datos_cargados_desde_solicitud = true;
+            }
+            if ((!isset($analisis['total_deuda_acreditar']) || $analisis['total_deuda_acreditar'] === '' || $analisis['total_deuda_acreditar'] === null) && isset($solicitud['monto_solicitado']) && is_numeric($solicitud['monto_solicitado'])) {
+                $tipo_cambio = 36.6243;
+                $analisis['total_deuda_acreditar'] = round((float)$solicitud['monto_solicitado'] * $tipo_cambio, 2);
+                $datos_cargados_desde_solicitud = true;
+            }
+            if ((!isset($analisis['plazo_credito']) || $analisis['plazo_credito'] === '' || $analisis['plazo_credito'] === null) && isset($solicitud['plazo_meses'])) {
+                $analisis['plazo_credito'] = $solicitud['plazo_meses'];
+                $datos_cargados_desde_solicitud = true;
+            }
+            if ((!isset($analisis['frecuencia_pago']) || $analisis['frecuencia_pago'] === '' || $analisis['frecuencia_pago'] === null)) {
+                $analisis['frecuencia_pago'] = isset($solicitud['frecuencia']) && $solicitud['frecuencia'] !== '' ? $solicitud['frecuencia'] : 'quincenal';
+                $datos_cargados_desde_solicitud = true;
+            }
+            $plazo = isset($analisis['plazo_credito']) ? (float)$analisis['plazo_credito'] : 0;
+            $frecuencia = isset($analisis['frecuencia_pago']) ? strtolower(trim($analisis['frecuencia_pago'])) : 'quincenal';
+            $numero_cuotas_actual = isset($analisis['numero_cuotas']) && $analisis['numero_cuotas'] !== '' && $analisis['numero_cuotas'] !== null ? (float)$analisis['numero_cuotas'] : null;
+            if ($plazo > 0 && ($numero_cuotas_actual === null || $numero_cuotas_actual === 0 || $numero_cuotas_actual === $plazo)) {
+                if ($frecuencia === 'quincenal' || $frecuencia === 'catorcenal') {
+                    $analisis['numero_cuotas'] = round($plazo / 2, 2);
+                    $datos_cargados_desde_solicitud = true;
+                } elseif ($frecuencia === 'mensual') {
+                    $analisis['numero_cuotas'] = round($plazo, 2);
+                    $datos_cargados_desde_solicitud = true;
+                }
+            }
+            if ((!isset($analisis['monto_cuota']) || $analisis['monto_cuota'] === '' || $analisis['monto_cuota'] === null)) {
+                if (isset($solicitud['cuota_estim_estimada_quincenal']) && $solicitud['cuota_estim_estimada_quincenal'] !== '') {
+                    $analisis['monto_cuota'] = $solicitud['cuota_estim_estimada_quincenal'];
+                    $datos_cargados_desde_solicitud = true;
+                } elseif (isset($solicitud['cuota_estim_estimada']) && $solicitud['cuota_estim_estimada'] !== '') {
+                    $analisis['monto_cuota'] = $solicitud['cuota_estim_estimada'];
+                    $datos_cargados_desde_solicitud = true;
+                }
+            }
+            if (isset($solicitud['cuota_estim_estimada']) && (!isset($analisis['cuota_estim_estimada']) || $analisis['cuota_estim_estimada'] === '' || $analisis['cuota_estim_estimada'] === null)) {
+                $analisis['cuota_estim_estimada'] = $solicitud['cuota_estim_estimada'];
+            }
+            if (isset($solicitud['cuota_estim_estimada_quincenal']) && (!isset($analisis['cuota_estim_estimada_quincenal']) || $analisis['cuota_estim_estimada_quincenal'] === '' || $analisis['cuota_estim_estimada_quincenal'] === null)) {
+                $analisis['cuota_estim_estimada_quincenal'] = $solicitud['cuota_estim_estimada_quincenal'];
+            }
+            if ((!isset($analisis['garantia_requerida']) || $analisis['garantia_requerida'] === '' || $analisis['garantia_requerida'] === null) && isset($solicitud['garantia'])) {
+                $analisis['garantia_requerida'] = $solicitud['garantia'];
+                $datos_cargados_desde_solicitud = true;
+            }
+        }
+
+        // Sugerencia: Promedio de cuota estimada mensual (US$) * tipo de cambio.
+        $tipo_cambio = 36.6243;
+        $cuota_usd = 0;
+        if (isset($solicitud['cuota_estimado']) && is_numeric($solicitud['cuota_estimado'])) {
+            $cuota_usd = (float)$solicitud['cuota_estimado'];
+        } elseif (isset($solicitud['cuota_estim_estimada']) && is_numeric($solicitud['cuota_estim_estimada'])) {
+            $cuota_usd = (float)$solicitud['cuota_estim_estimada'];
+        }
+        $cuota_sugerida_cs = round($cuota_usd * $tipo_cambio, 2);
+        $analisis['cuota_periodica_sugerida'] = $cuota_sugerida_cs;
+
+        if ((!isset($analisis['cuota_periodica']) || $analisis['cuota_periodica'] === '' || $analisis['cuota_periodica'] === null || $analisis['cuota_periodica'] === 0) && $cuota_sugerida_cs > 0) {
+            $analisis['cuota_periodica'] = $cuota_sugerida_cs;
         }
 
         // Calcular Cobertura de Garantía = (Total Garantía $ / Monto Solicitado $) * 100
         $cobertura_garantia = $this->_calcular_cobertura_garantia($idsolicitud, $solicitud);
         $analisis['cobertura_garantia'] = $cobertura_garantia;
+        
+        // Agregar flag para indicar datos cargados desde solicitud
+        $analisis['datos_cargados_desde_solicitud'] = $datos_cargados_desde_solicitud;
 
         if (!empty($analisis)) {
             echo json_encode(['status' => true, 'data' => $analisis]);
@@ -71,19 +225,100 @@ class Analisis_financiero extends CI_Controller
             'apellidos', 'nombres', 'direccion', 'telefono', 'estado_civil', 'fecha_nacimiento', 'numero_dependientes',
             'nombre_empresa', 'direccion_empresa', 'telefono_empresa', 'cargo_puesto', 'ingreso_mensual_neto', 'deducciones',
             'nombre_conyuge', 'dni_conyuge', 'ocupacion_conyuge', 'telefono_conyuge',
+            'tasa_interes', 'comision_desembolso',
             // Campos de montos para análisis financiero
             'ventas_promedio_mensual', 'cuentas_por_cobrar', 'caja_efectivo', 'banco', 'ventas_al_credito',
             'energia_electrica', 'agua_potable', 'internet_telefonia', 'gastos_personales', 'gastos_transporte', 'pago_trabajadores',
         ];
         foreach ($campos_map as $campo) {
-            if (!isset($analisis[$campo]) && isset($solicitud[$campo])) {
+            if ((!isset($analisis[$campo]) || $analisis[$campo] === '' || $analisis[$campo] === null) && isset($solicitud[$campo])) {
                 $analisis[$campo] = $solicitud[$campo];
+            }
+        }
+        if ((!isset($analisis['tasa_interes']) || $analisis['tasa_interes'] === '' || $analisis['tasa_interes'] === null) && isset($solicitud['producto_tasa'])) {
+            $analisis['tasa_interes'] = $solicitud['producto_tasa'];
+        }
+        if ((!isset($analisis['comision_desembolso']) || $analisis['comision_desembolso'] === '' || $analisis['comision_desembolso'] === null) && isset($solicitud['producto_comision'])) {
+            $analisis['comision_desembolso'] = $solicitud['producto_comision'];
+        }
+
+        // Mapear campos de tb_solicitudes a los nombres que usa el formulario comerciante
+        $alias_map = [
+            'personas_dependientes' => ['numero_dependientes'],
+            'fcm_otros_ingresos' => ['ingresos_conyuge'],
+            'inventario_mercaderia' => ['monto_total_inventario'],
+            'gasto_local_alquiler' => ['pago_alquiler', 'gasto_alquiler'],
+            'gasto_energia' => ['energia_electrica', 'energia'],
+            'gasto_agua' => ['agua_potable', 'agua'],
+            'gasto_internet' => ['internet_telefonia', 'internet'],
+            'gasto_transporte' => ['gastos_transporte'],
+            'gasto_salario_ayudante' => ['pago_trabajadores', 'gasto_trabajadores'],
+            'gasto_personal' => ['gastos_personales'],
+            'fcm_otros_gastos' => ['otros_gastos'],
+            'cuentas_cobrar' => ['cuentas_por_cobrar_amount', 'cuentas_por_cobrar'],
+            'efectivo_caja' => ['caja_amount', 'caja_efectivo'],
+            'dinero_banco' => ['banco_amount', 'saldo_banco', 'banco'],
+            'ventas_credito' => ['ventas_al_credito'],
+            'ventas_contado' => ['ventas_promedio_mensual', 'ventas_buenos_amount'],
+            'porcentaje_margen' => ['margen_comercial'],
+        ];
+        foreach ($alias_map as $target => $aliases) {
+            if (!isset($analisis[$target]) || $analisis[$target] === '' || $analisis[$target] === null) {
+                foreach ($aliases as $alias) {
+                    if (isset($solicitud[$alias]) && $solicitud[$alias] !== '') {
+                        $analisis[$target] = $solicitud[$alias];
+                        break;
+                    }
+                }
             }
         }
 
         // Compatibilidad de nombre de campo en BD: cuota_periodica_estim -> cuota_periodica
         if (!isset($analisis['cuota_periodica']) && isset($analisis['cuota_periodica_estim'])) {
             $analisis['cuota_periodica'] = $analisis['cuota_periodica_estim'];
+        }
+
+        // RECOMENDACIÓN DE CRÉDITO: cargar valores desde solicitud si no hay análisis guardado
+        if ((!isset($analisis['tipo_credito']) || $analisis['tipo_credito'] === '' || $analisis['tipo_credito'] === null) && isset($solicitud['destino_credito'])) {
+            $analisis['tipo_credito'] = $solicitud['destino_credito'];
+        }
+        if ((!isset($analisis['monto_financiar']) || $analisis['monto_financiar'] === '' || $analisis['monto_financiar'] === null) && isset($solicitud['monto_solicitado'])) {
+            $analisis['monto_financiar'] = $solicitud['monto_solicitado'];
+        }
+        if ((!isset($analisis['monto_credito_solicitado']) || $analisis['monto_credito_solicitado'] === '' || $analisis['monto_credito_solicitado'] === null) && isset($solicitud['monto_solicitado']) && is_numeric($solicitud['monto_solicitado'])) {
+            $analisis['monto_credito_solicitado'] = round((float)$solicitud['monto_solicitado'] * 36.6243, 2);
+        }
+        if ((!isset($analisis['plazo_credito']) || $analisis['plazo_credito'] === '' || $analisis['plazo_credito'] === null) && isset($solicitud['plazo_meses'])) {
+            $analisis['plazo_credito'] = $solicitud['plazo_meses'];
+        }
+        if ((!isset($analisis['frecuencia_pago']) || $analisis['frecuencia_pago'] === '' || $analisis['frecuencia_pago'] === null)) {
+            $analisis['frecuencia_pago'] = isset($solicitud['frecuencia']) && $solicitud['frecuencia'] !== '' ? $solicitud['frecuencia'] : 'quincenal';
+        }
+        $plazo = isset($analisis['plazo_credito']) ? (float)$analisis['plazo_credito'] : 0;
+        $frecuencia = isset($analisis['frecuencia_pago']) ? strtolower(trim($analisis['frecuencia_pago'])) : 'quincenal';
+        $numero_cuotas_actual = isset($analisis['numero_cuotas']) && $analisis['numero_cuotas'] !== '' && $analisis['numero_cuotas'] !== null ? (float)$analisis['numero_cuotas'] : null;
+        if ($plazo > 0 && ($numero_cuotas_actual === null || $numero_cuotas_actual === 0 || $numero_cuotas_actual === $plazo)) {
+            if ($frecuencia === 'quincenal' || $frecuencia === 'catorcenal') {
+                $analisis['numero_cuotas'] = round($plazo / 2, 2);
+            } elseif ($frecuencia === 'mensual') {
+                $analisis['numero_cuotas'] = round($plazo, 2);
+            }
+        }
+        if ((!isset($analisis['monto_cuota']) || $analisis['monto_cuota'] === '' || $analisis['monto_cuota'] === null)) {
+            if (isset($solicitud['cuota_estim_estimada_quincenal']) && $solicitud['cuota_estim_estimada_quincenal'] !== '') {
+                $analisis['monto_cuota'] = $solicitud['cuota_estim_estimada_quincenal'];
+            } elseif (isset($solicitud['cuota_estim_estimada']) && $solicitud['cuota_estim_estimada'] !== '') {
+                $analisis['monto_cuota'] = $solicitud['cuota_estim_estimada'];
+            }
+        }
+        if (isset($solicitud['cuota_estim_estimada']) && (!isset($analisis['cuota_estim_estimada']) || $analisis['cuota_estim_estimada'] === '' || $analisis['cuota_estim_estimada'] === null)) {
+            $analisis['cuota_estim_estimada'] = $solicitud['cuota_estim_estimada'];
+        }
+        if (isset($solicitud['cuota_estim_estimada_quincenal']) && (!isset($analisis['cuota_estim_estimada_quincenal']) || $analisis['cuota_estim_estimada_quincenal'] === '' || $analisis['cuota_estim_estimada_quincenal'] === null)) {
+            $analisis['cuota_estim_estimada_quincenal'] = $solicitud['cuota_estim_estimada_quincenal'];
+        }
+        if ((!isset($analisis['garantia_requerida']) || $analisis['garantia_requerida'] === '' || $analisis['garantia_requerida'] === null) && isset($solicitud['garantia'])) {
+            $analisis['garantia_requerida'] = $solicitud['garantia'];
         }
 
         // Sugerencia: Promedio de cuota estimada mensual (US$) * tipo de cambio.
@@ -98,7 +333,7 @@ class Analisis_financiero extends CI_Controller
         $analisis['cuota_periodica_sugerida'] = $cuota_sugerida_cs;
 
         // Si no hay valor guardado, usar sugerido por defecto.
-        if ((!isset($analisis['cuota_periodica']) || $analisis['cuota_periodica'] === '' || $analisis['cuota_periodica'] === null) && $cuota_sugerida_cs > 0) {
+        if ((!isset($analisis['cuota_periodica']) || $analisis['cuota_periodica'] === '' || $analisis['cuota_periodica'] === null || $analisis['cuota_periodica'] === 0) && $cuota_sugerida_cs > 0) {
             $analisis['cuota_periodica'] = $cuota_sugerida_cs;
         }
 
@@ -123,7 +358,7 @@ class Analisis_financiero extends CI_Controller
         if (!$analisis) {
             // Lista de campos de la tabla asalariado
             $campos = [
-                'ingreso_sueldo_neto','ingreso_comisiones','ingreso_bonificaciones','ingreso_remesas','ingreso_otros','total_ingresos','sueldo','inss','ir','sueldo_neto_calc','gastos_alimentacion','gastos_servicios','gastos_vestuario','gastos_educativos','gastos_transporte','gastos_alquiler','pago_empleado_viatico','entretenimiento','otros_gastos','total_gastos_familiares','cuotas_prestamos','pension_alimenticia','otras_obligaciones','total_otras_obligaciones','total_egresos','flujo_neto_mensual','cuota_periodica','canasta_basica','cantidad_promedio','monto_por_persona','personas_dependientes','gastos_alimentacion_canasta','transporte_urbano','transporte_individual','transporte_interurbano','recorrido_laboral','vehiculo_particular','total_transporte','alquiler','casa_propia','total_gastos_vivienda','cobertura_deuda','cobertura_garantia','tc_acumulado','p_entretenimiento','created_at','updated_at'
+            'ingreso_sueldo_neto','ingreso_comisiones','ingreso_bonificaciones','ingreso_remesas','ingreso_otros','total_ingresos','sueldo','inss','ir','sueldo_neto_calc','gastos_alimentacion','gastos_servicios','gastos_vestuario','gastos_educativos','gastos_transporte','gastos_alquiler','pago_empleado_viatico','entretenimiento','otros_gastos','total_gastos_familiares','cuotas_prestamos','pension_alimenticia','otras_obligaciones','total_otras_obligaciones','total_egresos','flujo_neto_mensual','cuota_periodica','canasta_basica','cantidad_promedio','monto_por_persona','personas_dependientes','gastos_alimentacion_canasta','transporte_urbano','transporte_individual','transporte_interurbano','recorrido_laboral','vehiculo_particular','total_transporte','alquiler','casa_propia','total_gastos_vivienda','cobertura_deuda','cobertura_garantia','tc_acumulado','p_entretenimiento','comentario','created_at','updated_at'
             ];
             $analisis = array();
             foreach ($campos as $c) $analisis[$c] = '';
@@ -143,7 +378,10 @@ class Analisis_financiero extends CI_Controller
         // (Total garantía USD / Monto solicitado USD) * 100
         $analisis['cobertura_garantia'] = $this->_calcular_cobertura_garantia($idsolicitud, $solicitud);
 
-        $data = ['analisis' => $analisis];
+        $data = [
+            'analisis' => $analisis,
+            'solicitud' => $solicitud,
+        ];
         $html = $this->load->view('analisis_financiero/pdf_asalariado', $data, true);
         $this->_generar_pdf($html, 'analisis_asalariado_' . $idsolicitud);
     }
@@ -158,7 +396,7 @@ class Analisis_financiero extends CI_Controller
         if (!$analisis) {
             // Lista de campos de la tabla comerciante (ajustar si hay más campos)
             $campos = [
-                'ingreso_sueldo_neto','ingreso_comisiones','ingreso_bonificaciones','ingreso_remesas','ingreso_otros','total_ingresos','sueldo','inss','ir','sueldo_neto_calc','gastos_alimentacion','gastos_servicios','gastos_vestuario','gastos_educativos','gastos_transporte','gastos_alquiler','pago_empleado_viatico','entretenimiento','otros_gastos','total_gastos_familiares','cuotas_prestamos','pension_alimenticia','otras_obligaciones','total_otras_obligaciones','total_egresos','flujo_neto_mensual','cuota_periodica','canasta_basica','cantidad_promedio','monto_por_persona','personas_dependientes','gastos_alimentacion_canasta','transporte_urbano','transporte_individual','transporte_interurbano','recorrido_laboral','vehiculo_particular','alquiler','casa_propia','cobertura_deuda','cobertura_garantia','tc_acumulado','p_entretenimiento','created_at','updated_at'
+                'ingreso_sueldo_neto','ingreso_comisiones','ingreso_bonificaciones','ingreso_remesas','ingreso_otros','total_ingresos','sueldo','inss','ir','sueldo_neto_calc','gastos_alimentacion','gastos_servicios','gastos_vestuario','gastos_educativos','gastos_transporte','gastos_alquiler','pago_empleado_viatico','entretenimiento','otros_gastos','total_gastos_familiares','cuotas_prestamos','pension_alimenticia','otras_obligaciones','total_otras_obligaciones','total_egresos','flujo_neto_mensual','cuota_periodica','canasta_basica','cantidad_promedio','monto_por_persona','personas_dependientes','gastos_alimentacion_canasta','transporte_urbano','transporte_individual','transporte_interurbano','recorrido_laboral','vehiculo_particular','alquiler','casa_propia','cobertura_deuda','cobertura_garantia','tc_acumulado','p_entretenimiento','comentario','created_at','updated_at'
             ];
             $analisis = array();
             foreach ($campos as $c) $analisis[$c] = '';
@@ -172,7 +410,7 @@ class Analisis_financiero extends CI_Controller
         if (empty($analisis['apellidos']) && isset($solicitud['apellidos'])) {
             $analisis['apellidos'] = $solicitud['apellidos'];
         }
-        $data = ['analisis' => $analisis];
+        $data = ['analisis' => $analisis, 'solicitud' => $solicitud];
         $html = $this->load->view('analisis_financiero/pdf_comerciante', $data, true);
         $this->_generar_pdf($html, 'analisis_comerciante_' . $idsolicitud);
     }
@@ -312,8 +550,8 @@ class Analisis_financiero extends CI_Controller
         // Calcular cobertura_deuda desde flujo neto mensual y cuota periódica cuando hay datos disponibles.
         $flujo_neto = $this->_to_float(isset($data['flujo_neto_mensual']) ? $data['flujo_neto_mensual'] : 0);
         $cuota = $this->_to_float(isset($data['cuota_periodica']) ? $data['cuota_periodica'] : 0);
-        if ($cuota > 0) {
-            $data['cobertura_deuda'] = round($flujo_neto / $cuota, 4);
+        if ($cuota > 0 && $flujo_neto > 0) {
+            $data['cobertura_deuda'] = round($cuota / $flujo_neto, 4);
         } elseif (!isset($data['cobertura_deuda']) || !is_numeric($data['cobertura_deuda'])) {
             $data['cobertura_deuda'] = 0;
         }
@@ -451,6 +689,7 @@ class Analisis_financiero extends CI_Controller
         $this->db->select('tb_solicitudes.*, COALESCE(tb_asesores.nombres, "") as nombre_asesor');
         $this->db->from('tb_solicitudes');
         $this->db->join('tb_asesores', 'tb_solicitudes.idasesor = tb_asesores.idasesor', 'left');
+        $this->db->order_by('tb_solicitudes.idsolicitud', 'DESC');
         $solicitudes = $this->db->get()->result();
         $rows_afa = $this->db->select('idsolicitud')->from('tb_analisis_financiero_asalariado')->get()->result();
         $rows_afc = $this->db->select('idsolicitud')->from('tb_analisis_financiero_comerciante')->get()->result();

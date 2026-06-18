@@ -297,6 +297,7 @@ class Pagos extends CI_Controller
         $this->db->where('idprestamo', $idprestamo);
         $this->db->order_by('numero', 'ASC');
         $cuotas = $this->db->get()->result();
+        log_message('debug', 'getPrestamoNextCuota idprestamo=' . print_r($idprestamo, true) . ' cuotas_found=' . count($cuotas));
         $chosen = null;
         $total_pending = 0;
         if (!empty($cuotas)) {
@@ -338,6 +339,7 @@ class Pagos extends CI_Controller
         }
 
         // after loop, if chosen exists include total_pending in response
+        log_message('debug', 'getPrestamoNextCuota chosen=' . print_r($chosen, true) . ' total_pending=' . $total_pending);
         if ($chosen) {
             $cuota_id = $chosen['id'] ? $chosen['id'] : ('N-' . $chosen['numero']);
             $html = '<option value="' . $cuota_id . '">CUOTA ' . ($chosen['numero'] ? $chosen['numero'] : $cuota_id) . '</option>';

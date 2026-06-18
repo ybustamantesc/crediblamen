@@ -534,7 +534,7 @@ try {
 						<a href="<?php echo base_url('usuarios'); ?>"><i class="ik ik-users"></i><span>Usuarios</span></a>
 					</div>
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'feriados' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('feriados'); ?>"><i class="fas fa-calendar-day"></i><span>Feriados</span></a>
+						<a href="<?php echo base_url('feriados'); ?>"><i class="fas fa-calendar-alt"></i><span>Feriados</span></a>
 					</div>
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'sistema' ? 'active' : ''); ?>">
 						<a href="<?php echo base_url('sistema'); ?>"><i class="ik ik-settings"></i><span>Sistema</span></a>

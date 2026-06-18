@@ -233,9 +233,10 @@ class Tesoreria extends CI_Controller {
         $id = $this->db->insert_id();
         header('Content-Type: application/json');
         echo json_encode(['status'=>true, 'id'=>$id]);
-                }
-            // AJAX: Guardar movimiento bancario
-            public function save_movimiento_ajax() {
+    }
+
+    // AJAX: Guardar movimiento bancario
+    public function save_movimiento_ajax() {
         $this->load->database();
         $p = $this->input->post(NULL, TRUE);
         // Validar cuenta_id
@@ -258,6 +259,29 @@ class Tesoreria extends CI_Controller {
                 $numero_cheque = ($row && $row->max_cheque) ? (intval($row->max_cheque) + 1) : 1;
             }
         }
+        
+        // Obtener usuario actual que ejecuta la operación
+        $usuarioTxt = $this->session->userdata('username');
+        if (!$usuarioTxt) {
+            try {
+                $usuario_id = null;
+                if (method_exists($this->ion_auth, 'get_user_id')) {
+                    $tmpUserId = intval($this->ion_auth->get_user_id());
+                    $usuario_id = $tmpUserId > 0 ? $tmpUserId : null;
+                }
+                if ($usuario_id === null) {
+                    $usuarioRow = $this->ion_auth->user()->row();
+                    if ($usuarioRow && isset($usuarioRow->id)) {
+                        $tmpUserId = intval($usuarioRow->id);
+                        $usuario_id = $tmpUserId > 0 ? $tmpUserId : null;
+                    }
+                }
+                $usuarioTxt = $usuario_id ? ('user_' . $usuario_id) : 'sistema';
+            } catch (Exception $e) {
+                $usuarioTxt = 'sistema';
+            }
+        }
+        
         $data = [
             'tipo_movimiento' => ($forma_pago && strtoupper($forma_pago) === 'CHEQUE') ? 'cheque' : 'transferencia',
             'concepto' => isset($p['concepto']) ? $p['concepto'] : null,
@@ -277,6 +301,8 @@ class Tesoreria extends CI_Controller {
             'cuenta_id' => $cuenta_id,
             'tipo_transferencia' => isset($p['tipo_transferencia']) ? $p['tipo_transferencia'] : null,
             'numero_cheque' => $numero_cheque,
+            'creado_por' => $usuarioTxt,
+            'fecha_creacion' => date('Y-m-d H:i:s'),
             'created_at' => date('Y-m-d H:i:s')
         ];
         $this->db->insert('teso_movimientos', $data);
@@ -295,9 +321,10 @@ class Tesoreria extends CI_Controller {
             header('Content-Type: application/json');
             echo json_encode(['status'=>false, 'message'=>'Error MySQL: '.$error['message']]);
         }
-            }
-        // AJAX: Obtener movimientos filtrados
-        public function get_movimientos_ajax() {
+    }
+
+    // AJAX: Obtener movimientos filtrados
+    public function get_movimientos_ajax() {
             $cuenta_id = $this->input->get('cuenta_id');
             $desde = trim((string)$this->input->get('desde'));
             $hasta = trim((string)$this->input->get('hasta'));
@@ -333,6 +360,7 @@ class Tesoreria extends CI_Controller {
             }
 
             $this->db->order_by('fecha_registro', 'desc');
+            $this->db->order_by('id', 'desc');
             $movs = $this->db->get()->result_array();
 
             // Resolver nombres de usuario para evitar mostrar IDs en la columna Ejecutado por.
@@ -1230,6 +1258,7 @@ class Tesoreria extends CI_Controller {
                 'tipo_transferencia' => 'abono',
                 'estado' => 'activo',
                 'creado_por' => $usuarioTxt,
+                'fecha_creacion' => date('Y-m-d H:i:s'),
                 'created_at' => date('Y-m-d H:i:s')
             );
             $this->db->insert('teso_movimientos', $mov);
@@ -2712,6 +2741,25 @@ class Tesoreria extends CI_Controller {
         echo json_encode(['status'=>true,'cuentas'=>$result, 'using' => 'teso_accounts']);
     }
 
+    // AJAX: Obtener datos de una cuenta específica (para editar)
+    public function get_cuenta_by_id_ajax()
+    {
+        header('Content-Type: application/json');
+        $cuenta_id = $this->input->get('cuenta_id');
+        if (!$cuenta_id || !is_numeric($cuenta_id)) {
+            echo json_encode(['status'=>false, 'message'=>'ID requerido']);
+            return;
+        }
+        
+        $cuenta = $this->db->get_where('teso_accounts', ['id' => intval($cuenta_id)])->row();
+        if (!$cuenta) {
+            echo json_encode(['status'=>false, 'message'=>'Cuenta no encontrada']);
+            return;
+        }
+        
+        echo json_encode(['status'=>true, 'cuenta'=>$cuenta]);
+    }
+
     public function save_cuenta_ajax()
     {
         if (!$this->ion_auth->is_admin()) { echo json_encode(['status'=>false,'message'=>'Sin permisos']); return; }
@@ -2726,6 +2774,17 @@ class Tesoreria extends CI_Controller {
             'estado' => isset($p['estado']) ? intval($p['estado']) : 1,
             'sig_cheque' => isset($p['sig_cheque']) ? intval($p['sig_cheque']) : null,
             'formato' => (isset($p['formato']) && $p['formato'] !== '' ? $p['formato'] : NULL),
+            // Nuevos campos
+            'fecha_apertura' => (isset($p['fecha_apertura']) && $p['fecha_apertura'] !== '' ? $p['fecha_apertura'] : NULL),
+            'clabe' => (isset($p['clabe']) && $p['clabe'] !== '' ? $p['clabe'] : NULL),
+            'dia_corte' => isset($p['dia_corte']) ? intval($p['dia_corte']) : NULL,
+            'ultimo_dia_mes' => isset($p['ultimo_dia_mes']) ? intval($p['ultimo_dia_mes']) : 0,
+            'clave_banco' => (isset($p['clave_banco']) && $p['clave_banco'] !== '' ? $p['clave_banco'] : NULL),
+            'sucursal' => (isset($p['sucursal']) && $p['sucursal'] !== '' ? $p['sucursal'] : NULL),
+            'funcionario' => (isset($p['funcionario']) && $p['funcionario'] !== '' ? $p['funcionario'] : NULL),
+            'telefono' => (isset($p['telefono']) && $p['telefono'] !== '' ? $p['telefono'] : NULL),
+            'cuenta_contable' => (isset($p['cuenta_contable']) && $p['cuenta_contable'] !== '' ? $p['cuenta_contable'] : NULL),
+            'banco_extranjero' => isset($p['banco_extranjero']) ? intval($p['banco_extranjero']) : 0,
         ];
         if (isset($p['id']) && intval($p['id'])>0) {
             // No permitir actualizar code ni saldo_inicial

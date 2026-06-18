@@ -6957,3 +6957,578 @@ CHECKPOINT 3: rowCount=1
 CHECKPOINT 4: Processing row 0
 CHECKPOINT 6: Inserted garantia_id=18
 SAVE completed for solicitud_id=16
+=== GARANTIAS SAVE DEBUG 2026-06-08T10:16:35-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 2
+    [garantia_id] => Array
+        (
+            [0] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Algo caro
+        )
+
+    [modelo] => Array
+        (
+            [0] => Caro
+        )
+
+    [marca] => Array
+        (
+            [0] => Verde
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 123
+        )
+
+    [costo] => Array
+        (
+            [0] => 15000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Ok
+        )
+
+    [total] => 15000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images (8).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpD1E.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 7535
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 6: Inserted garantia_id=19
+SAVE completed for solicitud_id=2
+=== GARANTIAS SAVE DEBUG 2026-06-08T14:50:07-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 16
+    [garantia_id] => Array
+        (
+            [0] => 18
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara profesional
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+        )
+
+    [marca] => Array
+        (
+            [0] => Negro
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 2
+        )
+
+    [costo] => Array
+        (
+            [0] => 4500.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Cuidado
+        )
+
+    [total] => 4500.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images (5).jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php7797.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 5651
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=18
+SAVE completed for solicitud_id=16
+=== GARANTIAS SAVE DEBUG 2026-06-08T14:50:16-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 16
+    [garantia_id] => Array
+        (
+            [0] => 18
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara profesional
+        )
+
+    [modelo] => Array
+        (
+            [0] => 1234A
+        )
+
+    [marca] => Array
+        (
+            [0] => Negro
+        )
+
+    [n_serie] => Array
+        (
+            [0] => 2
+        )
+
+    [costo] => Array
+        (
+            [0] => 4500.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Cuidado
+        )
+
+    [total] => 4500.00
+    [fotos_eliminar] => Array
+        (
+            [0] => uploads/garantias/solicitud_16/4e1765e12b67633819d08c5518843a73.jpg
+        )
+
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=18
+SAVE completed for solicitud_id=16
+=== GARANTIAS SAVE DEBUG 2026-06-09T09:20:06-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 17
+    [garantia_id] => Array
+        (
+            [0] => 
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+        )
+
+    [modelo] => Array
+        (
+            [0] => Parque
+        )
+
+    [marca] => Array
+        (
+            [0] => Algo
+        )
+
+    [n_serie] => Array
+        (
+            [0] => G6
+        )
+
+    [costo] => Array
+        (
+            [0] => 15000
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 15000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => png-transparent-user-person-generic-single-general-symbol-blue-icon-male.png
+                            [1] => pngtree-generic-manual-focus-photo-camera-lens-isolated-png-image_11511754.png
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/png
+                            [1] => image/png
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\phpB2B1.tmp
+                            [1] => D:\xampp\tmp\phpB2C2.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                            [1] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 87869
+                            [1] => 37844
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 6: Inserted garantia_id=20
+SAVE completed for solicitud_id=17
+=== GARANTIAS SAVE DEBUG 2026-06-09T09:21:37-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 17
+    [garantia_id] => Array
+        (
+            [0] => 20
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+        )
+
+    [modelo] => Array
+        (
+            [0] => Parque
+        )
+
+    [marca] => Array
+        (
+            [0] => Algo
+        )
+
+    [n_serie] => Array
+        (
+            [0] => G6
+        )
+
+    [costo] => Array
+        (
+            [0] => 15000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 15000.00
+)
+
+_FILES: Array
+(
+    [fotos] => Array
+        (
+            [name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => images.jpg
+                            [1] => images.png
+                            [2] => istockphoto-1142192548-612x612.jpg
+                        )
+
+                )
+
+            [type] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => image/jpeg
+                            [1] => image/png
+                            [2] => image/jpeg
+                        )
+
+                )
+
+            [tmp_name] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => D:\xampp\tmp\php138F.tmp
+                            [1] => D:\xampp\tmp\php1390.tmp
+                            [2] => D:\xampp\tmp\php1391.tmp
+                        )
+
+                )
+
+            [error] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 0
+                            [1] => 0
+                            [2] => 0
+                        )
+
+                )
+
+            [size] => Array
+                (
+                    [0] => Array
+                        (
+                            [0] => 8669
+                            [1] => 6745
+                            [2] => 13885
+                        )
+
+                )
+
+        )
+
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=20
+SAVE completed for solicitud_id=17
+=== GARANTIAS SAVE DEBUG 2026-06-09T09:24:05-05:00 ===
+POST: Array
+(
+    [solicitud_id] => 17
+    [garantia_id] => Array
+        (
+            [0] => 20
+        )
+
+    [cantidad] => Array
+        (
+            [0] => 1
+        )
+
+    [nombre] => Array
+        (
+            [0] => Cámara cara
+        )
+
+    [modelo] => Array
+        (
+            [0] => Parque
+        )
+
+    [marca] => Array
+        (
+            [0] => Algo
+        )
+
+    [n_serie] => Array
+        (
+            [0] => G6
+        )
+
+    [costo] => Array
+        (
+            [0] => 15000.00
+        )
+
+    [tiempo_vida] => Array
+        (
+            [0] => Bueno
+        )
+
+    [total] => 15000.00
+    [fotos_eliminar] => Array
+        (
+            [0] => uploads/garantias/solicitud_17/72a700bb479d0ed5b4a33211c9899cb0.jpg
+        )
+
+)
+
+_FILES: Array
+(
+)
+
+RAW: 
+
+CHECKPOINT 1: Loaded existing rows
+CHECKPOINT 2: Got POST data
+CHECKPOINT 3: rowCount=1
+CHECKPOINT 4: Processing row 0
+CHECKPOINT 5: Updated garantia_id=20
+SAVE completed for solicitud_id=17

@@ -1,18 +1,23 @@
-<div class="container py-5">
-    <!-- Styles moved to public/css/branding.css -->
+<div class="menu-page">
+    <div class="container py-5">
+        <!-- Styles moved to public/css/branding.css -->
 
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <div>
-            <h2 class="mb-1">Seleccionar Módulo</h2>
-            <p class="text-muted">Elija a cuál sección desea ingresar</p>
+        <div class="menu-hero">
+            <div class="menu-hero-brand">
+                <img src="<?php echo base_url('Logo/Logo.png'); ?>" alt="Crediblamen" class="menu-logo">
+                <div>
+                    <span class="hero-eyebrow">Crediblamen</span>
+                    <h1>Seleccionar módulo</h1>
+                    <p>Ingresa a las secciones principales de CrediBlamen con un diseño moderno, rápido y confiable.</p>
+                </div>
+            </div>
+            <div class="hero-actions">
+                <a href="<?php echo site_url('login/logout'); ?>" class="btn-hero btn-hero-logout"><i class="fas fa-sign-out-alt"></i> Cerrar sesión</a>
+                <a href="<?php echo site_url('contabilidad'); ?>" class="btn-hero btn-hero-secondary d-none" id="btnIrContabilidad"><i class="fa fa-calculator"></i> Ir a Contabilidad</a>
+            </div>
         </div>
-            <div>
-            <a href="<?php echo site_url('contabilidad'); ?>" class="btn btn-sm btn-outline-primary mr-2 d-none" id="btnIrContabilidad"><i class="fa fa-calculator mr-1"></i> Ir a Contabilidad</a>
-            <a href="<?php echo site_url('login/logout'); ?>" class="btn btn-sm btn-outline-danger" id="btnCerrarSesion"><i class="fa fa-sign-out-alt mr-1"></i> Cerrar sesión</a>
-        </div>
-    </div>
 
-    <div class="menu-grid">
+        <div class="menu-grid">
         <?php if (isset($permissions) && $permissions['creditos']) : ?>
             <div class="menu-card">
                 <a href="<?php echo base_url('home'); ?>" class="menu-btn btn-creditos"><i class="fas fa-money-bill-wave mr-2"></i> Créditos / Promotoria</a>
@@ -38,14 +43,27 @@
 
         <?php if (isset($permissions) && $permissions['tesoreria']) : ?>
             <div class="menu-card">
-                <a href="<?php echo site_url('tesoreria'); ?>" class="menu-btn btn-tesoreria"><i class="fas fa-wallet mr-2"></i> Tesorería / Pagos</a>
+                <a href="<?php echo site_url('tesoreria'); ?>" class="menu-btn btn-tesoreria">
+                    <span class="menu-btn-icon"><i class="fas fa-wallet"></i></span>
+                    <span class="menu-btn-text">Tesorería / Pagos</span>
+                </a>
                 <span class="menu-caption">Movimientos de caja, conciliaciones y pagos</span>
+            </div>
+            <div class="menu-card">
+                <a href="<?php echo site_url('tesoreria/cobros'); ?>" class="menu-btn btn-cobros">
+                    <span class="menu-btn-icon"><i class="fas fa-hand-holding-usd"></i></span>
+                    <span class="menu-btn-text">Gestión de Cobros</span>
+                </a>
+                <span class="menu-caption">Cobros, seguimiento y gestión de pagos</span>
             </div>
         <?php endif; ?>
 
         <?php if (isset($permissions) && $permissions['contabilidad']) : ?>
             <div class="menu-card">
-                <a href="<?php echo site_url('contabilidad'); ?>" class="menu-btn btn-contabilidad"><i class="fas fa-calculator mr-2"></i> Contabilidad / Financiera</a>
+                <a href="<?php echo site_url('contabilidad'); ?>" class="menu-btn btn-contabilidad">
+                    <span class="menu-btn-icon"><i class="fas fa-calculator"></i></span>
+                    <span class="menu-btn-text">Contabilidad / Financiera</span>
+                </a>
                 <span class="menu-caption">Asientos, reportes y gestión financiera</span>
             </div>
         <?php endif; ?>

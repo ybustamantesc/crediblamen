@@ -46,9 +46,15 @@ class Solicitudes extends CI_Controller
             if (!isset($sol->otros_ingresos_3_margen) && isset($sol->otros_ingresos_3_margin)) $sol->otros_ingresos_3_margen = $sol->otros_ingresos_3_margin;
 
             // Financial structure
-            if (!isset($sol->cuentas_por_cobrar) && isset($sol->cuentas_por_cobrar_amount)) $sol->cuentas_por_cobrar = $sol->cuentas_por_cobrar_amount;
-            if (!isset($sol->caja_efectivo) && isset($sol->caja_amount)) $sol->caja_efectivo = $sol->caja_amount;
-            if (!isset($sol->saldo_banco) && isset($sol->banco_amount)) $sol->saldo_banco = $sol->banco_amount;
+            if ((!isset($sol->cuentas_por_cobrar) || $sol->cuentas_por_cobrar === '' || ($sol->cuentas_por_cobrar == 0 && isset($sol->cuentas_por_cobrar_amount) && $sol->cuentas_por_cobrar_amount != 0)) && isset($sol->cuentas_por_cobrar_amount)) {
+                $sol->cuentas_por_cobrar = $sol->cuentas_por_cobrar_amount;
+            }
+            if ((!isset($sol->caja_efectivo) || $sol->caja_efectivo === '' || ($sol->caja_efectivo == 0 && isset($sol->caja_amount) && $sol->caja_amount != 0)) && isset($sol->caja_amount)) {
+                $sol->caja_efectivo = $sol->caja_amount;
+            }
+            if ((!isset($sol->saldo_banco) || $sol->saldo_banco === '' || ($sol->saldo_banco == 0 && isset($sol->banco_amount) && $sol->banco_amount != 0)) && isset($sol->banco_amount)) {
+                $sol->saldo_banco = $sol->banco_amount;
+            }
 
             // Gastos
             if (!isset($sol->gasto_alquiler) && isset($sol->pago_alquiler)) $sol->gasto_alquiler = $sol->pago_alquiler;
@@ -2340,20 +2346,23 @@ class Solicitudes extends CI_Controller
 
                     // Mostrar en la tabla quién aprobó y la vía (Comite/Junta) según el último registro.
                     $s->aprobado_por = isset($latest->aprobado_por) ? (string)$latest->aprobado_por : '';
-                    if (!empty($latest->username)) {
-                        $s->aprobado_usuario = (string)$latest->username;
-                    } elseif (!empty($latest->user_id)) {
+                    if (!empty($latest->user_id)) {
                         $u = $this->core_model->get_by_id('users', array('id' => (int)$latest->user_id));
                         if ($u) {
-                            $nombre = trim(((isset($u->first_name) ? $u->first_name : '') . ' ' . (isset($u->last_name) ? $u->last_name : '')));
-                            if ($nombre !== '') {
-                                $s->aprobado_usuario = $nombre;
-                            } elseif (!empty($u->username)) {
+                            if (!empty($u->username)) {
                                 $s->aprobado_usuario = (string)$u->username;
-                            } elseif (!empty($u->email)) {
-                                $s->aprobado_usuario = (string)$u->email;
+                            } else {
+                                $nombre = trim(((isset($u->first_name) ? $u->first_name : '') . ' ' . (isset($u->last_name) ? $u->last_name : '')));
+                                if ($nombre !== '') {
+                                    $s->aprobado_usuario = $nombre;
+                                } elseif (!empty($u->email)) {
+                                    $s->aprobado_usuario = (string)$u->email;
+                                }
                             }
                         }
+                    }
+                    if (empty($s->aprobado_usuario) && !empty($latest->username)) {
+                        $s->aprobado_usuario = (string)$latest->username;
                     }
 
                     $s->aprob_status = $this->_infer_aprob_status_from_comment(isset($latest->comment) ? $latest->comment : '');

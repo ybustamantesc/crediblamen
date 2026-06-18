@@ -73,6 +73,14 @@
 <script src="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/js/select2.min.js"></script>
 
 <script src="<?php echo base_url('public/dist/js/theme.min.js'); ?>"></script>
+<script>
+    $(document).on('click', '.navigation-main .nav-item.has-sub > a[href="#"]', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        e.stopImmediatePropagation();
+        return false;
+    });
+</script>
 
 <!-- <link rel="stylesheet" href="<?php echo base_url('public/plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.min.css'); ?>"> -->
 <!-- <script src="<?php echo base_url('public/plugins/bootstrap-touchspin/jquery.bootstrap-touchspin.min.js'); ?>"></script> -->

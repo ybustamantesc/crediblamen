@@ -183,6 +183,7 @@
                     <a href="<?php echo base_url('contabilidad/auxiliares'); ?>"><i class="ik ik-file-text"></i><span>Auxiliares</span></a>
                 </div>
 
+                <!--
                 <div class="nav-item has-sub <?php echo (in_array($this->router->fetch_method(), ['revaluacion']) ? 'active' : ''); ?>">
                     <a href="#"><i class="ik ik-repeat"></i><span>Procesos</span></a>
                     <div class="submenu-content">
@@ -190,6 +191,7 @@
                         <a href="<?php echo base_url('contabilidad/cierre_mensual'); ?>" class="menu-item">Cierre Mensual</a>
                     </div>
                 </div>
+                -->
 
                 <div class="nav-item has-sub <?php echo (in_array($this->router->fetch_method(), ['balance','situacion_financiera','resultados','flujo']) ? 'active' : ''); ?>">
                     <a href="#"><i class="ik ik-pie-chart"></i><span>Estados Financieros</span></a>

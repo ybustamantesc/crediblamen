@@ -65,7 +65,7 @@ document.addEventListener('DOMContentLoaded', function(){
         }
         
         if (!filtered.length){
-            tbody.innerHTML = '<tr><td colspan="6" class="text-center text-muted py-4">No se encontraron cuentas</td></tr>';
+            tbody.innerHTML = '<tr><td colspan="7" class="text-center text-muted py-4">No se encontraron cuentas</td></tr>';
             return;
         }
 
@@ -220,7 +220,17 @@ document.addEventListener('DOMContentLoaded', function(){
             const bal = (typeof a.balance !== 'undefined') ? parseFloat(a.balance) : 0;
             const balTd = document.createElement('td'); balTd.style.textAlign = 'right'; balTd.innerHTML = bal.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
             const actionsTd = document.createElement('td'); actionsTd.style.textAlign = 'center';
-            actionsTd.innerHTML = '<button class="btn btn-sm btn-outline-secondary btn-edit" data-id="'+a.id+'"><i class="fas fa-edit"></i></button> <button class="btn btn-sm btn-outline-danger btn-delete" data-id="'+a.id+'"><i class="fas fa-trash"></i></button>';
+            // Single "Acciones" dropdown with clean submenu styling
+            actionsTd.innerHTML = ''+
+                '<div class="action-dropdown" style="position:relative;display:inline-block;overflow:visible;">'
+                + '<button class="btn btn-sm btn-outline-primary btn-actions-toggle" type="button">Acciones</button>'
+                + '<div class="action-menu" style="position:absolute;right:0;top:calc(100% + 6px);background:#fff;border:1px solid rgba(0,0,0,0.08);padding:6px 0;display:none;min-width:180px;z-index:99999;border-radius:10px;box-shadow:0 14px 30px rgba(0,0,0,0.12);overflow:visible;">' 
+                    + '<button type="button" class="action-item btn-action-child" data-id="'+a.id+'" style="width:100%;border:none;background:transparent;padding:10px 16px;text-align:left;color:#0b1220;font-weight:600;cursor:pointer;">Subcuenta</button>'
+                    + '<button type="button" class="action-item btn-action-sibling" data-id="'+a.id+'" style="width:100%;border:none;background:transparent;padding:10px 16px;text-align:left;color:#0b1220;font-weight:600;cursor:pointer;">Mismo nivel</button>'
+                    + '<button type="button" class="action-item btn-action-edit" data-id="'+a.id+'" style="width:100%;border:none;background:transparent;padding:10px 16px;text-align:left;color:#0b1220;font-weight:600;cursor:pointer;">Editar</button>'
+                    + '<button type="button" class="action-item btn-action-delete" data-id="'+a.id+'" style="width:100%;border:none;background:transparent;padding:10px 16px;text-align:left;color:#dc2626;font-weight:600;cursor:pointer;">Eliminar</button>'
+                + '</div>'
+                + '</div>';
             tr.appendChild(codeTd); tr.appendChild(nameTd); tr.appendChild(typeTd); tr.appendChild(groupTd); tr.appendChild(natTd); tr.appendChild(balTd); tr.appendChild(actionsTd);
             tbody.appendChild(tr);
         });
@@ -234,7 +244,15 @@ document.addEventListener('DOMContentLoaded', function(){
         if (!document.body.dataset.accountsDelegation) {
             try { console.log('contabilidad_catalogo: attaching delegated handlers'); } catch(e){}
             document.body.addEventListener('click', function(ev){
-                const edit = ev.target.closest('.btn-edit');
+                // Close any open action menus when clicking outside
+                const openMenus = document.querySelectorAll('.action-menu');
+                openMenus.forEach(m => {
+                    if (!m.contains(ev.target) && !m.previousElementSibling?.contains(ev.target)) {
+                        m.style.display = 'none';
+                    }
+                });
+
+                const edit = ev.target.closest('.btn-action-edit');
                 if (edit) {
                     ev.preventDefault();
                     const id = edit.getAttribute('data-id');
@@ -249,7 +267,37 @@ document.addEventListener('DOMContentLoaded', function(){
                     }).catch(e=>{console.error(e); alert('Error al abrir modal');});
                     return;
                 }
-                const del = ev.target.closest('.btn-delete');
+                const child = ev.target.closest('.btn-action-child');
+                if (child) {
+                    ev.preventDefault();
+                    const id = child.getAttribute('data-id');
+                    fetch(base_url+'contabilidad/modal_account?mode=child&parent_id='+encodeURIComponent(id)).then(r=>r.text()).then(html=>{
+                        let mc = document.getElementById('modalContainer') || modalContainer;
+                        if (!mc) {
+                            mc = document.createElement('div'); mc.id = 'modalContainer'; document.body.appendChild(mc);
+                        }
+                        mc.innerHTML = html;
+                        modalContainer = mc;
+                        attachAccountModalEvents();
+                    }).catch(e=>{console.error(e); alert('Error al abrir modal');});
+                    return;
+                }
+                const sibling = ev.target.closest('.btn-action-sibling');
+                if (sibling) {
+                    ev.preventDefault();
+                    const id = sibling.getAttribute('data-id');
+                    fetch(base_url+'contabilidad/modal_account?mode=sibling&parent_id='+encodeURIComponent(id)).then(r=>r.text()).then(html=>{
+                        let mc = document.getElementById('modalContainer') || modalContainer;
+                        if (!mc) {
+                            mc = document.createElement('div'); mc.id = 'modalContainer'; document.body.appendChild(mc);
+                        }
+                        mc.innerHTML = html;
+                        modalContainer = mc;
+                        attachAccountModalEvents();
+                    }).catch(e=>{console.error(e); alert('Error al abrir modal');});
+                    return;
+                }
+                const del = ev.target.closest('.btn-action-delete');
                 if (del) {
                     ev.preventDefault();
                     if (!confirm('Eliminar cuenta?')) return;
@@ -260,6 +308,20 @@ document.addEventListener('DOMContentLoaded', function(){
                         if (resp.status === 'success') fetchAccounts(); else if (resp.status === 'error' && resp.errors) alert(resp.errors.join('\n')); else alert('Error al eliminar');
                     }).catch(e=>{console.error(e); alert('Error');});
                     return;
+                }
+            });
+            // Toggle action menu when clicking the Acciones button
+            document.body.addEventListener('click', function(ev){
+                const toggle = ev.target.closest('.btn-actions-toggle');
+                if (toggle) {
+                    ev.preventDefault();
+                    const dropdown = toggle.closest('.action-dropdown');
+                    if (!dropdown) return;
+                    const menu = dropdown.querySelector('.action-menu');
+                    if (!menu) return;
+                    // Close other menus
+                    document.querySelectorAll('.action-menu').forEach(m=>{ if (m !== menu) m.style.display = 'none'; });
+                    menu.style.display = (menu.style.display === 'block') ? 'none' : 'block';
                 }
             });
             document.body.dataset.accountsDelegation = '1';
@@ -292,13 +354,38 @@ document.addEventListener('DOMContentLoaded', function(){
     // Nuevo
     if (btnNew){
         btnNew.addEventListener('click', function(){
-            fetch(base_url+'contabilidad/modal_account').then(r=>r.text()).then(html=>{
-                let mc = document.getElementById('modalContainer') || modalContainer;
-                if (!mc) { mc = document.createElement('div'); mc.id = 'modalContainer'; document.body.appendChild(mc); }
-                mc.innerHTML = html;
-                modalContainer = mc;
-                attachAccountModalEvents();
-            });
+            // Show a small chooser to decide creation mode
+            let chooser = document.createElement('div');
+            chooser.style.position = 'fixed'; chooser.style.left = '0'; chooser.style.top = '0'; chooser.style.width = '100%'; chooser.style.height = '100%'; chooser.style.display = 'flex'; chooser.style.alignItems = 'center'; chooser.style.justifyContent = 'center'; chooser.style.background = 'rgba(3,7,18,0.45)'; chooser.style.zIndex = 99999;
+            chooser.innerHTML = '<div style="background:#fff;padding:20px;border-radius:10px;max-width:420px;width:100%;box-shadow:0 10px 30px rgba(2,6,23,0.16);">'
+                + '<h4 style="margin:0 0 8px 0">Crear nueva cuenta</h4>'
+                + '<div style="margin-bottom:12px;color:#374151;font-size:14px">Seleccione tipo de cuenta a crear:</div>'
+                + '<div style="display:flex;gap:8px;margin-bottom:12px">'
+                    + '<button id="cnew_root" class="btn btn-sm btn-outline-primary">Cuenta Mayor</button>'
+                    + '<button id="cnew_child" class="btn btn-sm btn-outline-primary">Subcuenta</button>'
+                    + '<button id="cnew_sibling" class="btn btn-sm btn-outline-primary">Mismo nivel</button>'
+                + '</div>'
+                + '<div style="text-align:right"><button id="cnew_cancel" class="btn btn-sm">Cancelar</button></div>'
+                + '</div>';
+            document.body.appendChild(chooser);
+
+            function openModalWithMode(mode){
+                // fetch modal with mode param
+                fetch(base_url+'contabilidad/modal_account?mode='+encodeURIComponent(mode))
+                    .then(r=>r.text()).then(html=>{
+                        let mc = document.getElementById('modalContainer') || modalContainer;
+                        if (!mc) { mc = document.createElement('div'); mc.id = 'modalContainer'; document.body.appendChild(mc); }
+                        mc.innerHTML = html;
+                        modalContainer = mc;
+                        attachAccountModalEvents();
+                        chooser.remove();
+                    }).catch(e=>{ console.error(e); alert('Error al abrir modal'); chooser.remove(); });
+            }
+
+            chooser.querySelector('#cnew_cancel').addEventListener('click', function(){ chooser.remove(); });
+            chooser.querySelector('#cnew_root').addEventListener('click', function(){ openModalWithMode('root'); });
+            chooser.querySelector('#cnew_child').addEventListener('click', function(){ openModalWithMode('child'); });
+            chooser.querySelector('#cnew_sibling').addEventListener('click', function(){ openModalWithMode('sibling'); });
         });
     }
     
@@ -409,6 +496,12 @@ document.addEventListener('DOMContentLoaded', function(){
         const modal = document.getElementById('modalAccount');
         if (!modal) return;
         const btnCancel = document.getElementById('btnCancelAccount');
+        const form = document.getElementById('formAccount');
+        const createMode = modal.querySelector('select[name="create_mode"]');
+        const parentSelect = modal.querySelector('select[name="parent_id"]');
+        const codeInput = modal.querySelector('#inputCode');
+        const levelInput = modal.querySelector('input[name="level"]');
+        const suggestBtn = modal.querySelector('#btnSuggestCode');
         if (btnCancel) btnCancel.addEventListener('click', ()=> {
             const mc = document.getElementById('modalContainer') || modalContainer;
             if (mc) mc.innerHTML = '';
@@ -427,15 +520,66 @@ document.addEventListener('DOMContentLoaded', function(){
                     const opt = document.createElement('option');
                     opt.value = a.id;
                     opt.text = (a.code ? a.code + ' - ' : '') + a.name;
+                    if (typeof a.level !== 'undefined') opt.dataset.level = a.level;
                     if (selectedParentId && String(a.id) === String(selectedParentId)) {
                         opt.selected = true;
                     }
                     sel.appendChild(opt);
                 });
             }
+            updateParentState();
+            fetchSuggestedCode();
         });
 
-        const form = document.getElementById('formAccount');
+        function updateParentState() {
+            if (!parentSelect || !createMode) return;
+            if (createMode.value === 'root') {
+                parentSelect.value = '';
+                parentSelect.disabled = true;
+            } else {
+                parentSelect.disabled = false;
+            }
+            // Update modal title according to create mode
+            const titleEl = modal.querySelector('#modalAccountTitle');
+            if (titleEl && !form.querySelector('input[name="id"]').value) {
+                if (createMode.value === 'sibling') titleEl.textContent = 'Nueva Cuenta (Mismo nivel)';
+                else if (createMode.value === 'child') titleEl.textContent = 'Nueva Cuenta (Subcuenta)';
+                else if (createMode.value === 'root') titleEl.textContent = 'Nueva Cuenta (Cuenta Mayor)';
+            }
+        }
+
+        function fetchSuggestedCode() {
+            if (!codeInput) return;
+            const mode = createMode ? createMode.value : 'child';
+            const params = new URLSearchParams();
+            if (mode === 'sibling') {
+                // For sibling mode, pass the source account id explicitly so backend can find its parent
+                const srcId = parentSelect && parentSelect.dataset ? parentSelect.dataset.sourceAccountId : null;
+                if (srcId && String(srcId).trim() !== '') params.append('source_id', srcId);
+                else if (parentSelect && parentSelect.value) params.append('parent_id', parentSelect.value);
+            } else if (mode !== 'root' && parentSelect && parentSelect.value) {
+                params.append('parent_id', parentSelect.value);
+            }
+            if (mode) {
+                params.append('mode', mode === 'root' ? 'root' : (mode === 'sibling' ? 'sibling' : 'child'));
+            }
+            fetch(base_url+'contabilidad/get_next_account_code?' + params.toString())
+                .then(r => r.json())
+                .then(data => {
+                    if (data.status === 'success' && data.suggested_code) {
+                        if (!form.querySelector('input[name="id"]').value) {
+                            codeInput.value = data.suggested_code;
+                        }
+                    }
+                    if (data && data.suggested_level && levelInput) {
+                        if (!form.querySelector('input[name="id"]').value) {
+                            levelInput.value = data.suggested_level;
+                        }
+                    }
+                })
+                .catch(err => console.error('Error fetching suggested code:', err));
+        }
+
         if (!form) return;
         form.addEventListener('submit', function(e){
             e.preventDefault();
@@ -454,6 +598,34 @@ document.addEventListener('DOMContentLoaded', function(){
                 }
             }).catch(err=>{console.error(err); alert('Error');});
         });
+
+        if (suggestBtn) {
+            suggestBtn.addEventListener('click', function(e){
+                e.preventDefault();
+                fetchSuggestedCode();
+            });
+        }
+
+        if (createMode) {
+            createMode.addEventListener('change', function(){
+                updateParentState();
+                fetchSuggestedCode();
+            });
+        }
+
+        if (parentSelect) {
+            parentSelect.addEventListener('change', function(){
+                if (!createMode || createMode.value !== 'root') fetchSuggestedCode();
+            });
+        }
+
+        const btnCancelFooter = modal.querySelector('#btnCancelAccountFooter');
+        if (btnCancelFooter) {
+            btnCancelFooter.addEventListener('click', function(){
+                const mc = document.getElementById('modalContainer') || modalContainer;
+                if (mc) mc.innerHTML = '';
+            });
+        }
     }
 
     if (typeof base_url === 'undefined') window.base_url = window.location.origin + '/servicredit/';

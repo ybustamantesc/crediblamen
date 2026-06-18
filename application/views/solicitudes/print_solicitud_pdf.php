@@ -315,7 +315,7 @@
       <div style="margin:14px 6px 6px 6px;">
         <div style="background:#0b3d91;color:#fff;padding:8px 10px;font-weight:700;font-size:13px;">Estructura Financiera del Negocio</div>
         <div style="border:1px solid #e6e6e6;padding:10px;font-size:11px;margin-top:6px;">
-          <div style="margin-bottom:6px;"><strong>Cuentas por cobrar:</strong> C$ <?php echo htmlspecialchars(number_format((float)($solicitud->cuentas_por_cobrar ?? 0),2,'.',',')); ?> &nbsp;&nbsp; <strong>Ventas al Crédito:</strong> C$ <?php echo htmlspecialchars(number_format((float)($solicitud->ventas_al_credito ?? 0),2,'.',',')); ?> &nbsp;&nbsp; <strong>Caja (efectivo):</strong> C$ <?php echo htmlspecialchars(number_format((float)($solicitud->caja_efectivo ?? 0),2,'.',',')); ?> &nbsp;&nbsp; <strong>Banco:</strong> C$ <?php echo htmlspecialchars(number_format((float)($solicitud->saldo_banco ?? 0),2,'.',',')); ?></div>
+          <div style="margin-bottom:6px;"><strong>Cuentas por cobrar:</strong> C$ <?php echo htmlspecialchars(number_format((float)($solicitud->cuentas_por_cobrar ?? $solicitud->cuentas_por_cobrar_amount ?? 0),2,'.',',')); ?> &nbsp;&nbsp; <strong>Ventas al Crédito:</strong> C$ <?php echo htmlspecialchars(number_format((float)($solicitud->ventas_al_credito ?? 0),2,'.',',')); ?> &nbsp;&nbsp; <strong>Caja (efectivo):</strong> C$ <?php echo htmlspecialchars(number_format((float)($solicitud->caja_efectivo ?? $solicitud->caja_amount ?? 0),2,'.',',')); ?> &nbsp;&nbsp; <strong>Banco:</strong> C$ <?php echo htmlspecialchars(number_format((float)($solicitud->saldo_banco ?? $solicitud->banco_amount ?? 0),2,'.',',')); ?></div>
         </div>
       </div>
 

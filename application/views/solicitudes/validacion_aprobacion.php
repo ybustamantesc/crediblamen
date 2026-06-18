@@ -57,15 +57,7 @@
                         <div class="col-md-4">
                             <input id="aprob_search" class="form-control" placeholder="Buscar por código o cliente..." />
                         </div>
-                        <div class="col-md-3">
-                            <select id="aprob_filter_status" class="form-control">
-                                <option value="all">Todos</option>
-                                <option value="pending">Pendiente</option>
-                                <option value="approved">Aprobado</option>
-                                <option value="rejected">Rechazado</option>
-                                <option value="annulled">Anulado</option>
-                            </select>
-                        </div>
+                        <div class="col-md-3"></div>
                         <div class="col-md-5 text-right">
                             <small class="text-muted">Filtrar por estado o buscar por cliente/código.</small>
                         </div>
@@ -79,20 +71,21 @@
                             <label class="mb-1">Fecha fin</label>
                             <input type="date" id="rep_fecha_fin" class="form-control form-control-sm" />
                         </div>
-                        <div class="col-md-2">
-                            <label class="mb-1">Estado reporte</label>
-                            <select id="rep_estado" class="form-control form-control-sm">
+                        <div class="col-md-3">
+                            <label class="mb-1">Estado del reporte</label>
+                            <select id="aprob_filter_status" class="form-control form-control-sm">
                                 <option value="all">Todos</option>
+                                <option value="pending">Pendiente</option>
                                 <option value="approved">Aprobado</option>
                                 <option value="rejected">Rechazado</option>
-                                <option value="pending">Pendiente</option>
                                 <option value="annulled">Anulado</option>
                             </select>
                         </div>
-                        <div class="col-md-6 d-flex align-items-end justify-content-end">
+                        <div class="col-md-5 d-flex align-items-end justify-content-end flex-column">
                             <button type="button" id="btn_generar_reporte_aprob" class="btn btn-sm btn-primary">
                                 <i class="fa fa-file-pdf"></i> Generar Resumen para Firma
                             </button>
+                            <small class="text-muted mt-2">Los filtros de fecha y estado se aplican a la tabla y también se usan al generar el PDF.</small>
                         </div>
                     </div>
                     <div class="table-responsive">
@@ -115,9 +108,17 @@
                                     <?php $status = isset($s->aprob_status) ? $s->aprob_status : 'pending'; ?>
                                     <tr data-id="<?php echo $s->idsolicitud; ?>" data-status="<?php echo $status; ?>">
                                         <td><?php echo $s->idsolicitud; ?></td>
-                                        <td><?php echo trim($s->apellidos . ' ' . $s->nombres); ?></td>
+                                        <td><?php echo trim($s->nombres . ' ' . $s->apellidos); ?></td>
                                         <td><?php echo (!empty($s->tipo_documento) ? $s->tipo_documento : ''); ?> <?php echo (!empty($s->numero_doc) ? '<br/><small class="text-muted">' . $s->numero_doc . '</small>' : ''); ?></td>
-                                        <td><?php echo (!empty($s->fecha_recepcion) ? $s->fecha_recepcion : (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : '')); ?></td>
+                                        <td><?php
+                                            $fecha = !empty($s->fecha_recepcion) ? $s->fecha_recepcion : (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : '');
+                                            if ($fecha) {
+                                                $dt = date_create($fecha);
+                                                echo $dt ? date_format($dt, 'Y-m-d') : $fecha;
+                                            } else {
+                                                echo '';
+                                            }
+                                        ?></td>
                                         <td><?php echo (isset($s->monto_solicitado) ? number_format($s->monto_solicitado, 2) : ''); ?></td>
                                         <td>
                                             <?php
@@ -247,17 +248,44 @@
                 function applyAprobFilters(){
                     var q = jQuery('#aprob_search').val().toLowerCase().trim();
                     var status = jQuery('#aprob_filter_status').val();
+                    var startDate = jQuery('#rep_fecha_inicio').val();
+                    var endDate = jQuery('#rep_fecha_fin').val();
 
                     jQuery('#aprobaciones-table tbody tr').each(function(){
                         var $tr = jQuery(this);
                         var id = $tr.data('id').toString();
                         var client = $tr.find('td').eq(1).text().toLowerCase();
                         var rowStatus = $tr.data('status') || 'pending';
+                        var rowDateText = $tr.find('td').eq(3).text().trim();
+                        var rowDateValue = NaN;
+                        if(rowDateText){
+                            if(/^\d{4}-\d{2}-\d{2}/.test(rowDateText)){
+                                rowDateValue = Date.parse(rowDateText);
+                            } else if(/^\d{2}\/\d{2}\/\d{4}/.test(rowDateText)){
+                                var d = rowDateText.split('/');
+                                rowDateValue = Date.UTC(parseInt(d[2],10), parseInt(d[1],10)-1, parseInt(d[0],10));
+                            } else {
+                                rowDateValue = Date.parse(rowDateText);
+                            }
+                        }
 
                         var matchesQuery = q === '' || id.indexOf(q) !== -1 || client.indexOf(q) !== -1;
                         var matchesStatus = (status === 'all') || (status === rowStatus);
+                        var matchesDate = true;
+                        var startDateValue = !startDate ? NaN : Date.parse(startDate);
+                        var endDateValue = !endDate ? NaN : Date.parse(endDate);
+                        if(!isNaN(endDateValue)){
+                            endDateValue += 24 * 60 * 60 * 1000 - 1; // include the entire end day
+                        }
 
-                        if(matchesQuery && matchesStatus){
+                        if(startDate){
+                            matchesDate = matchesDate && !isNaN(rowDateValue) && rowDateValue >= startDateValue;
+                        }
+                        if(endDate){
+                            matchesDate = matchesDate && !isNaN(rowDateValue) && rowDateValue <= endDateValue;
+                        }
+
+                        if(matchesQuery && matchesStatus && matchesDate){
                             $tr.show();
                         } else {
                             $tr.hide();
@@ -538,6 +566,48 @@
                                 // render garantias info after propuestas
                                 try{ renderGarantias(resp.garantias, resp.total_garantias); }catch(e){ console && console.warn && console.warn('renderGarantias error', e); }
                                 renderAprob(resp.aprobaciones);
+                                // Populate modal fields for the latest approval (if present)
+                                try{
+                                    var latest = (resp.aprobaciones && resp.aprobaciones.length>0) ? resp.aprobaciones[0] : null;
+                                    if(latest){
+                                        var full = (latest.comment || '').toString();
+                                        // decision: look for [Aprobado] or [Rechazado]
+                                        if(/\[Aprobado\]/i.test(full)){
+                                            jQuery('input[name="aprob_decision"][value="approve"]').prop('checked', true);
+                                        } else if(/\[Rechazado\]/i.test(full)){
+                                            jQuery('input[name="aprob_decision"][value="reject"]').prop('checked', true);
+                                        }
+                                        // strip tags [Aprobado] / [Rechazado] and [foto:...] from displayed comment
+                                        var cleaned = full.replace(/\[Aprobado\]|\[Rechazado\]/ig, '').replace(/\[foto:([^\]]+)\]/i, '').trim();
+                                        jQuery('#aprob_comment').val(cleaned);
+                                        // set aprobado_por if provided
+                                        try{ if(latest.aprobado_por){ jQuery('#aprob_aprobado_por').val(latest.aprobado_por); } }catch(e){}
+                                        // show saved photo preview if present in comment tag
+                                        var m = full.match(/\[foto:([^\]]+)\]/i);
+                                        if(m && m[1]){
+                                            var photoPath = m[1];
+                                            var baseUploads = '<?php echo base_url('uploads/'); ?>';
+                                            var src = baseUploads + photoPath;
+                                            // create or update preview container
+                                            var $prev = jQuery('#aprob_saved_photo');
+                                            if(!$prev.length){
+                                                jQuery('#aprob_photo').after('<div id="aprob_saved_photo" class="mt-2"></div>');
+                                                $prev = jQuery('#aprob_saved_photo');
+                                            }
+                                            $prev.empty();
+                                            var thumb = '<a href="'+src+'" target="_blank" rel="noopener"><img src="'+src+'" style="max-width:180px; max-height:140px; border:1px solid #ddd; padding:4px; background:#fff;" alt="Foto guardada"></a>';
+                                            $prev.append(thumb);
+                                        } else {
+                                            // remove any previous preview if not present
+                                            jQuery('#aprob_saved_photo').remove();
+                                        }
+                                    } else {
+                                        // clear modal fields when no approvals
+                                        jQuery('#aprob_comment').val('');
+                                        jQuery('input[name="aprob_decision"]').prop('checked', false);
+                                        jQuery('#aprob_saved_photo').remove();
+                                    }
+                                }catch(e){ console && console.warn && console.warn('populate modal fields error', e); }
                                 // Decide row color based on latest approval comment (approve/reject)
                                 if(resp.aprobaciones && resp.aprobaciones.length > 0){
                                     var latest = resp.aprobaciones[0];
@@ -747,7 +817,7 @@
                         e.preventDefault();
                         var fi = jQuery('#rep_fecha_inicio').val() || '';
                         var ff = jQuery('#rep_fecha_fin').val() || '';
-                        var est = jQuery('#rep_estado').val() || 'all';
+                        var est = jQuery('#aprob_filter_status').val() || 'all';
 
                         var url = '<?php echo base_url($this->router->fetch_class() . '/reporte_resumen_aprobaciones'); ?>';
                         var q = [];
@@ -827,6 +897,28 @@
                     // init: attach search/filter handlers and scan rows
                     jQuery('#aprob_search').on('input', applyAprobFilters);
                     jQuery('#aprob_filter_status').on('change', applyAprobFilters);
+                    jQuery('#rep_fecha_inicio, #rep_fecha_fin').on('change', applyAprobFilters);
+                    // keep table sorted newest -> oldest by date column (client-side fallback)
+                    function sortTableByDateDesc(){
+                        var $tbody = jQuery('#aprobaciones-table tbody');
+                        var rows = $tbody.find('tr[data-id]').get();
+                        rows.sort(function(a,b){
+                            var at = jQuery(a).find('td').eq(3).text().trim();
+                            var bt = jQuery(b).find('td').eq(3).text().trim();
+                            function p(t){
+                                if(!t) return 0;
+                                if(/^\d{4}-\d{2}-\d{2}/.test(t)) return Date.parse(t);
+                                if(/^\d{2}\/\d{2}\/\d{4}/.test(t)){
+                                    var d = t.split('/'); return Date.UTC(parseInt(d[2],10), parseInt(d[1],10)-1, parseInt(d[0],10));
+                                }
+                                var x = Date.parse(t); return isNaN(x)?0:x;
+                            }
+                            return p(bt) - p(at);
+                        });
+                        jQuery.each(rows, function(i,r){ $tbody.append(r); });
+                    }
+
+                    sortTableByDateDesc();
                     scanAndMarkRows();
                     // ensure filters are applied on initial load
                     try{ if(typeof applyAprobFilters === 'function') applyAprobFilters(); }catch(e){}

@@ -681,7 +681,7 @@ $this->load->view('layout/navbar'); ?>
                             <input type="text" name="ciudad" class="form-control" value="<?php echo html_escape(pv($perfil, $solicitud, ['ciudad'])); ?>">
                         </div>
                         <div class="form-group col-md-3">
-                            <label>Categoria (empleo)</label>
+                            <label>Categoría (empleo)</label>
                             <select name="categoria_empleo" class="form-control">
                                 <option value="">--</option>
                                 <option value="Empleado" <?php echo (pv($perfil,$solicitud,['categoria_empleo'])=='Empleado')?'selected':''; ?>>Empleado</option>
@@ -694,6 +694,10 @@ $this->load->view('layout/navbar'); ?>
                         <div class="form-group col-md-3">
                             <label>Ocupación</label>
                             <input type="text" name="ocupacion" class="form-control" value="<?php echo html_escape($pref_ocupacion ?: ''); ?>">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Profesión</label>
+                            <input type="text" name="profesion" class="form-control" value="<?php echo html_escape(pv($perfil, $solicitud, ['profesion'])); ?>">
                         </div>
                         <div class="form-group col-md-3">
                             <label>Empresa</label>
@@ -719,6 +723,21 @@ $this->load->view('layout/navbar'); ?>
                         <div class="form-group col-md-4">
                             <label>Sitio web centro de trabajo</label>
                             <input type="text" name="sitio_web_centro_trabajo" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['sitio_web_centro_trabajo'])); ?>">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group col-md-4">
+                            <label>Email centro de trabajo</label>
+                            <input type="email" name="email_centro_trabajo" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['email_centro_trabajo'])); ?>">
+                        </div>
+                        <div class="form-group col-md-2">
+                            <label>Fax centro de trabajo</label>
+                            <input type="text" name="fax_centro_trabajo" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['fax_centro_trabajo'])); ?>">
+                        </div>
+                        <div class="form-group col-md-6">
+                            <label>Apartado postal</label>
+                            <input type="text" name="apartado_postal" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['apartado_postal'])); ?>">
                         </div>
                     </div>
 
@@ -837,7 +856,7 @@ $this->load->view('layout/navbar'); ?>
                         </div>
                         <div class="form-group col-md-3">
                             <label>Doc1 - Departamento y Municipio</label>
-                            <input type="text" name="documento_legal_1_departamento_municipio" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['documento_legal_1_departamento_municipio'])); ?>">
+                            <input type="text" name="documento_legal_1_departamento_municipio" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['documento_legal_1_departamento_municipio','doc1_municipio_emision_documento'])); ?>">
                         </div>
                         <div class="form-group col-md-3">
                             <label>Doc1 - Fecha emisión</label>
@@ -856,6 +875,10 @@ $this->load->view('layout/navbar'); ?>
                         <div class="form-group col-md-3">
                             <label>Doc2 - País emisión</label>
                             <input type="text" name="documento_legal_2_pais_emision" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['documento_legal_2_pais_emision'])); ?>">
+                        </div>
+                        <div class="form-group col-md-3">
+                            <label>Doc2 - Departamento y Municipio</label>
+                            <input type="text" name="documento_legal_2_departamento_municipio" class="form-control" value="<?php echo html_escape(pv($perfil,$solicitud,['documento_legal_2_departamento_municipio','doc2_municipio_emision_documento'])); ?>">
                         </div>
                         <div class="form-group col-md-3">
                             <label>Doc2 - Fecha emisión</label>
@@ -899,7 +922,7 @@ $this->load->view('layout/navbar'); ?>
                         <div class="form-group col-md-12">
                             <label>Origen de fondos</label>
                             <?php $of = isset($perfil->origen_fondos)?(is_string($perfil->origen_fondos)?$perfil->origen_fondos:json_encode($perfil->origen_fondos)):''; $of_arr = []; if (!empty($of)) { $try = @json_decode($of,true); if (is_array($try)) $of_arr = $try; else { $try2 = @unserialize($of); if (is_array($try2)) $of_arr = $try2; else $of_arr = array_filter(array_map('trim', explode(',', $of))); } }
-                                  $of_opts = ['Préstamo','Venta de activos','Ahorro','Transferencia de fondos','salarios','Negocios','Remesas','Herencias','Donación','Dividendos'];
+                                  $of_opts = ['Préstamo','Venta de activos','Ahorro','Transferencia de fondos','Salarios','Negocios','Remesas','Herencias','Donación','Dividendos'];
                             ?>
                             <div>
                                 <?php foreach ($of_opts as $o): ?>

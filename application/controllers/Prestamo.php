@@ -138,11 +138,13 @@ class Prestamo extends CI_Controller
         if (!$this->input->is_ajax_request()) show_404();
         $monto = floatval($this->input->post('monto'));
         $tasa = floatval($this->input->post('tasa'));
-        $comision_percent = ($monto < 5000) ? 0.07 : 0.05;
         $plazo = intval($this->input->post('plazo'));
         $frecuencia = $this->input->post('frecuencia') ?: 'mensual'; // 'mensual' or 'quincenal'
         $start_date = $this->input->post('fecha_inicio') ?: date('Y-m-d');
-        // commission will be determined by business rule below (ignore posted value)
+        $posted_comision = $this->input->post('comision');
+        if ($posted_comision === null || $posted_comision === '') {
+            $posted_comision = $this->input->post('comision_desembolso');
+        }
 
         if ($monto <= 0 || $plazo <= 0) {
             echo json_encode(array('status' => false, 'message' => 'Parámetros inválidos')); return;
@@ -150,6 +152,21 @@ class Prestamo extends CI_Controller
 
         // normalize tasa: if >1 assume percent
         if ($tasa > 1) $tasa = $tasa / 100.0;
+
+        // normalize posted commission if provided
+        $comision_percent = null;
+        if ($posted_comision !== null && $posted_comision !== '') {
+            $comision_percent = floatval($posted_comision);
+            if ($comision_percent > 1) {
+                $comision_percent = $comision_percent / 100.0;
+            }
+            if ($comision_percent <= 0) {
+                $comision_percent = null;
+            }
+        }
+        if ($comision_percent === null) {
+            $comision_percent = ($monto > 5000) ? 0.05 : 0.07;
+        }
 
         // periods and rate per period based on frequency
         $frecuencia_lower = strtolower($frecuencia);
@@ -177,7 +194,10 @@ class Prestamo extends CI_Controller
 
         // Business rule: commission percent depends on loan amount
         // If monto > 5000 -> 5% ; otherwise (<=5000) -> 7%
-        $comision_percent = ($monto > 5000) ? 0.05 : 0.07;
+        // Only apply business rule when no commission was provided by caller
+        if ($comision_percent === null) {
+            $comision_percent = ($monto > 5000) ? 0.05 : 0.07;
+        }
         $commission_total = $monto * $comision_percent;
         $commission_per_period = ($periods > 0) ? ($commission_total / $periods) : 0;
 

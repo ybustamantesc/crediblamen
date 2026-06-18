@@ -36,16 +36,31 @@ class Analisis_financiero_comerciante_model extends CI_Model {
             'oblig_largo_plazo1_fecha','oblig_largo_plazo1_cuota','oblig_largo_plazo1_inst','oblig_largo_plazo1_saldo',
             'oblig_largo_plazo2_fecha','oblig_largo_plazo2_cuota','oblig_largo_plazo2_inst','oblig_largo_plazo2_saldo',
             'oblig_largo_plazo3_fecha','oblig_largo_plazo3_cuota','oblig_largo_plazo3_inst','oblig_largo_plazo3_saldo',
-            'subtotal_oblig_largo_plazo',
+            'subtotal_oblig_largo_plazo','subtotal_olp_saldo',
             // Campos Obligaciones Corto Plazo (mapeados a columnas individuales)
             'oblig_corto_plazo1_fecha','oblig_corto_plazo1_cuota','oblig_corto_plazo1_inst','oblig_corto_plazo1_saldo',
             'oblig_corto_plazo2_fecha','oblig_corto_plazo2_cuota','oblig_corto_plazo2_inst','oblig_corto_plazo2_saldo',
             'oblig_corto_plazo3_fecha','oblig_corto_plazo3_cuota','oblig_corto_plazo3_inst','oblig_corto_plazo3_saldo',
-            'subtotal_oblig_corto_plazo',
+            'subtotal_oblig_corto_plazo','subtotal_ocp_saldo',
             // Campos Costos de Operación
             'costo_salario_ayudante','costo_transporte','costo_total_operacion',
             // Campos Indicadores
             'indicador_endeudamiento','capital_trabajo_neto','porcentaje_margen','monto_credito_solicitado','nivel_endeudamiento',
+            // Campos Recomendación de Crédito
+            'tipo_credito',
+            'monto_financiar',
+            'plazo_credito',
+            'numero_cuotas',
+            'num_cuotas',
+            'monto_cuota',
+            'fecha_pago_cuota',
+            'frecuencia_pago',
+            'forma_pago',
+            'garantia_requerida',
+            'fundamentacion_propuesta',
+            'tasa_interes',
+            'comision_desembolso',
+            'comentario',
             'created_at','updated_at'
         ];
 
@@ -62,10 +77,12 @@ class Analisis_financiero_comerciante_model extends CI_Model {
             unset($data['olp_fecha'], $data['olp_cuota'], $data['olp_instituciones'], $data['olp_saldo']);
         }
 
-        // Mapear subtotal
+        // Mapear subtotal de largo plazo a la columna histórica y moderna si existe.
         if (isset($data['subtotal_olp_saldo'])) {
-            $data['subtotal_oblig_largo_plazo'] = $this->_to_float($data['subtotal_olp_saldo']);
-            unset($data['subtotal_olp_saldo']);
+            $subtotal = $this->_to_float($data['subtotal_olp_saldo']);
+            $data['subtotal_oblig_largo_plazo'] = $subtotal;
+            // Mantener también el nombre de campo original para compatibilidad con tablas antiguas.
+            $data['subtotal_olp_saldo'] = $subtotal;
         }
 
         // Mapear ocp (obligaciones corto plazo) arrays a columnas individuales
@@ -80,10 +97,12 @@ class Analisis_financiero_comerciante_model extends CI_Model {
             unset($data['ocp_fecha'], $data['ocp_cuota'], $data['ocp_instituciones'], $data['ocp_saldo']);
         }
 
-        // Mapear subtotal
+        // Mapear subtotal de corto plazo a la columna histórica y moderna si existe.
         if (isset($data['subtotal_ocp_saldo'])) {
-            $data['subtotal_oblig_corto_plazo'] = $this->_to_float($data['subtotal_ocp_saldo']);
-            unset($data['subtotal_ocp_saldo']);
+            $subtotal = $this->_to_float($data['subtotal_ocp_saldo']);
+            $data['subtotal_oblig_corto_plazo'] = $subtotal;
+            // Mantener también el nombre de campo original para compatibilidad con tablas antiguas.
+            $data['subtotal_ocp_saldo'] = $subtotal;
         }
 
         // Mapear campos de Flujo de Caja con nombres cortos a nombres largos
@@ -145,6 +164,12 @@ class Analisis_financiero_comerciante_model extends CI_Model {
         }
 
         $columnas_tabla = $this->db->list_fields($this->table);
+
+        // Compatibilidad: si la tabla tiene `num_cuotas` (columna histórica), aceptar `numero_cuotas` del formulario
+        if (in_array('num_cuotas', $columnas_tabla) && isset($data['numero_cuotas'])) {
+            $data['num_cuotas'] = $data['numero_cuotas'];
+            unset($data['numero_cuotas']);
+        }
 
         // Preferir guardar en columna `cuentas_cobrar` si existe; si no, mapear a `cuentas_por_cobrar` por compatibilidad
         if (isset($data['cuentas_cobrar'])) {
@@ -310,6 +335,25 @@ class Analisis_financiero_comerciante_model extends CI_Model {
                     $row[$formCampo] = $row[$dbCampo];
                 }
             }
+        }
+
+        // Compatibilidad: si la columna histórica en BD es `num_cuotas`, exponer también `numero_cuotas` para las vistas
+        if (!isset($row['numero_cuotas']) && isset($row['num_cuotas'])) {
+            $row['numero_cuotas'] = $row['num_cuotas'];
+        }
+
+        // Asegurar que el formulario reciba los nombres de campo usados en la vista.
+        if (isset($row['subtotal_oblig_largo_plazo']) && !isset($row['subtotal_olp_saldo'])) {
+            $row['subtotal_olp_saldo'] = $row['subtotal_oblig_largo_plazo'];
+        }
+        if (isset($row['subtotal_oblig_corto_plazo']) && !isset($row['subtotal_ocp_saldo'])) {
+            $row['subtotal_ocp_saldo'] = $row['subtotal_oblig_corto_plazo'];
+        }
+        if (isset($row['subtotal_olp_saldo']) && !isset($row['subtotal_oblig_largo_plazo'])) {
+            $row['subtotal_oblig_largo_plazo'] = $row['subtotal_olp_saldo'];
+        }
+        if (isset($row['subtotal_ocp_saldo']) && !isset($row['subtotal_oblig_corto_plazo'])) {
+            $row['subtotal_oblig_corto_plazo'] = $row['subtotal_ocp_saldo'];
         }
 
         return (object)$row;

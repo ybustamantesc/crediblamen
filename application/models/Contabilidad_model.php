@@ -300,6 +300,24 @@ class Contabilidad_model extends CI_Model {
         } else {
             $select .= ', 0 as posted, NULL as posted_by, NULL as posted_at';
         }
+
+        // Add source/origin fields if present (source_type/source_id)
+        if ($this->safe_field_exists('source_type', 'tb_journal')) {
+            $select .= ', j.source_type';
+        } else {
+            $select .= ', NULL as source_type';
+        }
+        if ($this->safe_field_exists('source_id', 'tb_journal')) {
+            $select .= ', j.source_id';
+        } else {
+            $select .= ', NULL as source_id';
+        }
+        // created_by useful as fallback/origin info
+        if ($this->safe_field_exists('created_by', 'tb_journal')) {
+            $select .= ', j.created_by';
+        } else {
+            $select .= ', NULL as created_by';
+        }
         
         // Get unique centro_costo from journal entry lines
         $select .= ', GROUP_CONCAT(DISTINCT CONCAT(cc.codigo, " - ", cc.nombre) SEPARATOR ", ") as centro_costo_nombres';
@@ -328,6 +346,77 @@ class Contabilidad_model extends CI_Model {
         $this->db->order_by('j.id', 'desc');
         $q = $this->db->get();
         return $q->result();
+    }
+
+    /**
+     * Obtener conteos mensuales de asientos: total, mayorizados (posted) y pendientes (no posted)
+     * Si $year/$month no se pasan usa el mes actual.
+     * Retorna array con keys: total, posted, unposted
+     */
+    public function get_monthly_counts($year = null, $month = null)
+    {
+        if (!$year || !$month) {
+            $year = date('Y');
+            $month = date('m');
+        }
+        $start = $year . '-' . $month . '-01';
+        // compute last day of month
+        $end = date('Y-m-t', strtotime($start));
+
+        $this->db->select("
+            COUNT(*) as total,
+            SUM(CASE WHEN COALESCE(j.posted, 0) = 1 THEN 1 ELSE 0 END) as posted,
+            SUM(CASE WHEN COALESCE(j.posted, 0) = 0 THEN 1 ELSE 0 END) as unposted
+        ", FALSE);
+        $this->db->from('tb_journal j');
+        $this->db->where('DATE(j.date) >=', $start);
+        $this->db->where('DATE(j.date) <=', $end);
+        $q = $this->db->get();
+        if ($q && $row = $q->row()) {
+            return [
+                'total' => intval($row->total),
+                'posted' => intval($row->posted),
+                'unposted' => intval($row->unposted),
+                'year' => intval($year),
+                'month' => intval($month)
+            ];
+        }
+        return ['total' => 0, 'posted' => 0, 'unposted' => 0, 'year' => intval($year), 'month' => intval($month)];
+    }
+
+    /**
+     * Obtener conteos para un rango arbitario de fechas (inclusive).
+     * Retorna array con keys: total, posted, unposted, start, end
+     */
+    public function get_counts_range($start_date, $end_date)
+    {
+        $ss = strtotime($start_date);
+        $ee = strtotime($end_date);
+        if ($ss === false || $ee === false || $ss > $ee) {
+            return ['total' => 0, 'posted' => 0, 'unposted' => 0, 'start' => $start_date, 'end' => $end_date];
+        }
+        $start = date('Y-m-d', $ss);
+        $end = date('Y-m-d', $ee);
+
+        $this->db->select("
+            COUNT(*) as total,
+            SUM(CASE WHEN COALESCE(j.posted, 0) = 1 THEN 1 ELSE 0 END) as posted,
+            SUM(CASE WHEN COALESCE(j.posted, 0) = 0 THEN 1 ELSE 0 END) as unposted
+        ", FALSE);
+        $this->db->from('tb_journal j');
+        $this->db->where('DATE(j.date) >=', $start);
+        $this->db->where('DATE(j.date) <=', $end);
+        $q = $this->db->get();
+        if ($q && $row = $q->row()) {
+            return [
+                'total' => intval($row->total),
+                'posted' => intval($row->posted),
+                'unposted' => intval($row->unposted),
+                'start' => $start,
+                'end' => $end
+            ];
+        }
+        return ['total' => 0, 'posted' => 0, 'unposted' => 0, 'start' => $start, 'end' => $end];
     }
 
     /**
@@ -2878,5 +2967,129 @@ class Contabilidad_model extends CI_Model {
 
         $this->db->trans_complete();
         return $this->db->trans_status();
+    }
+
+    /**
+     * Generate the next available hierarchical code for an account.
+     * If parent_id is null: finds highest level-1 code and suggests next (e.g., 1 → 2 → 3)
+     * If parent_id exists: uses parent's code as prefix and suggests next suffix (e.g., 1 → 11, 12, 13...)
+     * 
+     * @param int|null $parent_id The ID of the parent account (null for root level)
+     * @param int|null $exclude_id Exclude this account ID from comparison (for edits)
+     * @return string The suggested next code, or empty string on error
+     */
+    public function generate_next_code($parent_id = null, $exclude_id = null, $as_sibling = false, $max_digits = 14, $source_code = null)
+    {
+        $acct_fq = $this->account_table_fq();
+        // Normalize parent target depending on sibling flag
+        $target_parent_id = null;
+        $source_account = null;
+        if ($parent_id === null || $parent_id === 0) {
+            $target_parent_id = null;
+        } else {
+            $parent = $this->get_account($parent_id);
+            if (!$parent) return '';
+            if ($as_sibling) {
+                // sibling: target parent is the parent of the provided source
+                $target_parent_id = isset($parent->parent_id) ? $parent->parent_id : null;
+            } else {
+                // child: target parent is the provided parent
+                $target_parent_id = $parent_id;
+            }
+        }
+
+        // Determine prefix
+        $prefix = '';
+        $level = 1;
+        if ($target_parent_id !== null) {
+            $par = $this->get_account($target_parent_id);
+            if (!$par) return '';
+            $prefix = trim($par->code);
+            $level = isset($par->level) ? intval($par->level) + 1 : 2;
+        } else {
+            $prefix = '';
+            $level = 1;
+        }
+
+        // Guard: level and code length limits
+        if ($level > 14) return '';
+
+        // If asking for a sibling, use the source account code as the starting point,
+        // and increment until we find an unused sibling code.
+        if ($as_sibling && $source_account && !empty($source_account->code)) {
+            $candidate = strval(intval($source_account->code) + 1);
+            while (true) {
+                if (strlen($candidate) > intval($max_digits)) return '';
+                $sql = "SELECT id FROM " . $acct_fq . " WHERE code = ? AND parent_id " . ($target_parent_id === null ? "IS NULL" : "= " . intval($target_parent_id));
+                if ($exclude_id) {
+                    $sql .= " AND id != " . intval($exclude_id);
+                }
+                $q = $this->db->query($sql, array($candidate));
+                if (!$q || !$q->row()) {
+                    $next = $candidate;
+                    break;
+                }
+                $candidate = strval(intval($candidate) + 1);
+            }
+            return $next;
+        }
+
+        // Find last code within this prefix (any descendant) and increment
+        if ($prefix === '') {
+            $sql = "SELECT code FROM " . $acct_fq . " WHERE parent_id IS NULL";
+            if ($exclude_id) $sql .= " AND id != " . intval($exclude_id);
+            $sql .= " ORDER BY CAST(code AS UNSIGNED) DESC LIMIT 1";
+            $q = $this->db->query($sql);
+            if ($q && $q->row()) {
+                $lastCode = $q->row()->code;
+                $next = strval(intval($lastCode) + 1);
+            } else {
+                $next = '1';
+            }
+        } else {
+            // Find last direct child under target_parent_id (safer than LIKE on code)
+            $sql = "SELECT code FROM " . $acct_fq . " WHERE parent_id " . ($target_parent_id === null ? "IS NULL" : "= " . intval($target_parent_id));
+            if ($exclude_id) $sql .= " AND id != " . intval($exclude_id);
+            $sql .= " ORDER BY CAST(code AS UNSIGNED) DESC LIMIT 1";
+            $q = $this->db->query($sql);
+            if ($q && $q->row()) {
+                $lastCode = $q->row()->code;
+                // If lastCode equals prefix (shouldn't normally), append 01
+                if (strval($lastCode) === $prefix) {
+                    $candidate = $prefix . '01';
+                } else {
+                    $candidate = strval(intval($lastCode) + 1);
+                }
+                $next = $candidate;
+            } else {
+                // No children yet -> first child under this parent
+                $next = $prefix . '01';
+            }
+        }
+
+        // Ensure code length does not exceed max_digits
+        if (strlen($next) > intval($max_digits)) return '';
+
+        return $next;
+    }
+
+    /**
+     * Get all child account codes for a given parent code prefix.
+     * Useful for UI validation or hierarchical display.
+     * 
+     * @param string $parentCode The parent account code (prefix)
+     * @return array Array of child account codes
+     */
+    public function get_children_by_code($parentCode)
+    {
+        $acct_fq = $this->account_table_fq();
+        $parentCode = trim($parentCode);
+        
+        $sql = "SELECT code, id, name FROM " . $acct_fq . " 
+                WHERE code LIKE '" . $this->db->escape_like_str($parentCode) . "%'
+                ORDER BY CAST(code AS UNSIGNED)";
+        
+        $q = $this->db->query($sql);
+        return $q ? $q->result() : [];
     }
 }

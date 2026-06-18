@@ -211,7 +211,7 @@
             <div class="servicont-welcome-card">
                 <h2 class="servicont-welcome-title">Bienvenido al módulo de Contabilidad</h2>
                 <p class="servicont-welcome-text">Accede rápidamente a las funciones más usadas del módulo para gestionar tus registros contables de manera eficiente.</p>
-                <div class="d-flex flex-wrap">
+                <div class="d-flex flex-wrap align-items-center" style="gap:12px;">
                     <a href="<?php echo base_url('contabilidad/catalogo'); ?>" class="servicont-btn-primary">
                         <i class="ik ik-layers mr-2"></i>Catálogo de Cuentas
                     </a>
@@ -221,6 +221,82 @@
                     <a href="<?php echo base_url('contabilidad/mayor'); ?>" class="servicont-btn-primary">
                         <i class="ik ik-file-text mr-2"></i>Libro Mayor
                     </a>
+                    <div style="display:flex;gap:8px;align-items:center;margin-left:8px;">
+                        <input type="month" id="homeMonth" class="form-control" style="max-width:200px;" value="<?php
+                            // prefer start_date if present, else end_date, else current month
+                            $sd = $this->input->get('start_date');
+                            $ed = $this->input->get('end_date');
+                            if ($sd && preg_match('/^(\d{4}-\d{2})-01$/', $sd, $m)) {
+                                echo $m[1];
+                            } elseif ($ed && preg_match('/^(\d{4}-\d{2})-\d{2}$/', $ed, $m2)) {
+                                echo $m2[1];
+                            } else {
+                                echo date('Y-m');
+                            }
+                        ?>" />
+                        <button id="homeApply" class="servicont-btn-primary" style="background:#2a9d8f;color:#fff;border:none;">Aplicar mes</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Título resumen de indicadores -->
+            <div class="row mb-2">
+                <div class="col-12">
+                    <h3 style="margin:0 0 12px 0;color:#1e3c72;font-weight:700;font-size:20px;">Resumen de Asientos Mensual</h3>
+                </div>
+            </div>
+            <!-- Estadísticas mensuales / rango -->
+            <div class="row mb-3">
+                <?php 
+                    $s = isset($conta_stats) ? $conta_stats : ['total'=>0,'posted'=>0,'unposted'=>0,'year'=>date('Y'),'month'=>date('m')]; 
+                    $range = isset($conta_stats_range) && $conta_stats_range ? $conta_stats_range : null;
+                    $diario_base = base_url('contabilidad/diario');
+                    if ($range) {
+                        $diario_base .= '?start_date=' . $range['start'] . '&end_date=' . $range['end'];
+                        $diario_mayorizados = $diario_base . '&filter=posted';
+                        $diario_pendientes = $diario_base . '&filter=unposted';
+                    } else {
+                        $diario_mayorizados = base_url('contabilidad/diario?filter=posted');
+                        $diario_pendientes = base_url('contabilidad/diario?filter=unposted');
+                    }
+                ?>
+                <div class="col-md-4 mb-3">
+                    <div class="servicont-card-modern text-center p-3">
+                        <div class="servicont-card-header">
+                            <h4><i class="ik ik-list mr-2"></i>Asientos este mes</h4>
+                        </div>
+                        <div class="servicont-card-body">
+                            <h2 style="font-size:36px; margin:0;"><?php echo intval($s['total']); ?></h2>
+                            <p class="mb-0 text-muted"><?php echo $range ? 'Rango: ' . $range['start'] . ' → ' . $range['end'] : ('Mes: ' . sprintf('%02d', $s['month']) . '/' . $s['year']); ?></p>
+                            <div class="mt-3"><a href="<?php echo $diario_base; ?>" class="btn btn-outline-primary">Ver Libro Diario</a></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="servicont-card-modern text-center p-3">
+                        <div class="servicont-card-header">
+                            <h4><i class="ik ik-check-circle mr-2"></i>Asientos mayorizados</h4>
+                        </div>
+                        <div class="servicont-card-body">
+                            <h2 style="font-size:36px; margin:0; color:#2a9d8f;"><?php echo intval($s['posted']); ?></h2>
+                            <p class="mb-0 text-muted">Mayorizados (posted)</p>
+                            <div class="mt-3"><a href="<?php echo $diario_mayorizados; ?>" class="btn btn-outline-success">Ver mayorizados</a></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="col-md-4 mb-3">
+                    <div class="servicont-card-modern text-center p-3">
+                        <div class="servicont-card-header">
+                            <h4><i class="ik ik-alert-circle mr-2"></i>Asientos pendientes</h4>
+                        </div>
+                        <div class="servicont-card-body">
+                            <h2 style="font-size:36px; margin:0; color:#e76f51;"><?php echo intval($s['unposted']); ?></h2>
+                            <p class="mb-0 text-muted">Pendientes por mayorizar</p>
+                            <div class="mt-3"><a href="<?php echo $diario_pendientes; ?>" class="btn btn-outline-danger">Ver pendientes</a></div>
+                        </div>
+                    </div>
                 </div>
             </div>
 
@@ -285,6 +361,24 @@
             </div>
 
             <div id="modalContainer"></div>
+
+            <script>
+                document.getElementById('homeApply').addEventListener('click', function(){
+                    var m = document.getElementById('homeMonth').value; // format YYYY-MM
+                    if (!m) { alert('Seleccione un mes'); return; }
+                    var parts = m.split('-');
+                    var year = parseInt(parts[0],10);
+                    var month = parseInt(parts[1],10);
+                    var start = m + '-01';
+                    // compute last day of month
+                    var lastDay = new Date(year, month, 0).getDate();
+                    var end = m + '-' + String(lastDay).padStart(2,'0');
+                    var params = new URLSearchParams(window.location.search);
+                    params.set('start_date', start);
+                    params.set('end_date', end);
+                    window.location = window.location.pathname + '?' + params.toString();
+                });
+            </script>
 
         </div>
     </div>

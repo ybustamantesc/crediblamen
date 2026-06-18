@@ -24,16 +24,30 @@
 </div>
 <script>
 (function(){
-  var btn = document.getElementById('btnGuardarMovimiento');
-  if(!btn) return;
-  btn.addEventListener('click', function(){
-    var form = document.getElementById('formMovimiento');
-    var fd = new FormData(form);
-    fetch('<?php echo base_url('tesoreria/save_movimiento'); ?>', { method: 'POST', body: fd })
-      .then(r=>r.json()).then(function(json){
-        alert(json.status==='success'?'Movimiento guardado':'Error');
-        location.reload();
-      });
-  });
+    var btn = document.getElementById('btnGuardarMovimiento');
+    if(!btn) return;
+    btn.addEventListener('click', function(){
+        var form = document.getElementById('formMovimiento');
+        if(!form.checkValidity()){ form.reportValidity(); return; }
+        // Usar el endpoint AJAX estándar y serializar con jQuery para compatibilidad
+        var payload = $(form).serialize();
+        $.post('<?php echo site_url('tesoreria/save_movimiento_ajax'); ?>', payload)
+            .done(function(resp){
+                try{ var j = (typeof resp === 'object')? resp : JSON.parse(resp); }catch(e){ j = null; }
+                if(j && j.status){
+                    $('#modalMovimiento').modal('hide');
+                    alert('Movimiento guardado correctamente.');
+                    if(typeof cargarMovimientos === 'function') cargarMovimientos();
+                    else location.reload();
+                }else{
+                    alert((j && j.message)? j.message : 'Error al guardar movimiento.');
+                }
+            })
+            .fail(function(xhr){
+                var msg = 'Error en la petición AJAX.';
+                try{ if(xhr && xhr.responseText) msg = xhr.responseText; }catch(e){}
+                alert(msg);
+            });
+    });
 })();
 </script>

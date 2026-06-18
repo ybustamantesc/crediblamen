@@ -833,7 +833,7 @@ if (!empty($current_user_name)) {
 
                                     })();
                                     </script>
-                                    <div class="col-md-4"><div class="form-group"><label>Teléfono del negocio</label><input type="text" class="form-control" name="telefono_negocio" value="<?php echo s_val('telefono_negocio', set_value('telefono_negocio')); ?>"></div></div>
+                                    <div class="col-md-4"><div class="form-group"><label>Teléfono del negocio</label><input type="tel" inputmode="tel" pattern="[0-9+ ]*" class="form-control" name="telefono_negocio" value="<?php echo s_val('telefono_negocio', set_value('telefono_negocio')); ?>" oninput="this.value=this.value.replace(/[^0-9+ ]/g,'');"></div></div>
                                     <div class="col-md-2"><div class="form-group"><label>Tiempo de operación (años)</label><input type="number" class="form-control" name="tiempo_operacion_anios" value="<?php echo s_val('tiempo_operacion_anios', set_value('tiempo_operacion_anios')); ?>"></div></div>
                                     <div class="col-md-2"><div class="form-group"><label>Tiempo de operación (meses)</label><input type="number" class="form-control" name="tiempo_operacion_meses" value="<?php echo s_val('tiempo_operacion_meses', set_value('tiempo_operacion_meses')); ?>"></div></div>
                                     <!-- Propiedad del local: ocultado por petición (no mostrar ni capturar en el formulario) -->
@@ -853,8 +853,21 @@ if (!empty($current_user_name)) {
                                             <small class="form-text text-muted">Pulse "Calcular" para estimar a partir de ventas en días buenos/malos. El campo es editable manualmente.</small>
                                         </div></div>
 
+                                    <style>
+                                        .ventas-days-container { display: flex; gap: 8px; flex-wrap: wrap; }
+                                        @media (max-width: 575.98px) {
+                                            .ventas-days-container { 
+                                                gap: 4px;
+                                                flex-wrap: wrap;
+                                            }
+                                            .ventas-days-container label {
+                                                min-width: 35px !important;
+                                                font-size: 0.85rem;
+                                            }
+                                        }
+                                    </style>
                                     <div class="col-md-12"><div class="form-group"><label>Días de ventas (buenos)</label>
-                                        <div class="d-flex" style="gap:8px;">
+                                        <div class="ventas-days-container">
                                             <?php $mask_buenos = (int) s_val('ventas_dias_buenos_mask', 0); $labels = array('L','Ma','Mi','J','V','S','D'); for ($i=0;$i<7;$i++): $is = (($mask_buenos & (1<<$i)) !== 0) ? 'checked' : ''; ?>
                                                 <label style="min-width:40px;"><input type="checkbox" name="ventas_buenos_days[]" value="<?php echo $i; ?>" <?php echo $is; ?>> <?php echo $labels[$i]; ?></label>
                                             <?php endfor; ?>
@@ -862,7 +875,7 @@ if (!empty($current_user_name)) {
                                     </div></div>
 
                                     <div class="col-md-12"><div class="form-group"><label>Días de ventas (malos)</label>
-                                        <div class="d-flex" style="gap:8px;">
+                                        <div class="ventas-days-container">
                                             <?php $mask_malos = (int) s_val('ventas_dias_malos_mask', 0); for ($i=0;$i<7;$i++): $is2 = (($mask_malos & (1<<$i)) !== 0) ? 'checked' : ''; ?>
                                                 <label style="min-width:40px;"><input type="checkbox" name="ventas_malos_days[]" value="<?php echo $i; ?>" <?php echo $is2; ?>> <?php echo $labels[$i]; ?></label>
                                             <?php endfor; ?>

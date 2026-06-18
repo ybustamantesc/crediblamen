@@ -305,9 +305,15 @@ $(document).ready(function(){
         $('#btnAnularDesembolsoDesdeModal').toggle(puedeAnularDesembolso);
     }
 
+    function capitalizeFirstLetter(text) {
+        var str = String(text || '').trim();
+        if (!str) return str;
+        return str.charAt(0).toUpperCase() + str.slice(1);
+    }
+
     function renderDetalleMovimientoGeneral(movimiento) {
         var tipo = (movimiento.tipo_transferencia || movimiento.tipo_movimiento || movimiento.tipo || '-');
-        $('#previewMovTipo').text(tipo || '-');
+        $('#previewMovTipo').text(capitalizeFirstLetter(tipo) || '-');
         $('#previewMovFormaPago').text(movimiento.forma_pago || '-');
         $('#previewMovMonto').text(formatearMoneda(movimiento.monto_total || 0));
         $('#previewMovFechaRegistro').text(movimiento.fecha_registro_display || movimiento.fecha_registro || '-');
@@ -627,8 +633,9 @@ $(document).ready(function(){
                                     /* Compact table style aligned with solicitudes/desembolsos */
                                     #tablaMovimientos {
                                         width: 100%;
+                                        min-width: 920px;
                                         margin-bottom: 0;
-                                        table-layout: fixed;
+                                        table-layout: auto;
                                     }
                                     #tablaMovimientos td,
                                     #tablaMovimientos th {
@@ -639,6 +646,7 @@ $(document).ready(function(){
                                         white-space: normal;
                                         word-break: break-word;
                                         border-color: #e6edf5;
+                                        min-width: 0;
                                     }
                                     #tablaMovimientos thead th {
                                         background: linear-gradient(180deg, #f8fafc 0%, #eef2f7 100%);
@@ -663,42 +671,45 @@ $(document).ready(function(){
                                     }
                                     #tablaMovimientos th:nth-child(1),
                                     #tablaMovimientos td:nth-child(1) {
-                                        width: 32px;
+                                        width: 40px;
                                         text-align: center;
                                     }
                                     #tablaMovimientos th:nth-child(2),
                                     #tablaMovimientos td:nth-child(2) {
-                                        width: 80px;
+                                        min-width: 110px;
+                                        max-width: 160px;
                                     }
                                     #tablaMovimientos th:nth-child(3),
                                     #tablaMovimientos td:nth-child(3) {
-                                        width: 60px;
+                                        width: 75px;
                                         text-align: center;
                                     }
                                     #tablaMovimientos th:nth-child(4),
                                     #tablaMovimientos td:nth-child(4) {
-                                        width: 65px;
+                                        min-width: 100px;
+                                        max-width: 130px;
                                         text-align: center;
                                     }
                                     #tablaMovimientos th:nth-child(5),
                                     #tablaMovimientos td:nth-child(5),
                                     #tablaMovimientos th:nth-child(6),
                                     #tablaMovimientos td:nth-child(6) {
-                                        width: 85px;
+                                        width: 90px;
                                         text-align: center;
                                     }
                                     #tablaMovimientos th:nth-child(7),
                                     #tablaMovimientos td:nth-child(7) {
-                                        width: 90px;
+                                        min-width: 110px;
                                     }
                                     #tablaMovimientos th:nth-child(8),
                                     #tablaMovimientos td:nth-child(8) {
-                                        width: 65px;
+                                        width: 90px;
                                         text-align: right;
                                     }
                                     #tablaMovimientos th:nth-child(9),
                                     #tablaMovimientos td:nth-child(9) {
-                                        width: 100px;
+                                        min-width: 110px;
+                                        max-width: 160px;
                                     }
                                     /* Ocultar columnas de Referencias */
                                     #tablaMovimientos th:nth-child(10),
@@ -709,11 +720,12 @@ $(document).ready(function(){
                                     }
                                     #tablaMovimientos th:nth-child(12),
                                     #tablaMovimientos td:nth-child(12) {
-                                        width: 90px;
+                                        display: none;
                                     }
                                     #tablaMovimientos th:nth-child(13),
                                     #tablaMovimientos td:nth-child(13) {
-                                        width: 75px;
+                                        min-width: 120px;
+                                        max-width: 150px;
                                     }
                                     #tablaMovimientos .mov-ref-cell {
                                         white-space: normal;
@@ -744,13 +756,13 @@ $(document).ready(function(){
                                         align-items: stretch;
                                         white-space: normal;
                                         justify-content: flex-start;
-                                        min-width: 120px;
-                                        max-width: 240px;
+                                        min-width: 110px;
+                                        max-width: 180px;
                                         overflow: visible;
                                     }
                                     #tablaMovimientos .acciones-cell .btn {
-                                        padding: .32rem .4rem;
-                                        font-size: .75rem;
+                                        padding: .28rem .36rem;
+                                        font-size: .72rem;
                                         margin: 0;
                                         min-width: 0;
                                         width: 100%;
@@ -794,6 +806,25 @@ $(document).ready(function(){
                                         border: 1px solid #eac8cf;
                                         background: #fbecef;
                                         color: #9f2741;
+                                    }
+                                    #tablaMovimientos .mov-forma-pago-cell {
+                                        white-space: nowrap;
+                                        word-break: normal;
+                                        overflow: hidden;
+                                        text-overflow: ellipsis;
+                                        min-width: 100px;
+                                        max-width: 140px;
+                                    }
+                                    #tablaMovimientos th:nth-child(4),
+                                    #tablaMovimientos td.mov-forma-pago-cell {
+                                        width: 120px;
+                                    }
+                                    #tablaMovimientos th:nth-child(5),
+                                    #tablaMovimientos th:nth-child(6),
+                                    #tablaMovimientos td:nth-child(5),
+                                    #tablaMovimientos td:nth-child(6) {
+                                        width: 90px;
+                                        white-space: nowrap;
                                     }
                                     #tablaMovimientos .btn-mov-view {
                                         background: #e9f7fb;
@@ -971,88 +1002,88 @@ $(function(){
                         // Ocultar todos los campos del formulario y mostrar solo los del cheque
                         $('#formMovimiento .form-row, #formMovimiento .form-group').hide();
 
-                        // Construir el nuevo layout para cheque si no existe
-                        if ($('#chequeCustomLayout').length === 0) {
-                                // Generar select de cuentas tipo banco
-                                var cuentasBanco = <?php echo json_encode(array_values(array_filter($cuentas, function($c){return $c->type==='banco' && $c->estado==1;}))); ?>;
-                                var cuentaSelect = '<select class="form-control" name="cuenta_id" id="chequeCuentaBancoSelect" required><option value="">Seleccione cuenta bancaria...</option>';
-                                for(var i=0;i<cuentasBanco.length;i++){
-                                  cuentaSelect += '<option value="'+cuentasBanco[i].id+'">'+cuentasBanco[i].name+' ('+cuentasBanco[i].code+')</option>';
-                                }
-                                cuentaSelect += '</select>';
-                                var chequeHtml = `
-                                <div id="chequeCustomLayout">
-                                    <div class="form-row">
-                                        <div class="form-group col-md-12">
-                                            <label>Cuenta bancaria de origen <span class="text-danger">*</span></label>
-                                            `+cuentaSelect+`
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-12">
-                                            <label>Concepto</label>
-                                            <input type="text" class="form-control" name="concepto_cheque" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-12">
-                                            <textarea class="form-control" name="descripcion_cheque" rows="2" placeholder="Descripción"></textarea>
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-6">
-                                            <label>Fecha de registro</label>
-                                            <input type="date" class="form-control" name="fecha_registro" value="`+hoy+`" />
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <label>Monto total</label>
-                                            <input type="number" step="0.01" class="form-control" name="monto_total" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-12">
-                                            <label>Páguese este cheque a:</label>
-                                            <input type="text" class="form-control" name="cheque_a" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-6">
-                                            <label>No. cheque:</label>
-                                            <input type="text" class="form-control" name="numero_cheque" id="numero_cheque_auto" value="" readonly />
-                                        </div>
-                                        <div class="form-group col-md-6">
-                                            <label>Fecha de aplicación</label>
-                                            <input type="date" class="form-control" name="fecha_aplicacion" value="`+hoy+`" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-3">
-                                            <label>IVA Total</label>
-                                            <input type="number" step="0.01" class="form-control" name="iva_total" value="0.00" />
-                                        </div>
-                                        <div class="form-group col-md-3">
-                                            <label>Forma de pago</label>
-                                            <input type="text" class="form-control" name="forma_pago" value="CHEQUE" readonly />
-                                        </div>
-                                        <div class="form-group col-md-3">
-                                            <label>Referencia 1</label>
-                                            <input type="text" class="form-control" name="referencia1" />
-                                        </div>
-                                        <div class="form-group col-md-3">
-                                            <label>Referencia 2</label>
-                                            <input type="text" class="form-control" name="referencia2" />
-                                        </div>
-                                    </div>
-                                    <!-- Campos ocultos para que lleguen como null -->
-                                    <input type="hidden" name="departamento" value="" />
-                                    <input type="hidden" name="centro_costos" value="" />
-                                    <input type="hidden" name="proyecto" value="" />
-                                </div>
-                                `;
-                                $('#formMovimiento').append(chequeHtml);
-                        } else {
-                                $('#chequeCustomLayout').show();
+                        // Remover el layout anterior si existe (para evitar valores sucios)
+                        if ($('#chequeCustomLayout').length > 0) {
+                                $('#chequeCustomLayout').remove();
                         }
+                        
+                        // Generar select de cuentas tipo banco
+                        var cuentasBanco = <?php echo json_encode(array_values(array_filter($cuentas, function($c){return $c->type==='banco' && $c->estado==1;}))); ?>;
+                        var cuentaSelect = '<select class="form-control" name="cuenta_id" id="chequeCuentaBancoSelect" required><option value="">Seleccione cuenta bancaria...</option>';
+                        for(var i=0;i<cuentasBanco.length;i++){
+                          cuentaSelect += '<option value="'+cuentasBanco[i].id+'">'+cuentasBanco[i].name+' ('+cuentasBanco[i].code+')</option>';
+                        }
+                        cuentaSelect += '</select>';
+                        var chequeHtml = `
+                        <div id="chequeCustomLayout">
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Cuenta bancaria de origen <span class="text-danger">*</span></label>
+                                    `+cuentaSelect+`
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Concepto</label>
+                                    <input type="text" class="form-control" name="concepto_cheque" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <textarea class="form-control" name="descripcion_cheque" rows="2" placeholder="Descripción"></textarea>
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>Fecha de registro</label>
+                                    <input type="date" class="form-control" name="fecha_registro" value="`+hoy+`" />
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Monto total</label>
+                                    <input type="number" step="0.01" class="form-control" name="monto_total" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-12">
+                                    <label>Páguese este cheque a:</label>
+                                    <input type="text" class="form-control" name="cheque_a" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-6">
+                                    <label>No. cheque:</label>
+                                    <input type="text" class="form-control" name="numero_cheque" id="numero_cheque_auto" value="" readonly />
+                                </div>
+                                <div class="form-group col-md-6">
+                                    <label>Fecha de aplicación</label>
+                                    <input type="date" class="form-control" name="fecha_aplicacion" value="`+hoy+`" />
+                                </div>
+                            </div>
+                            <div class="form-row">
+                                <div class="form-group col-md-3">
+                                    <label>IVA Total</label>
+                                    <input type="number" step="0.01" class="form-control" name="iva_total" value="0.00" />
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Forma de pago</label>
+                                    <input type="text" class="form-control" name="forma_pago" value="CHEQUE" readonly />
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Referencia 1</label>
+                                    <input type="text" class="form-control" name="referencia1" />
+                                </div>
+                                <div class="form-group col-md-3">
+                                    <label>Referencia 2</label>
+                                    <input type="text" class="form-control" name="referencia2" />
+                                </div>
+                            </div>
+                            <!-- Campos ocultos para que lleguen como null -->
+                            <input type="hidden" name="departamento" value="" />
+                            <input type="hidden" name="centro_costos" value="" />
+                            <input type="hidden" name="proyecto" value="" />
+                        </div>
+                        `;
+                        $('#formMovimiento').append(chequeHtml);
 
                         // Obtener el siguiente número de cheque por AJAX
                         $('#modalMovimiento').modal('show');
@@ -1073,9 +1104,9 @@ $(function(){
                             $('#chequeCuentaBancoSelect').trigger('change');
                         }, 200);
 
-                        // Al cerrar el modal, restaurar el formulario original
+                        // Al cerrar el modal, limpiar el layout
                         $('#modalMovimiento').off('hidden.bs.modal.cheque').on('hidden.bs.modal.cheque', function(){
-                                $('#chequeCustomLayout').hide();
+                                $('#chequeCustomLayout').remove();
                                 $('#formMovimiento .form-row, #formMovimiento .form-group').show();
                         });
                 });
@@ -1138,10 +1169,10 @@ $(function(){
                         '<tr class="'+rowClass+'">'+
                         '<td>'+mov.id+'</td>'+
                         '<td>'+(mov.cuenta_nombre || mov.cuenta_id)+'</td>'+
-                        '<td>'+badge+'</td>'+
-                        '<td>'+mov.forma_pago+'</td>'+
-                        '<td>'+(mov.fecha_registro_display || mov.fecha_registro || '')+'</td>'+
-                        '<td>'+(mov.fecha_aplicacion_display || mov.fecha_aplicacion || '')+'</td>'+
+                        '<td>'+badge+'</td>'+ 
+                        '<td class="mov-forma-pago-cell">'+mov.forma_pago+'</td>'+ 
+                        '<td>'+(mov.fecha_registro_display || mov.fecha_registro || '')+'</td>'+ 
+                        '<td>'+(mov.fecha_aplicacion_display || mov.fecha_aplicacion || '')+'</td>'+ 
                         '<td>'+(mov.beneficiario || '')+'</td>'+
                         '<td class="text-right font-weight-bold">'+monto+'</td>'+
                         '<td class="texto-suave mov-user-cell" title="'+String(mov.ejecutado_por || '-').replace(/"/g,'&quot;')+'">'+(mov.ejecutado_por || '-')+'</td>'+
@@ -1174,6 +1205,10 @@ $(function(){
         e.preventDefault();
         // Limpiar formulario
         $('#formMovimiento')[0].reset();
+        // Limpiar el layout del cheque si existe (para evitar que aparezca con valores previos)
+        if ($('#chequeCustomLayout').length > 0) {
+            $('#chequeCustomLayout').remove();
+        }
         // Setear fechas por defecto
         var hoy = new Date().toISOString().slice(0,10);
         $('[name="fecha_registro"], [name="fecha_aplicacion"]').val(hoy);
@@ -1199,6 +1234,10 @@ $(function(){
         $labelTipo.text('Tipo de Transacción *');
         e.preventDefault();
         $('#formMovimiento')[0].reset();
+        // Limpiar el layout del cheque si existe
+        if ($('#chequeCustomLayout').length > 0) {
+            $('#chequeCustomLayout').remove();
+        }
         var hoy = new Date().toISOString().slice(0,10);
         $('[name="fecha_registro"], [name="fecha_aplicacion"]').val(hoy);
         $('#modalMovimientoLabel').text('Registrar Efectivo');

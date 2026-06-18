@@ -57,6 +57,16 @@ document.addEventListener('DOMContentLoaded', function(){
         box-shadow: 0 6px 15px rgba(42, 82, 152, 0.4);
         color: #ffffff;
     }
+
+    /* Stabilize button interaction to avoid visual jitter */
+    .servicont-diario-btn {
+        will-change: transform;
+        backface-visibility: hidden;
+        -webkit-font-smoothing: antialiased;
+    }
+    .servicont-diario-btn:active {
+        transform: translateY(0) !important;
+    }
     
     .servicont-diario-btn i {
         font-size: 14px;
@@ -277,6 +287,19 @@ document.addEventListener('DOMContentLoaded', function(){
                                 <button id="btnClearFilters" class="btn" style="background:#475569;color:white;border:none;font-weight:500;">
                                     <i class="fas fa-redo" style="color:#64748b;"></i> Limpiar
                                 </button>
+                                <!-- Filtro por mes -->
+                                <div style="display:flex;gap:8px;align-items:center;margin-left:8px;">
+                                    <input type="month" id="startMonth" class="form-control" value="<?php
+                                        $sd = $this->input->get('start_date');
+                                        $ed = $this->input->get('end_date');
+                                        if ($sd && preg_match('/^(\d{4}-\d{2})-01$/', $sd, $m)) {
+                                            echo $m[1];
+                                        } elseif ($ed && preg_match('/^(\d{4}-\d{2})-\d{2}$/', $ed, $m2)) {
+                                            echo $m2[1];
+                                        } else { echo date('Y-m'); }
+                                    ?>" style="max-width:160px;" />
+                                    <button id="applyDateFilter" class="btn btn-secondary" style="background:#334155;color:#fff;border:none;">Aplicar mes</button>
+                                </div>
                             </div>
                             
                             <div id="diarioContent">
@@ -291,6 +314,7 @@ document.addEventListener('DOMContentLoaded', function(){
                                                     </th>
                                                     <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Estado</th>
                                                     <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Código</th>
+                                                    <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Origen</th>
                                                     <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Tipo</th>
                                                     <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Centro Costo</th>
                                                     <th style="padding:16px 12px;font-weight:600;color:#374151;font-size:13px;text-transform:uppercase;border-bottom:2px solid #d1d5db;white-space:nowrap;">Fecha</th>
@@ -308,7 +332,7 @@ document.addEventListener('DOMContentLoaded', function(){
                                                 $centro_costo_ids = isset($d->centro_costo_ids) ? $d->centro_costo_ids : '';
                                                 $centro_costo_nombres = isset($d->centro_costo_nombres) && $d->centro_costo_nombres ? $d->centro_costo_nombres : '-';
                                             ?>
-                                                <tr class="entry-row" data-id="<?php echo $d->id; ?>" data-type="<?php echo $entry_type; ?>" data-centro="<?php echo $centro_costo_ids; ?>" data-description="<?php echo strtolower(htmlspecialchars($d->description)); ?>" data-date="<?php echo date('Y-m-d', strtotime($d->date)); ?>" data-posted="<?php echo $is_posted ? '1' : '0'; ?>" data-voided="<?php echo $is_voided ? '1' : '0'; ?>" style="border-bottom:1px solid #f3f4f6;transition:all 0.2s;<?php if($is_voided) echo 'opacity:0.5;'; ?>" onmouseover="this.style.background='#f9fafb'" onmouseout="this.style.background='#fff'">
+                                                <tr class="entry-row" data-id="<?php echo $d->id; ?>" data-type="<?php echo $entry_type; ?>" data-centro="<?php echo $centro_costo_ids; ?>" data-description="<?php echo strtolower(htmlspecialchars($d->description)); ?>" data-date="<?php echo date('Y-m-d', strtotime($d->date)); ?>" data-posted="<?php echo $is_posted ? '1' : '0'; ?>" data-voided="<?php echo $is_voided ? '1' : '0'; ?>" style="border-bottom:1px solid #f3f4f6;transition:all 0.2s;<?php if($is_voided) echo 'opacity:0.5;'; ?>">
                                                     <td style="padding:14px 12px;text-align:center;">
                                                         <?php if(!$is_voided && !$is_posted): ?>
                                                             <input type="checkbox" class="entry-checkbox" data-id="<?php echo $d->id; ?>" style="width:18px;height:18px;cursor:pointer;" />
@@ -331,6 +355,17 @@ document.addEventListener('DOMContentLoaded', function(){
                                                     </td>
                                                     <td style="padding:14px 12px;font-weight:700;color:<?php echo $color; ?>;font-size:15px;">
                                                         <?php echo $entry_type . '-' . $d->id; ?>
+                                                    </td>
+                                                    <td style="padding:14px 12px;color:#6b7280;font-size:13px;">
+                                                        <?php
+                                                            $origin = '-';
+                                                            if (isset($d->source_type) && $d->source_type) {
+                                                                $origin = htmlspecialchars($d->source_type) . (isset($d->source_id) && $d->source_id ? ' #' . intval($d->source_id) : '');
+                                                            } elseif (isset($d->created_by) && $d->created_by) {
+                                                                $origin = 'Usuario #' . intval($d->created_by);
+                                                            }
+                                                            echo $origin;
+                                                        ?>
                                                     </td>
                                                     <td style="padding:14px 12px;">
                                                         <span style="background:#64748b;color:#fff;padding:4px 10px;border-radius:12px;font-size:11px;font-weight:600;white-space:nowrap;border:2px solid #475569;">
@@ -407,6 +442,23 @@ document.addEventListener('DOMContentLoaded', function(){
                                 <?php endif; ?>
                             </div>
                             <div id="modalContainer"></div>
+                            <script>
+                                document.getElementById('applyDateFilter').addEventListener('click', function(e){
+                                    var m = document.getElementById('startMonth').value; // YYYY-MM
+                                    if (!m) { alert('Seleccione un mes'); return; }
+                                    var parts = m.split('-');
+                                    var year = parseInt(parts[0],10);
+                                    var month = parseInt(parts[1],10);
+                                    var start = m + '-01';
+                                    var lastDay = new Date(year, month, 0).getDate();
+                                    var end = m + '-' + String(lastDay).padStart(2,'0');
+                                    var params = new URLSearchParams(window.location.search);
+                                    params.set('start_date', start);
+                                    params.set('end_date', end);
+                                    params.delete('page');
+                                    window.location = window.location.pathname + '?' + params.toString();
+                                });
+                            </script>
                             
                             <!-- Hidden fields for PDF export -->
                             <input type="hidden" id="empresa_razon_social" value="<?php echo isset($empresa->razon_social) ? htmlspecialchars($empresa->razon_social) : 'Empresa'; ?>">

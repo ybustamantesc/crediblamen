@@ -36,6 +36,21 @@
                             <small class="text-muted">Filtrar por estado o buscar por cliente/código.</small>
                         </div>
                     </div>
+                    <style>
+                        @media (max-width: 767.98px) {
+                            #referencias-table th:nth-child(1),
+                            #referencias-table td:nth-child(1),
+                            #referencias-table th:nth-child(4),
+                            #referencias-table td:nth-child(4) {
+                                display: none;
+                            }
+                            #referencias-table th:last-child,
+                            #referencias-table td:last-child {
+                                min-width: 0;
+                                white-space: normal;
+                            }
+                        }
+                    </style>
                     <div id="referencias-table-wrap" class="table-responsive d-block">
                         <table id="referencias-table" class="table table-sm table-striped table-bordered table-compact">
                             <thead>
@@ -57,7 +72,7 @@
                                     <tr class="<?php echo $rowClass; ?>" data-id="<?php echo $s->idsolicitud; ?>" data-status="<?php echo $status; ?>">
                                         <td><?php echo $s->idsolicitud; ?></td>
                                         <td>
-                                            <?php echo htmlspecialchars(trim($s->apellidos . ' ' . $s->nombres)); ?>
+                                            <?php echo htmlspecialchars(trim($s->nombres . ' ' . $s->apellidos)); ?>
                                             <?php if ($status === 'annulled'): ?>
                                                 <span class="badge badge-secondary ml-1">Anulado</span>
                                             <?php endif; ?>
@@ -70,7 +85,7 @@
                                             <div class="btn-group" role="group">
                                                 <button class="btn btn-sm btn-primary btn-referencias" data-id="<?php echo $s->idsolicitud; ?>">
                                                     <span class="d-none d-md-inline">Completar Referencias</span>
-                                                    <span class="d-inline d-md-none">Referencias</span>
+                                                    <span class="d-inline d-md-none">Ver</span>
                                                 </button>
                                                 <a class="btn btn-sm btn-secondary" href="<?php echo base_url('solicitudes/download_referencias/' . $s->idsolicitud); ?>" target="_blank">
                                                     <span class="d-none d-md-inline">Descargar PDF</span>
@@ -98,12 +113,12 @@
                                         <div class="card-body py-2">
                                             <div class="d-flex justify-content-between align-items-start">
                                                 <div>
-                                                    <div class="font-weight-bold"><?php echo htmlspecialchars(trim($s->apellidos . ' ' . $s->nombres)); ?></div>
+                                                    <div class="font-weight-bold"><?php echo htmlspecialchars(trim($s->nombres . ' ' . $s->apellidos)); ?></div>
                                                     <div class="text-muted small"><?php echo 'SOL-' . str_pad($s->idsolicitud, 4, '0', STR_PAD_LEFT); ?></div>
                                                 </div>
                                                 <div class="text-right">
                                                     <div class="btn-group" role="group">
-                                                        <button class="btn btn-sm btn-primary btn-referencias" data-id="<?php echo $s->idsolicitud; ?>">Referencias</button>
+                                                        <button class="btn btn-sm btn-primary btn-referencias" data-id="<?php echo $s->idsolicitud; ?>">Ver</button>
                                                         <a class="btn btn-sm btn-secondary" href="<?php echo base_url('solicitudes/download_referencias/' . $s->idsolicitud); ?>" target="_blank">PDF</a>
                                                     </div>
                                                 </div>

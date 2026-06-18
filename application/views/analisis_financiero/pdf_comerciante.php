@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="utf-8">
-    <title>Resumen Análisis Financiero Asalariado</title>
+    <title>Resumen Análisis Financiero Comerciante</title>
     <style>
         body { font-family: Arial, sans-serif; font-size: 9.5px; color: #222; }
         .pdf-titulo-principal {
@@ -28,9 +28,69 @@
             font-weight: bold;
             margin-top: 2px;
         }
+        .no-break {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .no-break table {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .no-break tr {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
         table { width: 100%; border-collapse: collapse; margin-bottom: 12px; font-size: 9.5px; }
         th, td { border: 1px solid #e6e6e6; padding: 3px 4px; text-align: left; }
         th { background: #f5f5f5; }
+        .section-title {
+            margin-top: 12px;
+            margin-bottom: 4px;
+            padding: 8px 10px;
+            font-size: 12px;
+            font-weight: bold;
+            color: #ffffff;
+            background: #1760a3;
+            text-transform: uppercase;
+            page-break-after: avoid;
+        }
+        .section-break,
+        .section-block {
+            page-break-inside: avoid;
+            break-inside: avoid;
+            page-break-before: avoid;
+            margin-top: 12px;
+        }
+        .section-block table,
+        .section-block .section-title {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .rec-table {
+            width: 100%;
+            table-layout: fixed;
+            margin-top: 6px;
+            word-wrap: break-word;
+        }
+        .rec-table th, .rec-table td {
+            white-space: normal;
+            padding: 6px 8px;
+            overflow-wrap: break-word;
+            word-break: break-word;
+        }
+        .rec-table th {
+            background: #073a5b;
+            color: #ffffff;
+        }
+        .rec-table .value-col {
+            width: auto;
+            text-align: right;
+            font-weight: bold;
+        }
+        .rec-vertical td {
+            white-space: normal;
+            padding: 6px 8px;
+        }
         .cliente-nombre { font-size: 13px; font-weight: bold; color: #1760a3; margin-bottom: 6px; }
     </style>
 </head>
@@ -58,7 +118,13 @@
             $cuota = trim((string)($cuotas[$i] ?? ''));
             $institucion = trim((string)($instituciones[$i] ?? ''));
             $saldo = trim((string)($saldos[$i] ?? ''));
-            if ($fecha === '' && $cuota === '' && $institucion === '' && $saldo === '') {
+            $fecha_normalizada = strtoupper($fecha);
+            $cuota_val = floatval(str_replace([','], ['.'], $cuota));
+            $saldo_val = floatval(str_replace([','], ['.'], $saldo));
+            if (
+                $fecha === '' || $fecha_normalizada === 'NULL'
+                || ($cuota_val === 0.0 && $saldo_val === 0.0)
+            ) {
                 continue;
             }
             $rows[] = [
@@ -69,6 +135,26 @@
             ];
         }
         return $rows;
+    };
+
+    $money = function ($value) {
+        return 'C$ ' . number_format((float)$value, 2);
+    };
+    $money_usd = function ($value) {
+        return 'US$ ' . number_format((float)$value, 2);
+    };
+    $money_usd_or_dash = function ($value) use ($money_usd) {
+        return ((float)$value) > 0 ? $money_usd($value) : '-';
+    };
+    $percent = function ($value) {
+        if (is_string($value)) {
+            $value = str_replace('%', '', trim($value));
+        }
+        $num = (float)$value;
+        if ($num > 0 && $num <= 1) {
+            $num = $num * 100;
+        }
+        return number_format($num, 2) . '%';
     };
 
     $olp_rows = $build_obligaciones(
@@ -246,8 +332,9 @@
             <td colspan="2"><b>C$ <?= number_format($analisis['flujo_neto_disponible'] ?? 0, 2) ?></b></td>
         </tr>
     </table>
-    <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Gastos Fijos Mensuales</h3>
-    <table style="width:60%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+    <div class="no-break">
+        <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Gastos Fijos Mensuales</h3>
+        <table style="width:60%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
         <tr><th style="background:#e9ecef;">Concepto</th><th style="background:#e9ecef;">Valor C$</th></tr>
         <tr><td>Local o casa propia/Alquiler</td><td>C$ <?= number_format($analisis['gasto_local_alquiler'] ?? 0, 2) ?></td></tr>
         <tr><td>Servicio de energía eléctrica</td><td>C$ <?= number_format($analisis['gasto_energia'] ?? 0, 2) ?></td></tr>
@@ -256,6 +343,8 @@
         <tr><td style="background:yellow;">Seguridad:</td><td style="background:yellow;">C$ <?= number_format($analisis['gasto_seguridad'] ?? 0, 2) ?></td></tr>
         <tr><td style="background:yellow;">Limpieza y mantenimiento:</td><td style="background:yellow;">C$ <?= number_format($analisis['gasto_limpieza'] ?? 0, 2) ?></td></tr>
         <tr><td>Gastos personales básicos:</td><td>C$ <?= number_format($analisis['gasto_personal'] ?? 0, 2) ?></td></tr>
+        <tr><td>Salario de Ayudante Empleado:</td><td>C$ <?= number_format($analisis['gasto_salario_ayudante'] ?? $analisis['costo_salario_ayudante'] ?? 0, 2) ?></td></tr>
+        <tr><td>Transporte:</td><td>C$ <?= number_format($analisis['costo_transporte'] ?? 0, 2) ?></td></tr>
         <tr><th>Total</th><th>C$ <?= number_format(
             ($analisis['gasto_local_alquiler'] ?? 0) +
             ($analisis['gasto_energia'] ?? 0) +
@@ -263,9 +352,12 @@
             ($analisis['gasto_internet'] ?? 0) +
             ($analisis['gasto_seguridad'] ?? 0) +
             ($analisis['gasto_limpieza'] ?? 0) +
-            ($analisis['gasto_personal'] ?? 0)
+            ($analisis['gasto_personal'] ?? 0) +
+            ($analisis['gasto_salario_ayudante'] ?? $analisis['costo_salario_ayudante'] ?? 0) +
+            ($analisis['costo_transporte'] ?? 0)
         , 2) ?></th></tr>
     </table>
+    </div>
     <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Costos de Operación Directos</h3>
     <table style="width:60%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
         <tr><th style="background:#e9ecef;">Concepto</th><th style="background:#e9ecef;">Valor C$</th></tr>
@@ -298,12 +390,12 @@
             </td>
         </tr>
     </table>
-    <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Obligaciones a largo plazo</h3>
-    <table style="width:80%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
-        <tr style="background:#d9d9d9; color:#000;">
-            <th>Fecha</th><th>Cuota</th><th>Instituciones</th><th>Saldo</th>
-        </tr>
-        <?php if (!empty($olp_rows)): ?>
+    <?php if (!empty($olp_rows)): ?>
+        <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Obligaciones a largo plazo</h3>
+        <table style="width:80%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+            <tr style="background:#d9d9d9; color:#000;">
+                <th>Fecha</th><th>Cuota</th><th>Instituciones</th><th>Saldo</th>
+            </tr>
             <?php foreach ($olp_rows as $obl): ?>
                 <tr>
                     <td><?= htmlspecialchars($obl['fecha'] ?? '') ?></td>
@@ -312,21 +404,19 @@
                     <td><?= number_format($obl['saldo'] ?? 0, 2) ?></td>
                 </tr>
             <?php endforeach; ?>
-        <?php else: ?>
-            <tr><td colspan="4" style="text-align:center;">Sin datos</td></tr>
-        <?php endif; ?>
-        <tr>
-            <td colspan="3" style="background:#e86c1a; color:#fff; text-align:right; font-weight:bold;">Total</td>
-            <td style="background:#e86c1a; color:#fff; font-weight:bold;">C$ <?= number_format($analisis['subtotal_olp_saldo'] ?? $analisis['subtotal_oblig_largo_plazo'] ?? 0, 2) ?></td>
-        </tr>
-    </table>
+            <tr>
+                <td colspan="3" style="background:#e86c1a; color:#fff; text-align:right; font-weight:bold;">Total</td>
+                <td style="background:#e86c1a; color:#fff; font-weight:bold;">C$ <?= number_format($analisis['subtotal_olp_saldo'] ?? $analisis['subtotal_oblig_largo_plazo'] ?? 0, 2) ?></td>
+            </tr>
+        </table>
+    <?php endif; ?>
 
-    <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Obligaciones a corto plazo</h3>
-    <table style="width:80%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
-        <tr style="background:#d9d9d9; color:#000;">
-            <th>Fecha</th><th>Cuota</th><th>Instituciones</th><th>Saldo</th>
-        </tr>
-        <?php if (!empty($ocp_rows)): ?>
+    <?php if (!empty($ocp_rows)): ?>
+        <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Obligaciones a corto plazo</h3>
+        <table style="width:80%; border-collapse:collapse; font-size:13px; margin-bottom:20px;">
+            <tr style="background:#d9d9d9; color:#000;">
+                <th>Fecha</th><th>Cuota</th><th>Instituciones</th><th>Saldo</th>
+            </tr>
             <?php foreach ($ocp_rows as $obl): ?>
                 <tr>
                     <td><?= htmlspecialchars($obl['fecha'] ?? '') ?></td>
@@ -335,71 +425,149 @@
                     <td><?= number_format($obl['saldo'] ?? 0, 2) ?></td>
                 </tr>
             <?php endforeach; ?>
-        <?php else: ?>
-            <tr><td colspan="4" style="text-align:center;">Sin datos</td></tr>
-        <?php endif; ?>
-        <tr>
-            <td colspan="2"></td>
-            <td style="background:#e86c1a; color:#fff; text-align:right; font-weight:bold;">Total</td>
-            <td style="background:#e86c1a; color:#fff; font-weight:bold;">C$ <?= number_format($analisis['subtotal_ocp_saldo'] ?? $analisis['subtotal_oblig_corto_plazo'] ?? 0, 2) ?></td>
-        </tr>
-    </table>
-    <h3 style="background:#073048; color:#fff; text-align:left; padding:6px; margin-top:30px;">Indicadores</h3>
-    <table style="width:100%; border-collapse:collapse; font-size:13px;">
-        <tr>
-            <th style="background:#e9ecef;">Indicadores</th>
-            <th style="background:#e9ecef;">Resultado Actual</th>
-        </tr>
-        <tr>
-            <td>Nivel de Endeudamiento = (Total Pasivo + Monto Crédito Solicitado / Total Activos)</td>
-            <td style="background:yellow; text-align:center; font-weight:bold;">
-                <?php
-                $val = isset($analisis['nivel_endeudamiento']) ? floatval($analisis['nivel_endeudamiento']) : (isset($analisis['indicador_endeudamiento']) ? floatval($analisis['indicador_endeudamiento']) : 0);
-                if ($val > 0 && $val <= 1) {
-                    $val = $val * 100;
-                }
-                echo number_format($val, 2) . '%';
-                ?>
-            </td>
-        </tr>
-        <tr>
-            <td>Capital de trabajo Neto (Activo Corriente - Pasivo Corriente)</td>
-            <td style="background:yellow; text-align:center; font-weight:bold;">
-                C$ <?= number_format($analisis['capital_trabajo_neto'] ?? 0, 2) ?>
-            </td>
-        </tr>
-        <tr>
-            <td>Cobertura de la deuda capacidad de pago = (Cuota / Flujo neto disponible)<br>Máxima porción a comprometer del flujo = 25%</td>
-            <td style="background:yellow; text-align:center; font-weight:bold;">
-                <?php
-                $val = isset($analisis['cobertura_deuda']) ? floatval($analisis['cobertura_deuda']) : 0;
-                if ($val > 0 && $val <= 1) {
-                    $val = $val * 100;
-                } elseif ($val < 0 && $val >= -1) {
-                    $val = $val * 100;
-                }
-                echo number_format($val, 2) . '%';
-                ?>
-            </td>
-        </tr>
-        <tr>
-            <td>Cobertura de garantía (150%)</td>
-            <td style="background:yellow; text-align:center; font-weight:bold;">
-                <?php
-                $cg_raw = isset($analisis['cobertura_garantia']) ? $analisis['cobertura_garantia'] : 0;
-                if (is_string($cg_raw)) {
-                    $cg_raw = str_replace('%', '', $cg_raw);
-                    $cg_raw = trim($cg_raw);
-                }
-                $cg = floatval($cg_raw);
-                if ($cg > 0 && $cg <= 1) {
-                    $cg = $cg * 100;
-                }
-                echo number_format($cg, 2) . '%';
-                ?>
-            </td>
-        </tr>
-    </table>
+            <tr>
+                <td colspan="2"></td>
+                <td style="background:#e86c1a; color:#fff; text-align:right; font-weight:bold;">Total</td>
+                <td style="background:#e86c1a; color:#fff; font-weight:bold;">C$ <?= number_format($analisis['subtotal_ocp_saldo'] ?? $analisis['subtotal_oblig_corto_plazo'] ?? 0, 2) ?></td>
+            </tr>
+        </table>
+    <?php endif; ?>
+    <div class="no-break">
+        <h3 style="background:#073048; color:#fff; text-align:left; padding:6px; margin-top:30px;">Indicadores</h3>
+        <table style="width:100%; border-collapse:collapse; font-size:13px;">
+            <tr>
+                <th style="background:#e9ecef;">Indicadores</th>
+                <th style="background:#e9ecef;">Resultado Actual</th>
+            </tr>
+            <tr>
+                <td>Nivel de Endeudamiento = (Total Pasivo + Monto Crédito Solicitado / Total Activos)</td>
+                <td style="background:yellow; text-align:center; font-weight:bold;">
+                    <?php
+                    $val = isset($analisis['nivel_endeudamiento']) ? floatval($analisis['nivel_endeudamiento']) : (isset($analisis['indicador_endeudamiento']) ? floatval($analisis['indicador_endeudamiento']) : 0);
+                    if ($val > 0 && $val <= 1) {
+                        $val = $val * 100;
+                    }
+                    echo number_format($val, 2) . '%';
+                    ?>
+                </td>
+            </tr>
+            <tr>
+                <td>Capital de trabajo Neto (Activo Corriente - Pasivo Corriente)</td>
+                <td style="background:yellow; text-align:center; font-weight:bold;">
+                    C$ <?= number_format($analisis['capital_trabajo_neto'] ?? 0, 2) ?>
+                </td>
+            </tr>
+            <tr>
+                <td>Cobertura de la deuda capacidad de pago = (Cuota / Flujo neto disponible)<br>Máxima porción a comprometer del flujo = 25%</td>
+                <td style="background:yellow; text-align:center; font-weight:bold;">
+                    <?php
+                    $val = isset($analisis['cobertura_deuda']) ? floatval($analisis['cobertura_deuda']) : 0;
+                    if ($val > 0 && $val <= 1) {
+                        $val = $val * 100;
+                    } elseif ($val < 0 && $val >= -1) {
+                        $val = $val * 100;
+                    }
+                    echo number_format($val, 2) . '%';
+                    ?>
+                </td>
+            </tr>
+        </table>
+    </div>
+    <?php
+    $solicitud_tipo_credito = isset($solicitud['destino_credito']) ? $solicitud['destino_credito'] : (isset($solicitud['tipo_credito']) ? $solicitud['tipo_credito'] : '-');
+    $solicitud_monto = isset($solicitud['monto_solicitado']) ? $solicitud['monto_solicitado'] : 0;
+    $solicitud_plazo = isset($solicitud['plazo_meses']) ? (float)$solicitud['plazo_meses'] : 0;
+    // Forzar frecuencia mostrada a 'quincenal' por defecto en el PDF
+    $solicitud_frecuencia = 'quincenal';
+    $solicitud_numero_cuotas = '-';
+    if ($solicitud_plazo > 0) {
+        // Por defecto consideramos periodo quincenal: número de cuotas = meses * 2
+        $solicitud_numero_cuotas = number_format($solicitud_plazo * 2, 0);
+    }
+    $solicitud_cuota = null;
+    if (isset($solicitud['cuota_estim_estimada_quincenal']) && $solicitud['cuota_estim_estimada_quincenal'] !== '') {
+        $solicitud_cuota = $solicitud['cuota_estim_estimada_quincenal'];
+    } elseif (isset($solicitud['cuota_estim_estimada']) && $solicitud['cuota_estim_estimada'] !== '') {
+        $solicitud_cuota = $solicitud['cuota_estim_estimada'];
+    }
+    ?>
+    <div class="section-block">
+        <div class="section-title">Datos de la Solicitud</div>
+        <table class="rec-table">
+            <thead>
+                <tr>
+                    <th>Tipo de Crédito</th>
+                    <th>Monto de Solicitud</th>
+                    <th>Plazo del crédito</th>
+                    <th>No. de cuotas</th>
+                    <th>Monto de cada cuota</th>
+                    <th>Fecha de pago</th>
+                    <th>Frecuencia</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><?= htmlspecialchars($solicitud_tipo_credito ?? '-') ?></td>
+                    <td class="value-col"><?= $money_usd_or_dash($solicitud_monto) ?></td>
+                    <td class="value-col"><?= $solicitud_plazo > 0 ? number_format($solicitud_plazo, 0) . ' meses' : '-' ?></td>
+                    <td class="value-col"><?= $solicitud_numero_cuotas ?></td>
+                    <td class="value-col"><?= $solicitud_cuota !== null ? $money_usd_or_dash($solicitud_cuota) : '-' ?></td>
+                    <td>-</td>
+                    <td><?= htmlspecialchars(ucfirst($solicitud_frecuencia ?? '-')) ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="section-block">
+        <div class="section-title">RECOMENDACIÓN DEL ANALISTA</div>
+        <table class="rec-table">
+            <thead>
+                <tr>
+                    <th>Tipo de Crédito</th>
+                    <th>Monto a financiar (US$)</th>
+                    <th>Plazo del crédito (meses)</th>
+                    <th>No. de cuotas</th>
+                    <th>Monto de cuota</th>
+                    <th>Fecha de pago</th>
+                    <th>Frecuencia de pago</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td><?= htmlspecialchars($analisis['tipo_credito'] ?? '-') ?></td>
+                    <td class="value-col"><?= $money_usd_or_dash($analisis['monto_financiar'] ?? 0) ?></td>
+                    <td class="value-col"><?= isset($analisis['plazo_credito']) && $analisis['plazo_credito'] !== '' ? number_format((float)$analisis['plazo_credito'],0) : '-' ?></td>
+                    <td class="value-col"><?= isset($analisis['numero_cuotas']) ? number_format((float)$analisis['numero_cuotas'],0) : (isset($analisis['num_cuotas']) ? number_format((float)$analisis['num_cuotas'],0) : '-') ?></td>
+                    <td class="value-col"><?= $money_usd_or_dash($analisis['monto_cuota'] ?? 0) ?></td>
+                    <td><?= htmlspecialchars($analisis['fecha_pago_cuota'] ?? '-') ?></td>
+                    <td><?= htmlspecialchars(ucfirst(strval($analisis['frecuencia_pago'] ?? '-'))) ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <table class="rec-vertical">
+            <tbody>
+                <tr>
+                    <th style="width: 180px;">Forma de pago</th>
+                    <td><?= nl2br(htmlspecialchars($analisis['forma_pago'] ?? '-')) ?></td>
+                </tr>
+                <tr>
+                    <th style="width: 180px;">Garantía requerida</th>
+                    <td><?= nl2br(htmlspecialchars($analisis['garantia_requerida'] ?? '-')) ?></td>
+                </tr>
+                <tr>
+                    <th>Fundamentación de la propuesta</th>
+                    <td><?= nl2br(htmlspecialchars($analisis['fundamentacion_propuesta'] ?? '-')) ?></td>
+                </tr>
+                <tr>
+                    <th>Comentario del analista</th>
+                    <td><?= nl2br(htmlspecialchars($analisis['comentario'] ?? '-')) ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 </body>
 </html>
 

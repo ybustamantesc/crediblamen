@@ -15,7 +15,7 @@
                         </div>
                     </div>
                     <div class="col-lg-4 text-right">
-                        <a href="<?php echo base_url('solicitudes/core/' . intval($idsolicitud)); ?>" class="btn btn-secondary">Volver</a>
+                        <a href="<?php echo base_url('solicitudes'); ?>" class="btn btn-secondary">Volver</a>
                     </div>
                 </div>
             </div>

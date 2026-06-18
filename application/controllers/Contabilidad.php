@@ -21,6 +21,40 @@ class Contabilidad extends CI_Controller {
             'scripts' => array('js/contabilidad.js')
         );
 
+        // Soporte para filtro de fechas en el inicio: start_date y end_date (GET)
+        $start_date = $this->input->get('start_date');
+        $end_date = $this->input->get('end_date');
+        try {
+            if ($start_date && $end_date && strtotime($start_date) !== false && strtotime($end_date) !== false) {
+                $this->load->model('Contabilidad_model');
+                $stats = $this->Contabilidad_model->get_counts_range($start_date, $end_date);
+                $data['conta_stats_range'] = ['start' => $stats['start'], 'end' => $stats['end']];
+                // If range corresponds exactly to a single month, expose month/year for the view
+                $s_ts = strtotime($stats['start']);
+                $e_ts = strtotime($stats['end']);
+                if ($s_ts !== false && $e_ts !== false) {
+                    $s_ym = date('Y-m', $s_ts);
+                    $e_ym = date('Y-m', $e_ts);
+                    // same month and starts at day 01 and ends at last day of month
+                    if ($s_ym === $e_ym && date('d', $s_ts) === '01') {
+                        $last_day = date('t', $s_ts);
+                        if (date('d', $e_ts) === $last_day) {
+                            $stats['year'] = intval(date('Y', $s_ts));
+                            $stats['month'] = intval(date('m', $s_ts));
+                        }
+                    }
+                }
+            } else {
+                $this->load->model('Contabilidad_model');
+                $stats = $this->Contabilidad_model->get_monthly_counts();
+                $data['conta_stats_range'] = null;
+            }
+        } catch (Exception $e) {
+            $stats = ['total' => 0, 'posted' => 0, 'unposted' => 0, 'year' => date('Y'), 'month' => date('m')];
+            $data['conta_stats_range'] = null;
+        }
+        $data['conta_stats'] = $stats;
+
         // Render within the global layout so styles/scripts match Home
         $this->load->view('layout/header', $data);
         $this->load->view('contabilidad/home', $data);
@@ -1338,6 +1372,32 @@ class Contabilidad extends CI_Controller {
     {
         $id = $this->input->get('id');
         $data = [];
+        // Support preselection mode and parent for new account creation
+        $mode = $this->input->get('mode'); // 'child','sibling','root'
+        $parent_pref = $this->input->get('parent_id');
+        if ($mode && in_array(strtolower($mode), ['child','sibling','root'])) {
+            $data['create_mode'] = strtolower($mode);
+        }
+        $data['selected_parent_id'] = null;
+        $data['source_account'] = null;
+        if ($parent_pref && intval($parent_pref) > 0) {
+            $parentPrefId = intval($parent_pref);
+            if (isset($data['create_mode']) && $data['create_mode'] === 'sibling') {
+                $source = $this->Contabilidad_model->get_account($parentPrefId);
+                if ($source) {
+                    $data['source_account'] = $source;
+                    $data['selected_parent_id'] = isset($source->parent_id) ? intval($source->parent_id) : null;
+                }
+            } elseif (isset($data['create_mode']) && $data['create_mode'] === 'child') {
+                $source = $this->Contabilidad_model->get_account($parentPrefId);
+                if ($source) {
+                    $data['source_account'] = $source;
+                    $data['selected_parent_id'] = $parentPrefId;
+                }
+            } else {
+                $data['selected_parent_id'] = $parentPrefId;
+            }
+        }
         if ($id) {
             $acct = $this->Contabilidad_model->get_account($id);
             // If agrupador_estado was set (import), map it into the appropriate report select
@@ -1401,7 +1461,7 @@ class Contabilidad extends CI_Controller {
         $muc_class = isset($post['muc_class']) && $post['muc_class'] !== '' ? intval($post['muc_class']) : null;
         $muc_group = isset($post['muc_group']) ? trim($post['muc_group']) : null;
         $muc_subgroup = isset($post['muc_subgroup']) ? trim($post['muc_subgroup']) : null;
-        $level = isset($post['level']) && $post['level'] !== '' ? intval($post['level']) : 4;
+        $level = isset($post['level']) && $post['level'] !== '' ? intval($post['level']) : 1;
         $is_mayor = isset($post['is_mayor']) && ($post['is_mayor'] == '1' || $post['is_mayor'] == 1) ? 1 : 0;
         $statement = isset($post['statement']) ? trim($post['statement']) : 'BS';
         $regulatory_code = isset($post['regulatory_code']) ? trim($post['regulatory_code']) : null;
@@ -1412,8 +1472,11 @@ class Contabilidad extends CI_Controller {
 
         $errors = [];
         // Validaciones básicas
-        if ($code === '') $errors[] = 'El código es obligatorio.';
         if ($name === '') $errors[] = 'El nombre es obligatorio.';
+        if ($code === '' && !$id) {
+            $code = $this->Contabilidad_model->generate_next_code($parent_id, null, false, 14);
+        }
+        if ($code === '') $errors[] = 'El código es obligatorio.';
         $allowed = ['activo','pasivo','patrimonio','ingreso','gasto'];
         if (!in_array($typeLower, $allowed)) $errors[] = 'Tipo de cuenta inválido.';
         if ($naturaleza && !in_array($naturaleza, ['deudora', 'acreedora'])) $errors[] = 'Naturaleza de cuenta inválida.';
@@ -1423,6 +1486,12 @@ class Contabilidad extends CI_Controller {
         // Código con formato: números y puntos (ej. 1.100)
         if ($code !== '' && !preg_match('/^[0-9]+(\.[0-9]+)*$/', $code)) {
             $errors[] = 'El código debe contener sólo números y puntos, p. ej. 1.100.';
+        }
+        if ($code !== '' && strlen(str_replace('.', '', $code)) > 14) {
+            $errors[] = 'El código no puede exceder 14 dígitos.';
+        }
+        if ($level < 1 || $level > 14) {
+            $errors[] = 'El nivel debe estar entre 1 y 14.';
         }
         // Código único
         if ($code !== '' && $this->Contabilidad_model->code_exists($code, $id)) {
@@ -1479,6 +1548,89 @@ class Contabilidad extends CI_Controller {
         }
         $ok = $this->Contabilidad_model->delete_account(intval($id));
         echo json_encode(['status' => $ok ? 'success' : 'error']);
+    }
+
+    // API: get suggested next hierarchical code
+    public function get_next_account_code()
+    {
+        $parent_id = $this->input->get('parent_id');
+        $exclude_id = $this->input->get('exclude_id');
+        $mode = $this->input->get('mode'); // 'child' (default), 'sibling', 'root'
+
+        header('Content-Type: application/json');
+
+        $parent_id = ($parent_id && $parent_id !== '') ? intval($parent_id) : null;
+        // allow explicit source_id to be provided by frontend (useful for sibling calculations)
+        $source_id = $this->input->get('source_id');
+        $source_id = ($source_id && $source_id !== '') ? intval($source_id) : null;
+        $exclude_id = ($exclude_id && $exclude_id !== '') ? intval($exclude_id) : null;
+
+        $as_sibling = false;
+        if ($mode && in_array(strtolower($mode), ['sibling','mismo_nivel'])) $as_sibling = true;
+        if ($mode && strtolower($mode) === 'root') $parent_id = null;
+
+        // If sibling mode and a source_id is provided, compute next code directly
+        // by taking source code + 1 (looping if needed) constrained to same parent.
+        $suggested_level = 1;
+        $suggestedCode = '';
+        if ($as_sibling && $source_id) {
+            $src = $this->Contabilidad_model->get_account($source_id);
+            if ($src && !empty($src->code)) {
+                $source_code = trim($src->code);
+                $source_parent = isset($src->parent_id) && $src->parent_id ? intval($src->parent_id) : null;
+                // start candidate as numeric increment of full code
+                $candidate = strval(intval($source_code) + 1);
+                // iterate until we find a free code under the same parent
+                while (true) {
+                    if (strlen($candidate) > 14) { $suggestedCode = ''; break; }
+                    // check existence of this code under the same parent
+                    $found = $this->Contabilidad_model->get_account_by_code($candidate);
+                    $exists = false;
+                    if ($found) {
+                        if ($exclude_id && intval($found->id) === intval($exclude_id)) {
+                            $exists = false;
+                        } else {
+                            $found_parent = isset($found->parent_id) ? $found->parent_id : null;
+                            if ($source_parent === null) {
+                                $exists = ($found_parent === null);
+                            } else {
+                                $exists = (intval($found_parent) === $source_parent);
+                            }
+                        }
+                    }
+                    if (!$exists) { $suggestedCode = $candidate; break; }
+                    $candidate = strval(intval($candidate) + 1);
+                }
+                // suggested level is parent's level + 1 (if parent exists)
+                if ($source_parent) {
+                    $p = $this->Contabilidad_model->get_account($source_parent);
+                    if ($p && isset($p->level)) $suggested_level = intval($p->level) + 1;
+                } else {
+                    $suggested_level = 1;
+                }
+            }
+        }
+
+        // Fallback: use model generator for other cases
+        if (empty($suggestedCode)) {
+            $parent_for_generation = $parent_id;
+            if ($as_sibling && $source_id) {
+                $parent_for_generation = $source_id;
+            }
+            $suggestedCode = $this->Contabilidad_model->generate_next_code($parent_for_generation, $exclude_id, $as_sibling);
+            if ($parent_for_generation) {
+                $p = $this->Contabilidad_model->get_account($parent_for_generation);
+                if ($p && isset($p->level)) $suggested_level = intval($p->level) + 1;
+            } else {
+                $suggested_level = 1;
+            }
+        }
+
+        echo json_encode([
+            'status' => 'success',
+            'suggested_code' => $suggestedCode,
+            'suggested_level' => $suggested_level
+        ]);
     }
 
     // Export catalogo to Excel with filters
@@ -1642,7 +1794,42 @@ class Contabilidad extends CI_Controller {
             'scripts' => array('js/contabilidad_diario.js','js/contabilidad.js','js/contabilidad_modal_enhanced.js')
         );
         // server-side entries for immediate rendering (fallback when JS is cached/blocked)
-        $data['entries'] = $this->Contabilidad_model->get_journals();
+        // Allow filtering by date range via GET: start_date, end_date (YYYY-MM-DD)
+        $start_date = $this->input->get('start_date');
+        $end_date = $this->input->get('end_date');
+        $filter = $this->input->get('filter');
+
+        $use_range = false;
+        if ($start_date && $end_date) {
+            $ss = strtotime($start_date);
+            $ee = strtotime($end_date);
+            if ($ss !== false && $ee !== false && $ss <= $ee) {
+                $use_range = true;
+                // normalize to Y-m-d
+                $start = date('Y-m-d', $ss);
+                $end = date('Y-m-d', $ee);
+                $entries = $this->Contabilidad_model->get_journals($start, $end);
+            }
+        }
+
+        if (!$use_range) {
+            // fallback: support quick filters 'posted'/'unposted' (current month)
+            if ($filter && in_array($filter, ['posted','unposted'])) {
+                $year = date('Y');
+                $month = date('m');
+                $start = $year . '-' . $month . '-01';
+                $end = date('Y-m-t', strtotime($start));
+                $entries = $this->Contabilidad_model->get_journals($start, $end);
+                if ($filter == 'posted') {
+                    $entries = array_filter($entries, function($e){ return isset($e->posted) && intval($e->posted) === 1; });
+                } else {
+                    $entries = array_filter($entries, function($e){ return !isset($e->posted) || intval($e->posted) === 0; });
+                }
+            } else {
+                $entries = $this->Contabilidad_model->get_journals();
+            }
+        }
+        $data['entries'] = $entries;
         
         // Include company info for PDF export
         $this->load->model('Core_model');
