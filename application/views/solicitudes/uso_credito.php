@@ -64,10 +64,19 @@
                                and hide the card-based alternative to avoid duplicate lists. */
                             #uso-table-wrap { display: block !important; }
                             #uso-cards-wrap { display: none !important; }
+                            #uso-table th:nth-child(1), #uso-table td:nth-child(1),
+                            #uso-table th:nth-child(4), #uso-table td:nth-child(4) {
+                                display: none !important;
+                            }
                             #uso-table td:last-child .btn-uso {
                                 padding: .22rem .35rem;
                                 font-size: .78rem;
                                 min-width: auto;
+                            }
+                            #uso-table th:last-child, #uso-table td:last-child {
+                                width: auto !important;
+                                min-width: 0 !important;
+                                white-space: normal;
                             }
                         }
                         @media (min-width: 768px) {

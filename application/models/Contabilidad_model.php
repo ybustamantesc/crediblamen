@@ -2597,6 +2597,13 @@ class Contabilidad_model extends CI_Model {
                     'description' => isset($line['description']) ? $line['description'] : '',
                 ];
 
+                if (isset($line['debit_usd']) && $this->db->field_exists('debit_usd', 'tb_journal_entry')) {
+                    $entry['debit_usd'] = floatval(str_replace(',', '.', $line['debit_usd']));
+                }
+                if (isset($line['credit_usd']) && $this->db->field_exists('credit_usd', 'tb_journal_entry')) {
+                    $entry['credit_usd'] = floatval(str_replace(',', '.', $line['credit_usd']));
+                }
+
                 // Add centro_costo_id if provided and field exists
                 if (isset($line['centro_costo_id']) && $this->db->field_exists('centro_costo_id', 'tb_journal_entry')) {
                     $entry['centro_costo_id'] = intval($line['centro_costo_id']);

@@ -71,15 +71,27 @@
                         <div class="page-header-title">
                             <i class="fas fa-university bg-blue"></i>
                             <div class="d-inline">
-                                <h5>Cajas y Bancos</h5>
-                                <span>Gestione cuentas bancarias y cajas internas (crear, editar, eliminar y consultar saldos).</span>
+                                <h5><?php echo isset($default_tipo) ? ($default_tipo === 'caja' ? 'Cajas' : 'Bancos') : 'Cajas y Bancos'; ?></h5>
+                                <span><?php echo isset($default_tipo)
+                                    ? ($default_tipo === 'caja'
+                                        ? 'Gestione solo las cajas internas (crear, editar, eliminar y consultar saldos).'
+                                        : 'Gestione solo las cuentas bancarias (crear, editar, eliminar y consultar saldos).')
+                                    : 'Gestione cuentas bancarias y cajas internas (crear, editar, eliminar y consultar saldos).'; ?></span>
                             </div>
                         </div>
                     </div>
                     <div class="col-lg-4 text-lg-right mt-2 mt-lg-0">
-                        <button id="btnNewCuenta" class="btn bg-blue text-white"><i class="fas fa-plus-circle"></i> Nueva Cuenta</button>
+                        <?php if (!isset($default_tipo)): ?>
+                            <button id="btnNewCuenta" class="btn bg-blue text-white"><i class="fas fa-plus-circle"></i> Nueva Cuenta</button>
+                        <?php endif; ?>
                     </div>
                 </div>
+            </div>
+            <div class="mb-3">
+                <?php $activeTipo = isset($default_tipo) ? $default_tipo : 'all'; ?>
+                <a href="<?php echo base_url('tesoreria/cajas_bancos'); ?>" class="btn btn-sm <?php echo $activeTipo === 'all' ? 'btn-primary text-white' : 'btn-outline-primary'; ?>">Todos</a>
+                <a href="<?php echo base_url('tesoreria/cajas'); ?>" class="btn btn-sm <?php echo $activeTipo === 'caja' ? 'btn-primary text-white' : 'btn-outline-primary'; ?>">Solo Cajas</a>
+                <a href="<?php echo base_url('tesoreria/bancos'); ?>" class="btn btn-sm <?php echo $activeTipo === 'banco' ? 'btn-primary text-white' : 'btn-outline-primary'; ?>">Solo Bancos</a>
             </div>
 
             <div class="card teso-cb-card">
@@ -119,7 +131,6 @@
                                     <th>Banco</th>
                                     <th>Cuenta</th>
                                     <th>Moneda</th>
-                                                <th>Saldo</th>
                                     <th>Estado</th>
                                     <th>Acciones</th>
                                 </tr>
@@ -172,7 +183,7 @@
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label>Fecha de apertura</label>
-                                            <input id="cuenta_fecha_apertura" type="date" class="form-control" />
+                                            <input id="cuenta_fecha_apertura_tab1" type="date" class="form-control" />
                                         </div>
                                     </div>
                                     <div class="form-row">
@@ -228,7 +239,7 @@
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label>Nombre de la cuenta</label>
-                                            <input id="cuenta_nombre_banco" class="form-control" />
+                                            <input id="cuenta_name" class="form-control" />
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label>Clave del Banco</label>
@@ -260,13 +271,7 @@
                                         </div>
                                         <div class="form-group col-md-4">
                                             <label>Fecha de apertura</label>
-                                            <input id="cuenta_fecha_apertura" type="date" class="form-control" />
-                                        </div>
-                                    </div>
-                                    <div class="form-row">
-                                        <div class="form-group col-md-12">
-                                            <label>Nombre</label>
-                                            <input id="cuenta_name" class="form-control" />
+                                            <input id="cuenta_fecha_apertura_tab2" type="date" class="form-control" />
                                         </div>
                                     </div>
                                     <div class="form-check">
@@ -335,6 +340,13 @@
 
 <script>
 jQuery(function($){
+    var cuentasData = [];
+    var defaultTipo = '<?php echo isset($default_tipo) ? $default_tipo : 'all'; ?>';
+    if (defaultTipo !== 'all') {
+        $('#cb_filter_tipo').val(defaultTipo).prop('disabled', true);
+        $('#cb_filter_tipo').closest('.col-md-3').append('<small class="form-text text-muted">Vista filtrada: ' + (defaultTipo === 'caja' ? 'Cajas' : 'Bancos') + '</small>');
+    }
+
     function applyClientFilters(){
         var q = ($('#cb_search').val() || '').toLowerCase().trim();
         var tipo = ($('#cb_filter_tipo').val() || 'all').toLowerCase();
@@ -344,7 +356,7 @@ jQuery(function($){
             var $tr = $(this);
             var rowText = $tr.text().toLowerCase();
             var rowTipo = ($tr.children().eq(3).text() || '').toLowerCase().trim();
-            var rowEstado = $tr.find('td').eq(8).text().toUpperCase().trim();
+            var rowEstado = $tr.find('td').eq(7).text().toUpperCase().trim();
 
             var okQ = (q === '' || rowText.indexOf(q) !== -1);
             var okTipo = (tipo === 'all' || rowTipo === tipo);
@@ -360,15 +372,16 @@ jQuery(function($){
             console.log('Respuesta AJAX cuentas:', resp);
             if(!resp || !resp.status) {
                 console.error('Respuesta inválida o status false:', resp);
-                $('#cuentas-table tbody').html('<tr><td colspan="10" class="text-danger">Error: respuesta inválida del servidor</td></tr>');
+                $('#cuentas-table tbody').html('<tr><td colspan="9" class="text-danger">Error: respuesta inválida del servidor</td></tr>');
                 return;
             }
             var $tb = $('#cuentas-table tbody'); $tb.empty();
             if(!Array.isArray(resp.cuentas)) {
                 console.error('El campo cuentas no es un array:', resp.cuentas);
-                    $tb.html('<tr><td colspan="10" class="text-danger">Error: formato de cuentas incorrecto</td></tr>');
+                    $tb.html('<tr><td colspan="9" class="text-danger">Error: formato de cuentas incorrecto</td></tr>');
                 return;
             }
+            cuentasData = resp.cuentas;
             resp.cuentas.forEach(function(c){
                 var nombre = c.name || c.nombre || '';
                 var estado = (c.estado==1) ? '<span class="badge badge-success">ACTIVO</span>' : '<span class="badge badge-warning">INACTIVO</span>';
@@ -385,17 +398,20 @@ jQuery(function($){
                     saldo_usd = (saldoRaw / tasa).toLocaleString('en-US', {minimumFractionDigits: 2, maximumFractionDigits: 2});
                 }
 
-                var tr = '<tr data-id="'+c.id+'">'
+                var tipoRaw = (c.type || '').toString().trim().toLowerCase();
+                var tipoLabel = tipoRaw === 'banco' ? 'Banco' : tipoRaw === 'caja' ? 'Caja' : (tipoRaw.length > 0 ? tipoRaw.charAt(0).toUpperCase() + tipoRaw.slice(1) : '');
+
+                var saldoBtn = (defaultTipo !== 'all') ? '<button class="btn btn-sm btn-info btn-caja-saldo" data-id="'+c.id+'" data-currency="'+(c.currency||'')+'">Saldo</button> ' : '';
+                var tr = '<tr data-id="'+c.id+'">' 
                     +'<td>'+c.id+'</td>'
                     +'<td>'+ (c.code||'') +'</td>'
                     +'<td>'+ nombre +'</td>'
-                    +'<td>'+ (c.type||'') +'</td>'
+                    +'<td>'+ tipoLabel +'</td>'
                     +'<td>'+ (c.bank_name||'') +'</td>'
                     +'<td>'+ (c.account_number||'') +'</td>'
                     +'<td>'+ (c.currency||'') + (c.currency_symbol? ' ('+c.currency_symbol+')':'') +'</td>'
-                    +'<td class="text-right font-weight-bold">'+ saldo_nio + ' NIO<br><span style="color:#888;font-size:0.95em">' + saldo_usd + ' USD</span></td>'
                     +'<td>'+ estado +'</td>'
-                    +'<td><button class="btn btn-sm btn-info btn-edit" data-id="'+c.id+'">Editar</button> '
+                    +'<td>'+ saldoBtn +'<button class="btn btn-sm btn-info btn-edit" data-id="'+c.id+'">Editar</button> '
                     +'<a class="btn btn-sm btn-danger" href="<?php echo base_url('tesoreria/del_cuenta/'); ?>'+c.id+'" onclick="return confirm(\'Confirmar eliminación\')">Eliminar</a></td>'
                     +'</tr>';
                 $tb.append(tr);
@@ -405,12 +421,25 @@ jQuery(function($){
         })
         .fail(function(jqXHR, textStatus, errorThrown){
             console.error('Error AJAX:', textStatus, errorThrown, jqXHR.responseText);
-            $('#cuentas-table tbody').html('<tr><td colspan="10" class="text-danger">Error cargando cuentas (AJAX)</td></tr>');
+            $('#cuentas-table tbody').html('<tr><td colspan="9" class="text-danger">Error cargando cuentas (AJAX)</td></tr>');
         });
     }
 
     $('#cb_search, #cb_filter_tipo, #cb_filter_estado').on('input change', function(){
         applyClientFilters();
+    });
+
+    $(document).on('click', '.btn-caja-saldo', function(){
+        var id = $(this).data('id');
+        var caja = cuentasData.find(function(c){ return c.id == id; });
+        if (!caja) {
+            alert('No se encontraron datos de la caja.');
+            return;
+        }
+        var saldo = (typeof caja.saldo !== 'undefined' && !isNaN(parseFloat(caja.saldo))) ? parseFloat(caja.saldo) : 0;
+        var currency = caja.currency || 'NIO';
+        var saldoFormato = saldo.toLocaleString(currency === 'USD' ? 'en-US' : 'es-NI', {minimumFractionDigits: 2, maximumFractionDigits: 2});
+        alert('Saldo actual de ' + (caja.name || caja.nombre || 'caja desconocida') + ':\n' + currency + ' ' + saldoFormato);
     });
 
     $('#btnNewCuenta').on('click', function(){
@@ -435,56 +464,79 @@ jQuery(function($){
 
     $(document).on('click', '.btn-edit', function(){
         var id = $(this).data('id');
-        var $tr = $('tr[data-id="'+id+'"]');
-        $('#cuenta_id').val(id);
-        $('#cuenta_code').val($tr.children().eq(1).text().trim());
-        $('#cuenta_name').val($tr.children().eq(2).text().trim());
-        var tipo = $tr.children().eq(3).text().trim();
-        $('#cuenta_type').val(tipo);
+        // Obtener datos de la cuenta desde la BD
+        $.getJSON('<?php echo base_url('tesoreria/get_cuenta_by_id_ajax'); ?>', {cuenta_id: id}, function(resp){
+            if(!resp || !resp.status) {
+                alert('Error cargando datos de la cuenta');
+                return;
+            }
+            var c = resp.cuenta;
+            $('#cuenta_id').val(c.id);
+            $('#cuenta_code').val(c.code || '').prop('readonly', true).prop('disabled', true);
+            $('#cuenta_name').val(c.name || '');
+            $('#cuenta_type').val(c.type || 'caja');
+            if((c.type || '').toLowerCase() === 'banco') {
+                $('#cuenta_sig_cheque').prop('required', true).prop('readonly', true);
+                $.getJSON('<?php echo base_url('tesoreria/get_sig_cheque_ajax'); ?>', {cuenta_id: id}, function(resp) {
+                    if(resp && resp.status) {
+                        $('#cuenta_sig_cheque').val(resp.sig_cheque);
+                    }
+                });
+            } else {
+                $('#cuenta_sig_cheque').val('').prop('required', false).prop('readonly', true);
+            }
+            $('#cuenta_bank_name').val(c.bank_name || '');
+            $('#cuenta_account_number_1, #cuenta_account_number_2').val(c.account_number || '');
+            $('#cuenta_currency').val(c.currency || '');
+            $('#cuenta_currency_symbol').val(c.currency_symbol || '');
+            $('#cuenta_estado').val(c.estado == 1 ? '1' : '0');
+            $('#cuenta_formato').val(c.formato || '');
+            // Nuevos campos
+            $('#cuenta_fecha_apertura_tab1').val(c.fecha_apertura || '');
+            $('#cuenta_fecha_apertura_tab2').val(c.fecha_apertura || '');
+            $('#cuenta_clabe').val(c.clabe || '');
+            $('#cuenta_dia_corte').val(c.dia_corte || '');
+            $('#cuenta_ultimo_dia_mes').prop('checked', c.ultimo_dia_mes == 1);
+
+            $('#cuenta_clave_banco').val(c.clave_banco || '');
+            $('#cuenta_sucursal').val(c.sucursal || '');
+            $('#cuenta_funcionario').val(c.funcionario || '');
+            $('#cuenta_telefono').val(c.telefono || '');
+            $('#cuenta_contable').val(c.cuenta_contable || '');
+            $('#cuenta_banco_extranjero').prop('checked', c.banco_extranjero == 1);
+            // Bloquear saldo inicial en edición
+            $('#cuenta_saldo_inicial').prop('readonly', true).prop('disabled', true);
+            $('#cuentaModal').modal('show');
+        });
+    });
+
+    // Al cambiar tipo de cuenta, mostrar/ocultar y autollenar sig_cheque
+    $('#cuenta_type').on('change', function(){
+        var tipo = $(this).val();
         if(tipo === 'banco') {
-            var cuentaId = id;
             $('#cuenta_sig_cheque').prop('required', true).prop('readonly', true);
-            // Obtener siguiente cheque
-            $.getJSON('<?php echo base_url('tesoreria/get_sig_cheque_ajax'); ?>', {cuenta_id: cuentaId}, function(resp) {
-                if(resp && resp.status) {
-                    $('#cuenta_sig_cheque').val(resp.sig_cheque);
-                } else {
-                    $('#cuenta_sig_cheque').val('');
-                }
-            });
+            var cuentaId = $('#cuenta_id').val();
+            if(cuentaId) {
+                $.getJSON('<?php echo base_url('tesoreria/get_sig_cheque_ajax'); ?>', {cuenta_id: cuentaId}, function(resp) {
+                    if(resp && resp.status) {
+                        $('#cuenta_sig_cheque').val(resp.sig_cheque);
+                    }
+                });
+            } else {
+                $('#cuenta_sig_cheque').val('1');
+            }
         } else {
             $('#cuenta_sig_cheque').val('').prop('required', false).prop('readonly', true);
         }
-            // Al cambiar tipo de cuenta, mostrar/ocultar y autollenar sig_cheque
-            $('#cuenta_type').on('change', function(){
-                var tipo = $(this).val();
-                if(tipo === 'banco') {
-                    $('#cuenta_sig_cheque').prop('required', true).prop('readonly', true);
-                    // Si es edición, usar el id actual
-                    var cuentaId = $('#cuenta_id').val();
-                    if(cuentaId) {
-                        $.getJSON('<?php echo base_url('tesoreria/get_sig_cheque_ajax'); ?>', {cuenta_id: cuentaId}, function(resp) {
-                            if(resp && resp.status) {
-                                $('#cuenta_sig_cheque').val(resp.sig_cheque);
-                            } else {
-                                $('#cuenta_sig_cheque').val('');
-                            }
-                        });
-                    } else {
-                        $('#cuenta_sig_cheque').val('1');
-                    }
-                } else {
-                    $('#cuenta_sig_cheque').val('').prop('required', false).prop('readonly', true);
-                }
-            });
-        $('#cuenta_bank_name').val($tr.children().eq(4).text().trim());
-        $('#cuenta_account_number_1, #cuenta_account_number_2').val($tr.children().eq(5).text().trim());
-        var cur = $tr.children().eq(6).text().trim(); $('#cuenta_currency').val(cur.split(' ')[0] || '');
-        $('#cuenta_currency_symbol').val((/\((.*)\)/.exec(cur)||[])[1]||'');
-        $('#cuenta_estado').val($tr.children().eq(7).text().indexOf('ACTIVO')>-1?1:0);
-        // Bloquear saldo inicial en edición
-        $('#cuenta_saldo_inicial').prop('readonly', true).prop('disabled', true);
-        $('#cuentaModal').modal('show');
+    });
+
+    // Sincronizar Fecha de apertura entre ambas pestañas
+    $(document).on('change', '#cuenta_fecha_apertura_tab1', function(){
+        $('#cuenta_fecha_apertura_tab2').val($(this).val());
+    });
+    
+    $(document).on('change', '#cuenta_fecha_apertura_tab2', function(){
+        $('#cuenta_fecha_apertura_tab1').val($(this).val());
     });
 
     $('#cuenta_save').on('click', function(){
@@ -496,9 +548,21 @@ jQuery(function($){
             var v = el.val();
             return (typeof v === 'string') ? v.trim() : '';
         }
-        // Si formato está vacío, enviar null
-        var formato = safeVal('#cuenta_formato');
-        if(formato === '') formato = null;
+        // Helper para valores numéricos
+        function safeNum(sel) {
+            var v = safeVal(sel);
+            return v === '' ? null : parseInt(v, 10);
+        }
+        // Helper para valores flotantes
+        function safeFloat(sel) {
+            var v = safeVal(sel);
+            return v === '' ? null : parseFloat(v);
+        }
+        // Helper para checkbox
+        function safeCheckbox(sel) {
+            return $(sel).is(':checked') ? 1 : 0;
+        }
+        
         var payload = {
             id: id,
             // code no se envía, es automático
@@ -509,11 +573,23 @@ jQuery(function($){
             currency: safeVal('#cuenta_currency'),
             currency_symbol: safeVal('#cuenta_currency_symbol'),
             estado: safeVal('#cuenta_estado'),
-            formato: formato
+            formato: safeVal('#cuenta_formato') || null,
+            // Nuevos campos - usar tab1, pero ambas están sincronizadas
+            fecha_apertura: safeVal('#cuenta_fecha_apertura_tab1') || null,
+            clabe: safeVal('#cuenta_clabe') || null,
+            dia_corte: safeNum('#cuenta_dia_corte'),
+            ultimo_dia_mes: safeCheckbox('#cuenta_ultimo_dia_mes'),
+            clave_banco: safeVal('#cuenta_clave_banco') || null,
+            sucursal: safeVal('#cuenta_sucursal') || null,
+            funcionario: safeVal('#cuenta_funcionario') || null,
+            telefono: safeVal('#cuenta_telefono') || null,
+            cuenta_contable: safeVal('#cuenta_contable') || null,
+            banco_extranjero: safeCheckbox('#cuenta_banco_extranjero'),
+            sig_cheque: safeNum('#cuenta_sig_cheque')
         };
         // Solo enviar saldo_inicial si es alta (no edición)
         if(!id){
-            payload.saldo_inicial = safeVal('#cuenta_saldo_inicial');
+            payload.saldo_inicial = safeFloat('#cuenta_saldo_inicial');
         }
         // No hay campos obligatorios
         $.post('<?php echo base_url('tesoreria/save_cuenta_ajax'); ?>', payload).done(function(resp){

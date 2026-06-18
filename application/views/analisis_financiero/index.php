@@ -67,7 +67,7 @@
                                             <?php $rowClass = ($s->aprob_status === 'annulled') ? 'table-secondary' : ''; ?>
                                             <tr class="<?php echo $rowClass; ?>">
                                                 <td><?php echo $s->idsolicitud; ?></td>
-                                                <td><?php echo trim($s->apellidos . ' ' . $s->nombres); ?></td>
+                                                <td><?php echo trim($s->nombres . ' ' . $s->apellidos); ?></td>
                                                 <td><?php echo 'SOL-' . str_pad($s->idsolicitud, 4, '0', STR_PAD_LEFT); ?></td>
                                                 <td><?php echo isset($s->fecha_solicitud) ? $s->fecha_solicitud : (isset($s->fecha_recepcion) ? $s->fecha_recepcion : ''); ?></td>
                                                 <td><?php echo html_escape(isset($s->rubro_credito) ? $s->rubro_credito : ''); ?></td>
@@ -81,8 +81,10 @@
                                                     <?php if($s->aprob_status=='annulled'): ?>
                                                         <span class="text-muted">Crédito anulado</span>
                                                     <?php else: ?>
-                                                        <button class="btn btn-sm btn-info btn-comerciante" data-id="<?php echo $s->idsolicitud; ?>" data-tipo="comerciante"><i class="fa fa-user-tie"></i> Comerciante</button>
-                                                        <button class="btn btn-sm btn-warning btn-asalariado" data-id="<?php echo $s->idsolicitud; ?>" data-tipo="asalariado"><i class="fa fa-store"></i> Asalariado</button>
+                                                        <div class="btn-actions">
+                                                            <button class="btn btn-sm btn-info btn-comerciante" data-id="<?php echo $s->idsolicitud; ?>" data-tipo="comerciante"><i class="fa fa-user-tie"></i> Comerciante</button>
+                                                            <button class="btn btn-sm btn-warning btn-asalariado" data-id="<?php echo $s->idsolicitud; ?>" data-tipo="asalariado"><i class="fa fa-store"></i> Asalariado</button>
+                                                        </div>
                                                     <?php endif; ?>
                                                 </td>
                                             </tr>
@@ -144,6 +146,24 @@
     }
     #modalAnalisisFinanciero .modal-body .row > [class*="col-"] {
         min-width: 0;
+    }
+    #tabla_solicitudes_pendientes td .btn-actions {
+        display: inline-flex;
+        flex-wrap: nowrap;
+        gap: .35rem;
+        white-space: nowrap;
+        align-items: center;
+    }
+    #tabla_solicitudes_pendientes th:nth-child(5),
+    #tabla_solicitudes_pendientes td:nth-child(5) {
+        width: 14%;
+        max-width: 140px;
+        white-space: normal;
+    }
+    #tabla_solicitudes_pendientes th:nth-child(8),
+    #tabla_solicitudes_pendientes td:nth-child(8) {
+        width: 20%;
+        min-width: 170px;
     }
 </style>
 <?php $this->load->view('layout/footer'); ?>
@@ -438,11 +458,15 @@ $('#btnGuardarAnalisis').on('click', function() {
             if (resp.status) {
                 alert('Análisis financiero guardado correctamente');
                 $('#modalAnalisisFinanciero').modal('hide');
-                // Descargar PDF automáticamente si es asalariado
+                var idsol = $('#idsolicitud_modal').val();
+                // Descargar PDF automáticamente según el tipo
                 if (tipo === 'asalariado') {
-                    var idsol = $('#idsolicitud_modal').val();
                     setTimeout(function() {
                         window.open(base_url + 'analisis_financiero/descargar_pdf_asalariado/' + idsol, '_blank');
+                    }, 500);
+                } else if (tipo === 'comerciante') {
+                    setTimeout(function() {
+                        window.open(base_url + 'analisis_financiero/descargar_pdf_comerciante/' + idsol, '_blank');
                     }, 500);
                 }
             } else {
@@ -510,7 +534,7 @@ function renderCamposAsalariado() {
                 <input type="number" min="0" step="any" class="form-control suma-gastos-familiares" name="gastos_alquiler" id="gastos_alquiler" value="0">
             </div>
             <div class="col-md-6 mb-2">
-                <label><b>L. Pago de empleado + viatico</b></label>
+                <label><b>L. Salud / Medicinas</b></label>
                 <input type="number" min="0" step="any" class="form-control suma-gastos-familiares" name="pago_empleado_viatico" id="pago_empleado_viatico" value="0">
             </div>
             <div class="col-md-6 mb-2">
@@ -518,7 +542,7 @@ function renderCamposAsalariado() {
                 <input type="number" min="0" step="any" class="form-control suma-gastos-familiares" name="entretenimiento" id="entretenimiento" value="0">
             </div>
             <div class="col-md-6 mb-2">
-                <label><b>Q. Otros Gastos (Especifique) pago de trabajador+viatico de transporte</b></label>
+                <label><b>Q. Otros Gastos (Especifique) pago de trabajador+viático de transporte</b></label>
                 <input type="number" min="0" step="any" class="form-control suma-gastos-familiares" name="otros_gastos" id="otros_gastos" value="0">
             </div>
             <div class="col-md-6 mb-2">
@@ -529,7 +553,7 @@ function renderCamposAsalariado() {
         <hr/>
         <div class="row">
             <div class="col-md-6 mb-2">
-                <label><b>M. Abono o cuotas de prestamos o deudas con instituciones financieras, casas comerciales o particulares</b></label>
+                <label><b>M. Abono o cuotas de préstamos o deudas con instituciones financieras, casas comerciales o particulares</b></label>
                 <input type="number" min="0" step="any" class="form-control suma-otras-obligaciones" name="cuotas_prestamos" id="cuotas_prestamos" value="0">
             </div>
             <div class="col-md-6 mb-2">
@@ -635,10 +659,6 @@ function renderCamposAsalariado() {
             <div class="col-md-6 mb-2">
                 <label><b>T/C Acumulado de liquidación</b></label>
                 <input type="number" min="0" step="any" class="form-control" name="tc_acumulado" id="tc_acumulado" value="0">
-            </div>
-            <div class="col-md-6 mb-2">
-                <label><b>P. Entretenimiento (incluye gastos derivados del uso celulares e internet)</b></label>
-                <input type="number" min="0" step="any" class="form-control" name="p_entretenimiento" id="p_entretenimiento" value="0">
             </div>
             <div class="col-md-6 mb-2">
                 <label><b>Total de Deuda a Creditar</b></label>

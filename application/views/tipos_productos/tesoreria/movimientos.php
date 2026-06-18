@@ -106,7 +106,8 @@
                                                 <select name="cuenta_id" id="mov_cuenta_id" class="form-control" required>
                                                     <option value="">Selecciona una cuenta</option>
                                                     <?php if (isset($cuentas) && is_array($cuentas)) foreach($cuentas as $c): ?>
-                                                        <option value="<?= htmlspecialchars($c->id) ?>"><?= htmlspecialchars($c->name) ?> (<?= htmlspecialchars($c->account_number) ?>)</option>
+                                                        <?php $account_type = isset($c->type) ? $c->type : (isset($c->tipo) ? $c->tipo : ''); ?>
+                                                        <option value="<?= htmlspecialchars($c->id) ?>" data-account-type="<?= htmlspecialchars($account_type) ?>"><?= htmlspecialchars($c->name) ?> (<?= htmlspecialchars($c->account_number) ?>)</option>
                                                     <?php endforeach; ?>
                                                 </select>
                                             </div>
@@ -247,6 +248,12 @@
                             <label>IVA Total</label>
                             <input name="iva_total" id="mov_iva_total" class="form-control" type="number" step="0.01" min="0" />
                         </div>
+                        <div class="form-group col-md-6">
+                            <label>Previsualización</label>
+                            <div id="preview_movimiento_tipo" class="alert alert-info" style="margin: 0; padding: 8px 12px;">
+                                Selecciona un concepto y monto para ver dónde irá el movimiento
+                            </div>
+                        </div>
                         <!-- Campo Centro de Costos oculto por solicitud -->
                     </div>
                     <div class="form-row">
@@ -381,6 +388,40 @@ jQuery(function($){
     }
     cargarConceptos();
 
+    // Función para actualizar la previsualización del movimiento en tiempo real
+    function actualizarPreviewMovimiento() {
+        var concepto_txt = $('#mov_concepto option:selected').text() || '';
+        var monto = parseFloat($('#mov_monto_total').val() || '0.00');
+        var $preview = $('#preview_movimiento_tipo');
+        
+        if (!concepto_txt || monto === 0) {
+            $preview.html('Selecciona un concepto y monto para ver dónde irá el movimiento');
+            $preview.removeClass('alert-success alert-danger').addClass('alert-info');
+            return;
+        }
+        
+        // Determinar si es CARGO o ABONO basado en el texto del concepto
+        var tipo_concepto = concepto_txt.toUpperCase().includes('CARGO') ? 'CARGO' : 'ABONO';
+        var monto_formateado = monto.toFixed(2);
+        
+        if (tipo_concepto === 'CARGO') {
+            $preview.html('<strong>📊 Este movimiento será un CARGO de:</strong> <strong style="color: #dc3545;">$' + monto_formateado + '</strong> (Columna: Cargo)');
+            $preview.removeClass('alert-info alert-success').addClass('alert-danger');
+        } else {
+            $preview.html('<strong>📊 Este movimiento será un ABONO de:</strong> <strong style="color: #28a745;">$' + monto_formateado + '</strong> (Columna: Abono)');
+            $preview.removeClass('alert-info alert-danger').addClass('alert-success');
+        }
+    }
+
+    // Event listeners para actualizar la previsualización cuando cambia el concepto o el monto
+    $('#mov_concepto').on('change', function() {
+        actualizarPreviewMovimiento();
+    });
+
+    $('#mov_monto_total').on('input change', function() {
+        actualizarPreviewMovimiento();
+    });
+
     // Mostrar modal para agregar concepto
     $('#btnAddConcepto').on('click', function(){
         var $form = $('#formConcepto');
@@ -423,17 +464,53 @@ jQuery(function($){
         $('#btnNuevoMovimiento').on('click', function(){
             $('#formMovimiento')[0].reset();
             $('.transferencia-only').hide();
+            $('.cheque-only').hide();
+            actualizarPreviewMovimiento();
             $('#modalMovimiento').modal('show');
-            // Disparar el evento para que se llene el número de cheque si corresponde
-            setTimeout(function(){
-                $('#mov_forma_pago').val('Cheque').trigger('change');
-                $('#mov_cuenta_id').trigger('change');
-            }, 200);
+            $('#mov_cuenta_id').trigger('change');
         });
+        function actualizarOpcionesFormaPago() {
+            var selected = $('#mov_cuenta_id option:selected');
+            var accountType = (selected.data('account-type') || '').toString().toLowerCase();
+            var $formaPago = $('#mov_forma_pago');
+            var current = $formaPago.val();
+            var opciones = [];
+            if (accountType === 'caja') {
+                opciones = [
+                    { value: 'Efectivo', label: 'Efectivo' }
+                ];
+            } else if (accountType === 'banco') {
+                opciones = [
+                    { value: 'Transferencia', label: 'Transferencia' },
+                    { value: 'Cheque', label: 'Cheque' },
+                    { value: 'Traslado', label: 'Traslado entre cuentas' }
+                ];
+            } else {
+                opciones = [
+                    { value: 'Efectivo', label: 'Efectivo' },
+                    { value: 'Transferencia', label: 'Transferencia' },
+                    { value: 'Cheque', label: 'Cheque' },
+                    { value: 'Traslado', label: 'Traslado entre cuentas' }
+                ];
+            }
+            $formaPago.empty();
+            opciones.forEach(function(opt){
+                $formaPago.append('<option value="'+opt.value+'">'+opt.label+'</option>');
+            });
+            if (opciones.some(function(opt){ return opt.value === current; })) {
+                $formaPago.val(current);
+            } else {
+                $formaPago.val(opciones[0].value);
+            }
+        }
+
         $('#mov_forma_pago, #mov_cuenta_id').on('change', function(){
+            if ($(this).is('#mov_cuenta_id')) {
+                actualizarOpcionesFormaPago();
+            }
             var forma = $('#mov_forma_pago').val();
             var cuenta_id = $('#mov_cuenta_id').val();
-            if(forma === 'Transferencia') {
+            if(forma === 'Transferencia' || forma === 'Traslado') {
                 $('.transferencia-only').show();
             } else {
                 $('.transferencia-only').hide();
@@ -606,6 +683,8 @@ jQuery(function($){
                 } else {
                     $('.transferencia-only').hide();
                 }
+                // Actualizar la previsualización del movimiento
+                actualizarPreviewMovimiento();
                 $('#modalMovimiento').modal('show');
                 // Guardar edición
                 $('#btnGuardarMovimiento').off('click').on('click', function(){

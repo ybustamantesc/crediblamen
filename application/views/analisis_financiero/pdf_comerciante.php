@@ -256,6 +256,8 @@
         <tr><td style="background:yellow;">Seguridad:</td><td style="background:yellow;">C$ <?= number_format($analisis['gasto_seguridad'] ?? 0, 2) ?></td></tr>
         <tr><td style="background:yellow;">Limpieza y mantenimiento:</td><td style="background:yellow;">C$ <?= number_format($analisis['gasto_limpieza'] ?? 0, 2) ?></td></tr>
         <tr><td>Gastos personales básicos:</td><td>C$ <?= number_format($analisis['gasto_personal'] ?? 0, 2) ?></td></tr>
+        <tr><td>Salario de Ayudante Empleado:</td><td>C$ <?= number_format($analisis['gasto_salario_ayudante'] ?? $analisis['costo_salario_ayudante'] ?? 0, 2) ?></td></tr>
+        <tr><td>Transporte:</td><td>C$ <?= number_format($analisis['costo_transporte'] ?? 0, 2) ?></td></tr>
         <tr><th>Total</th><th>C$ <?= number_format(
             ($analisis['gasto_local_alquiler'] ?? 0) +
             ($analisis['gasto_energia'] ?? 0) +
@@ -263,7 +265,9 @@
             ($analisis['gasto_internet'] ?? 0) +
             ($analisis['gasto_seguridad'] ?? 0) +
             ($analisis['gasto_limpieza'] ?? 0) +
-            ($analisis['gasto_personal'] ?? 0)
+            ($analisis['gasto_personal'] ?? 0) +
+            ($analisis['gasto_salario_ayudante'] ?? $analisis['costo_salario_ayudante'] ?? 0) +
+            ($analisis['costo_transporte'] ?? 0)
         , 2) ?></th></tr>
     </table>
     <h3 style="background:#073048; color:#fff; text-align:center; padding:6px; margin-top:30px;">Costos de Operación Directos</h3>

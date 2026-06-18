@@ -1,3 +1,6 @@
 ALTER TABLE teso_movimientos 
 ADD COLUMN cuenta_destino INT(11) NULL,
-ADD COLUMN tipo_transferencia VARCHAR(50) NULL;
+ADD COLUMN tipo_transferencia VARCHAR(50) NULL,
+ADD COLUMN comision DECIMAL(18,2) NULL DEFAULT 0.00,
+ADD COLUMN id_transaccion VARCHAR(100) NULL,
+ADD COLUMN tasa_cambio DECIMAL(18,4) NULL DEFAULT NULL;

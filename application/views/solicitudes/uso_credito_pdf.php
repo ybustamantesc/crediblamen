@@ -14,11 +14,12 @@
         .logo { float:right; }
         .clear { clear:both; }
 
-        .section-title { margin-top:8px; font-size:11px; font-weight:700; color:#fff; background:#0b3d91; padding:6px 8px; }
+        .section-title { margin-top:8px; font-size:11px; font-weight:700; color:#fff; background:#0b3d91; padding:6px 8px; page-break-after: avoid; break-after: avoid; }
 
-        .section { margin-bottom: 8px; padding:8px 6px; }
+        .section { margin-bottom: 8px; padding:8px 6px; page-break-inside: avoid; break-inside: avoid; }
+        .section.section-break-before { page-break-before: always; break-before: page; }
         .label { font-weight:700; display:block; margin-bottom:4px; color:#222; }
-        .box { border:1px solid #e6e6e6; padding:8px; background:#fff; line-height:1.35; min-height:26px; word-wrap:break-word; white-space:pre-wrap; box-sizing:border-box; }
+        .box { border:1px solid #e6e6e6; padding:8px; background:#fff; line-height:1.35; min-height:26px; word-wrap:break-word; white-space:pre-wrap; box-sizing:border-box; page-break-inside: avoid; break-inside: avoid; }
         .decl-box { font-size:11px; line-height:1.35; word-wrap:break-word; overflow-wrap:break-word; hyphens:auto; max-width:100%; box-sizing:border-box; }
         .decl-box p { margin:0 0 6px 0; }
         .cols { width:100%; border-collapse:collapse; }
@@ -68,7 +69,6 @@
             <div class="detail"><strong>Nombre Completo:</strong> <?php echo isset($solicitud->nombres) ? htmlspecialchars(trim($solicitud->nombres . ' ' . $solicitud->apellidos)) : '<span class="small text-muted">(sin datos)</span>'; ?></div>
             <div class="detail"><strong>Número de Identificación:</strong> <?php echo isset($solicitud->cedula) ? htmlspecialchars($solicitud->cedula) : (isset($solicitud->numero_identificacion) ? htmlspecialchars($solicitud->numero_identificacion) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
             <div class="detail"><strong>Teléfono de Contacto:</strong> <?php echo isset($solicitud->telefono) ? htmlspecialchars($solicitud->telefono) : (isset($solicitud->celular) ? htmlspecialchars($solicitud->celular) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
-            <div class="detail"><strong>Correo Electrónico:</strong> <?php echo isset($solicitud->email) ? htmlspecialchars($solicitud->email) : (isset($solicitud->correo_electronico) ? htmlspecialchars($solicitud->correo_electronico) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
             <div class="detail"><strong>Fecha de Solicitud:</strong> <?php echo isset($solicitud->fecha_solicitud) ? htmlspecialchars($solicitud->fecha_solicitud) : (isset($solicitud->fecha_recepcion) ? htmlspecialchars($solicitud->fecha_recepcion) : '<span class="small text-muted">(sin datos)</span>'); ?></div>
         </div>
     </div>
@@ -124,7 +124,7 @@
         </div>
     </div>
 
-    <div class="section">
+    <div class="section section-break-before">
         <div class="section-title">PLAN DE PAGOS (si aplica)</div>
         <div class="box">
             <div class="detail"><strong>Fuente de ingreso para el pago:</strong> <?php echo isset($uso->fuente_ingreso) && trim($uso->fuente_ingreso) !== '' ? nl2br(htmlspecialchars($uso->fuente_ingreso)) : '<span class="small text-muted">(sin datos)</span>'; ?></div>

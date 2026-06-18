@@ -19,8 +19,13 @@
                 });
             } catch (err) { console.error('PerfectScrollbar init sidebar error', err); }
         }
-        t.on("click", ".navigation-main .nav-item a", function() {
+        t.on("click", ".navigation-main .nav-item a", function(s) {
             var e = i(this).parent(".nav-item");
+            if (e.hasClass("has-sub")) {
+                s.preventDefault();
+                s.stopPropagation();
+                s.stopImmediatePropagation();
+            }
             if (e.hasClass("has-sub") && e.hasClass("open")) a(e);
             else {
                 if (e.hasClass("has-sub") && function(e, s) {

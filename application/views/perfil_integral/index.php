@@ -182,19 +182,38 @@
                             /* Keep table visible in mobile and hide cards so DataTables pagination works consistently */
                             #perfil-table-wrap { display: block !important; }
                             #perfil-cards-wrap { display: none !important; }
-                            /* Hide # column to save space for action buttons */
-                            #perfil-table th:first-child, #perfil-table td:first-child { display: none; }
+                            /* Hide #, Solicitud and Destino Conami columns to save horizontal space */
+                            #perfil-table th:first-child, #perfil-table td:first-child,
+                            #perfil-table th:nth-child(2), #perfil-table td:nth-child(2),
+                            #perfil-table th:nth-child(7), #perfil-table td:nth-child(7) { display: none; }
+                            #perfil-table { table-layout: fixed; }
+                            #perfil-table th:last-child, #perfil-table td:last-child {
+                                width: auto !important;
+                                min-width: 0 !important;
+                                white-space: normal !important;
+                            }
                             #perfil-table td:last-child {
                                 padding: .08rem .15rem !important;
                             }
                             #perfil-table td:last-child .btn {
-                                padding: .08rem .18rem !important;
-                                font-size: .65rem !important;
-                                min-width: auto !important;
+                                padding: .10rem .14rem !important;
+                                font-size: .68rem !important;
+                                min-width: 0 !important;
                                 line-height: 1 !important;
+                                width: 100% !important;
+                                white-space: normal !important;
+                                overflow-wrap: break-word !important;
+                                word-break: break-word !important;
                             }
                             .perfil-actions {
-                                gap: .04rem !important;
+                                gap: .08rem !important;
+                                flex-direction: column !important;
+                                align-items: stretch !important;
+                            }
+                            .perfil-actions .btn {
+                                display: block !important;
+                                width: 100% !important;
+                                text-align: center !important;
                             }
                         }
                         @media (min-width: 768px) {

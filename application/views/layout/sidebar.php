@@ -1,10 +1,10 @@
-	<div class="nav-item <?php echo ($this->router->fetch_class() == 'analisis_financiero' ? 'active' : ''); ?>">
-		<a href="<?php echo base_url('analisis_financiero'); ?>"><i class="fa fa-file-alt"></i><span>6. Análisis Financiero</span></a>
+﻿	<div class="nav-item <?php echo ($this->router->fetch_class() == 'analisis_financiero' ? 'active' : ''); ?>">
+		<a href="<?php echo base_url('analisis_financiero'); ?>"><i class="fa fa-file-alt"></i><span>6. AnÃ¡lisis Financiero</span></a>
 	</div>
 <?php $is_home = ($this->router->fetch_class() == 'home'); ?>
 <div class="app-sidebar colored <?php echo ($this->router->fetch_class() == 'tesoreria' ? 'sidebar-teso' : ''); ?>">
 	<style>
-		/* GENERIC SIDEBAR STYLES - Apply to all modules, not just tesorería */
+		/* GENERIC SIDEBAR STYLES - Apply to all modules, not just tesorerÃ­a */
 		.app-sidebar .navigation-main .nav-item a {
 			display: flex !important;
 			align-items: center !important;
@@ -37,6 +37,11 @@
 		.app-sidebar .navigation-main .nav-item a:hover span,
 		.app-sidebar .navigation-main .nav-item.active > a span {
 			color: #ffffff !important;
+		}
+
+		.app-sidebar .navigation-main .nav-item.has-sub > a.menu-group-title,
+		.app-sidebar .navigation-main .nav-item.has-sub > a.menu-group-title span {
+			color: #1f2937 !important;
 		}
 
 		/* Generic menu items (used in Consultas and other dropdowns) */
@@ -98,7 +103,7 @@
 			color: #ffffff !important;
 		}
 
-		/* Improve sidebar readability for tesorería and preserve colored sidebar aesthetic */
+		/* Improve sidebar readability for tesorerÃ­a and preserve colored sidebar aesthetic */
 		.app-sidebar.sidebar-teso .sidebar-header {
 			background-color: #272d36 !important;
 		}
@@ -150,7 +155,7 @@
 			color: #ffffff !important;
 		}
 
-		/* Tesorería: menú tipo botones (coordinado con otros módulos) */
+		/* TesorerÃ­a: menÃº tipo botones (coordinado con otros mÃ³dulos) */
 		.app-sidebar.sidebar-teso .navigation-main .nav-item.has-sub .submenu-content {
 			background-color: #4a5872 !important;
 			padding: 12px 12px !important;
@@ -285,7 +290,7 @@ try {
 }
 ?>
 
-<?php /* When inside the Administración module we render only the shortcuts (Atajos)
+<?php /* When inside the AdministraciÃ³n module we render only the shortcuts (Atajos)
    server-side to avoid flicker and to keep the sidebar focused. */ ?>
 
 <div class="sidebar-content">
@@ -300,7 +305,7 @@ try {
 				</div>
 
 				<div class="nav-item <?php echo ($this->router->fetch_class() == 'administracion' && $this->router->fetch_method() == 'usuarios' ? 'active' : ''); ?>">
-					<a href="<?php echo base_url('administracion/usuarios'); ?>"><i class="ik ik-users"></i><span>Gestión de Usuarios</span></a>
+					<a href="<?php echo base_url('administracion/usuarios'); ?>"><i class="ik ik-users"></i><span>GestiÃ³n de Usuarios</span></a>
 				</div>
 
 				<div class="nav-item <?php echo ($this->router->fetch_class() == 'administracion' && $this->router->fetch_method() == 'roles' ? 'active' : ''); ?>">
@@ -308,7 +313,7 @@ try {
 				</div>
 
 				<div class="nav-item <?php echo ($this->router->fetch_class() == 'administracion' && $this->router->fetch_method() == 'configuracion' ? 'active' : ''); ?>">
-					<a href="<?php echo base_url('administracion/configuracion'); ?>"><i class="ik ik-settings"></i><span>Configuración General</span></a>
+					<a href="<?php echo base_url('administracion/configuracion'); ?>"><i class="ik ik-settings"></i><span>ConfiguraciÃ³n General</span></a>
 				</div>
 
 				<div class="nav-item <?php echo ($this->router->fetch_class() == 'administracion' && $this->router->fetch_method() == 'seguridad' ? 'active' : ''); ?>">
@@ -328,14 +333,14 @@ try {
 
 		<div class="nav-container">
 			<nav id="main-menu-navigation" class="navigation-main">
-				<div class="nav-lavel">MENÚ PRINCIPAL</div>
-				<?php // Mostrar menú de Contabilidad siempre que estemos en ese módulo para facilitar navegación ?>
+				<div class="nav-lavel">MENÃš PRINCIPAL</div>
+				<?php // Mostrar menÃº de Contabilidad siempre que estemos en ese mÃ³dulo para facilitar navegaciÃ³n ?>
 				<?php if (isset($is_contab) && $is_contab) : ?>
 					<div class="nav-item has-sub active open">
 						<a href="#"><i class="fas fa-calculator"></i><span>Contabilidad</span></a>
 						<div class="submenu-content">
 							<a href="<?php echo base_url('contabilidad'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'index' ? 'active' : ''); ?>">Inicio</a>
-							<a href="<?php echo base_url('contabilidad/catalogo'); ?>" class="menu-item">Catálogo de Cuentas</a>
+							<a href="<?php echo base_url('contabilidad/catalogo'); ?>" class="menu-item">CatÃ¡logo de Cuentas</a>
 							<!-- Transacciones label + enlaces (visible dentro de Contabilidad) -->
 							<div style="padding:6px 14px 0 14px; color:#444; font-weight:600;">Transacciones</div>
 							<a href="<?php echo base_url('contabilidad/diario'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'diario' ? 'active' : ''); ?>">Libro Diario</a>
@@ -344,17 +349,17 @@ try {
 							<a href="<?php echo base_url('contabilidad/balance'); ?>" class="menu-item">Balance General</a>
 							<a href="<?php echo base_url('contabilidad/resultados'); ?>" class="menu-item">Estado de Resultados</a>
 							<a href="<?php echo base_url('contabilidad/flujo'); ?>" class="menu-item">Flujo de Efectivo</a>
-							<a href="<?php echo base_url('contabilidad/revaluacion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'revaluacion' ? 'active' : ''); ?>">Reevaluación del Dólar</a>
+							<a href="<?php echo base_url('contabilidad/revaluacion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'revaluacion' ? 'active' : ''); ?>">ReevaluaciÃ³n del DÃ³lar</a>
 						</div>
 					</div>
 				<?php endif; ?>
 					<?php /* perfil already defined above */ ?>
 					<?php
-					// Fallback: si la lógica de roles no imprime elementos, mostrar enlaces esenciales
+					// Fallback: si la lÃ³gica de roles no imprime elementos, mostrar enlaces esenciales
 					$has_role_menu = (
 						($perfil === 1) || ($perfil === 2) || (! empty($is_promotor)) || (! empty($is_admin)) || $is_contab || $is_pld || $is_teso || $is_konami
 					);
-					// Menú fallback oculto - se usa el menú específico por perfil
+					// MenÃº fallback oculto - se usa el menÃº especÃ­fico por perfil
 					if (false && ! $has_role_menu) : ?>
 						<div class="nav-item">
 							<a href="<?php echo base_url('/'); ?>"><i class="ik ik-home"></i><span>Inicio</span></a>
@@ -397,24 +402,39 @@ try {
 							<a href="<?php echo base_url('pld/alertas'); ?>" class="menu-item">Alertas</a>
 							<a href="<?php echo base_url('pld/reportes'); ?>" class="menu-item">Reportes</a>
 							<a href="<?php echo base_url('pld/expediente'); ?>" class="menu-item">Expediente</a>
-							<a href="<?php echo base_url('pld/bitacora'); ?>" class="menu-item">Bitácora</a>
+							<a href="<?php echo base_url('pld/bitacora'); ?>" class="menu-item">BitÃ¡cora</a>
 						</div>
 					</div>
 					<?php elseif ($is_teso) : ?>
+					<div class="nav-item has-sub <?php echo ((in_array($this->router->fetch_method(), array('bancos','conciliacion','reporte_bancos')) || ($this->router->fetch_method() == 'movimientos' && $this->input->get('modo') === 'banco')) ? 'active open' : ''); ?>">
+						<a href="#" class="menu-group-title"><i class="fas fa-university"></i><span>Banco</span></a>
+						<div class="submenu-content">
+							<a href="<?php echo base_url('tesoreria/bancos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'bancos' ? 'active' : ''); ?>"><i class="fas fa-university"></i><span>Banco</span></a>
+							<a href="<?php echo base_url('tesoreria/movimientos?modo=banco'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'movimientos' && $this->input->get('modo') === 'banco' ? 'active' : ''); ?>"><i class="fas fa-file-invoice"></i><span>Movimientos</span></a>
+					<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'conciliacion' ? 'active' : ''); ?>"><i class="fas fa-file-alt"></i><span>Estados de Cuenta</span></a>
+							<a href="<?php echo base_url('tesoreria/reporte_bancos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'reporte_bancos' ? 'active' : ''); ?>"><i class="fas fa-chart-bar"></i><span>Reporte de Bancos</span></a>
+						</div>
+					</div>
+					<div class="nav-item has-sub <?php echo (in_array($this->router->fetch_method(), array('cajas','pagos','movimientos','arqueos','cobros','reporte_caja')) ? 'active open' : ''); ?>">
+						<a href="#" class="menu-group-title"><i class="fas fa-cash-register"></i><span>Caja</span></a>
+						<div class="submenu-content">
+							<a href="<?php echo base_url('tesoreria/cajas'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cajas' ? 'active' : ''); ?>"><i class="fas fa-cash-register"></i><span>Caja</span></a>
+							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'pagos' ? 'active' : ''); ?>"><i class="fas fa-credit-card"></i><span>Pagos de CrÃ©dito</span></a>
+					<a href="<?php echo base_url('tesoreria/movimientos?modo=caja'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'movimientos' && $this->input->get('modo') === 'caja' ? 'active' : ''); ?>"><i class="fas fa-file-invoice"></i><span>Movimientos</span></a>
+							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'arqueos' ? 'active' : ''); ?>"><i class="fas fa-coins"></i><span>Arqueo de CrÃ©ditos</span></a>
+							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cobros' ? 'active' : ''); ?>"><i class="fas fa-hand-holding-usd"></i><span>Cobros</span></a>
+							<a href="<?php echo base_url('tesoreria/reporte_caja'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'reporte_caja' ? 'active' : ''); ?>"><i class="fas fa-chart-bar"></i><span>Reporte de Caja</span></a>
+						</div>
+					</div>
 					<div class="nav-item has-sub active open">
-						<a href="#"><i class="fas fa-wallet"></i><span>Tesorería</span></a>
+						<a href="#"><i class="fas fa-wallet"></i><span>TesorerÃ­a</span></a>
 						<div class="submenu-content">
 							<a href="<?php echo base_url('tesoreria'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'index' ? 'active' : ''); ?>"><i class="fas fa-home"></i><span>Inicio</span></a>
-							<a href="<?php echo base_url('tesoreria/cajas_bancos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cajas_bancos' ? 'active' : ''); ?>"><i class="fas fa-university"></i><span>Bancario</span></a>
-							<a href="<?php echo base_url('tesoreria/movimientos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'movimientos' ? 'active' : ''); ?>"><i class="fas fa-exchange-alt"></i><span>Documentos</span></a>
-							<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'conciliacion' ? 'active' : ''); ?>"><i class="fas fa-check-circle"></i><span>Conciliación</span></a>
-							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'pagos' ? 'active' : ''); ?>"><i class="fas fa-credit-card"></i><span>Pagos de Crédito</span></a>
-							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cobros' ? 'active' : ''); ?>"><i class="fas fa-hand-holding-usd"></i><span>Cobros</span></a>
-							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'arqueos' ? 'active' : ''); ?>"><i class="fas fa-coins"></i><span>Arqueos de Crédito</span></a>
+							<a href="<?php echo base_url('tesoreria/cajas_bancos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cajas_bancos' ? 'active' : ''); ?>"><i class="fas fa-cogs"></i><span>ConfiguraciÃ³n Cuentas</span></a>
 							<a href="<?php echo base_url('tesoreria/flujo'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'flujo' ? 'active' : ''); ?>"><i class="fas fa-chart-line"></i><span>Flujo de Efectivo</span></a>
-							<a href="<?php echo base_url('tesoreria/integracion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'integracion' ? 'active' : ''); ?>"><i class="fas fa-link"></i><span>Integración Bancaria</span></a>
-							<a href="<?php echo base_url('tesoreria/reportes'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'reportes' ? 'active' : ''); ?>"><i class="fas fa-file-alt"></i><span>Reportería</span></a>
-							<!-- Seguridad y Roles removed for Tesorería -->
+							<a href="<?php echo base_url('tesoreria/integracion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'integracion' ? 'active' : ''); ?>"><i class="fas fa-link"></i><span>IntegraciÃ³n Bancaria</span></a>
+							<a href="<?php echo base_url('tesoreria/reportes'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'reportes' ? 'active' : ''); ?>"><i class="fas fa-file-alt"></i><span>ReporterÃ­a</span></a>
+							<!-- Seguridad y Roles removed for TesorerÃ­a -->
 						</div>
 					</div>
 					<?php elseif ($is_konami) : ?>
@@ -422,16 +442,16 @@ try {
 						<a href="#"><i class="fas fa-landmark"></i><span>Conami / CONAMI</span></a>
 						<div class="submenu-content">
 							<a href="<?php echo base_url('konami'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'index' ? 'active' : ''); ?>">Inicio</a>
-							<a href="<?php echo base_url('konami/informes'); ?>" class="menu-item">Información Institucional</a>
+							<a href="<?php echo base_url('konami/informes'); ?>" class="menu-item">InformaciÃ³n Institucional</a>
 							<a href="<?php echo base_url('konami/cartera'); ?>" class="menu-item">Seguimiento Cartera</a>
 							<a href="<?php echo base_url('konami/pld'); ?>" class="menu-item">Usuarios PLD/FT</a>
 							<a href="<?php echo base_url('konami/inusuales'); ?>" class="menu-item">Operaciones Inusuales</a>
 							<a href="<?php echo base_url('konami/gobierno'); ?>" class="menu-item">Gobierno Corporativo</a>
-							<a href="<?php echo base_url('konami/riesgos'); ?>" class="menu-item">Gestión de Riesgos</a>
+							<a href="<?php echo base_url('konami/riesgos'); ?>" class="menu-item">GestiÃ³n de Riesgos</a>
 							<a href="<?php echo base_url('konami/financiero'); ?>" class="menu-item">Reporte Financiero</a>
-							<a href="<?php echo base_url('konami/limites'); ?>" class="menu-item">Límites Regulatorios</a>
-							<a href="<?php echo base_url('konami/integracion'); ?>" class="menu-item">Integración Contable</a>
-							<a href="<?php echo base_url('konami/auditoria'); ?>" class="menu-item">Auditoría Interna</a>
+							<a href="<?php echo base_url('konami/limites'); ?>" class="menu-item">LÃ­mites Regulatorios</a>
+							<a href="<?php echo base_url('konami/integracion'); ?>" class="menu-item">IntegraciÃ³n Contable</a>
+							<a href="<?php echo base_url('konami/auditoria'); ?>" class="menu-item">AuditorÃ­a Interna</a>
 						</div>
 					</div>
 					<?php else: ?>
@@ -440,7 +460,7 @@ try {
 					</div>
 
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'solicitudes' && $this->router->fetch_method() == 'uso_credito' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('solicitudes/uso_credito'); ?>"><i class="fas fa-file-alt"></i><span>2. Uso Crédito</span></a>
+						<a href="<?php echo base_url('solicitudes/uso_credito'); ?>"><i class="fas fa-file-alt"></i><span>2. Uso CrÃ©dito</span></a>
 					</div>
 
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'solicitudes' && $this->router->fetch_method() == 'referencias' ? 'active' : ''); ?>">
@@ -452,12 +472,12 @@ try {
 					</div>
 
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'garantias' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('garantias'); ?>"><i class="fas fa-shield-alt"></i><span>5. Garantías</span></a>
+						<a href="<?php echo base_url('garantias'); ?>"><i class="fas fa-shield-alt"></i><span>5. GarantÃ­as</span></a>
 					</div>
 
-					<!-- Acceso rápido: 6. Análisis Financiero -->
+					<!-- Acceso rÃ¡pido: 6. AnÃ¡lisis Financiero -->
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'analisis_financiero' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('analisis_financiero'); ?>"><i class="fa fa-file-alt"></i><span>6. Análisis Financiero</span></a>
+						<a href="<?php echo base_url('analisis_financiero'); ?>"><i class="fa fa-file-alt"></i><span>6. AnÃ¡lisis Financiero</span></a>
 					</div>
 
 					<!-- FAF submenu (hidden temporarily) -->
@@ -472,11 +492,11 @@ try {
 					<?php endif; ?>
 
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'solicitudes' && $this->router->fetch_method() == 'validacion_aprobacion' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('solicitudes/validacion_aprobacion'); ?>"><i class="fas fa-check-square"></i><span>7. Comité de Aprobaciones</span></a>
+						<a href="<?php echo base_url('solicitudes/validacion_aprobacion'); ?>"><i class="fas fa-check-square"></i><span>7. ComitÃ© de Aprobaciones</span></a>
 					</div>
-					<!-- Nuevo acceso rápido: Emisión Plan de Pago -->
+					<!-- Nuevo acceso rÃ¡pido: EmisiÃ³n Plan de Pago -->
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'prestamo' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('prestamo'); ?>"><i class="fas fa-file-invoice-dollar"></i><span>8. Emisión Plan de Pago</span></a>
+						<a href="<?php echo base_url('prestamo'); ?>"><i class="fas fa-file-invoice-dollar"></i><span>8. EmisiÃ³n Plan de Pago</span></a>
 					</div>
 					<!-- 9. Contratos (oculto) -->
 					<!--
@@ -485,7 +505,7 @@ try {
 					</div>
 					-->
 
-					<!-- 10. Planes de Crédito: accesible desde sidebar debajo de Contratos -->
+					<!-- 10. Planes de CrÃ©dito: accesible desde sidebar debajo de Contratos -->
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'planescredito' ? 'active' : ''); ?>">
 						<a href="<?php echo base_url('planescredito'); ?>"><i class="fas fa-list-alt"></i><span>9. Planes de Pago</span></a>
 					</div>
@@ -498,7 +518,7 @@ try {
 					<!-- Planes de Pago hidden from sidebar per request -->
 					<!-- Contracts link kept later after Emision Plan de Pago -->
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'prestamospagados' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('prestamospagados'); ?>"><i class="fas fa-check-circle"></i><span>Créditos Pagados</span></a>
+						<a href="<?php echo base_url('prestamospagados'); ?>"><i class="fas fa-check-circle"></i><span>CrÃ©ditos Pagados</span></a>
 					</div>
 					<?php endif; ?>
 
@@ -507,10 +527,10 @@ try {
 					<div class="nav-item has-sub">
 						<a href="#"><i class="fas fa-file-pdf"></i><span>Consultas</span></a>
 						<div class="submenu-content">
-							<a href="<?php echo base_url('reporte'); ?>" class="menu-item">Créditos por Fechas</a>
-							<a href="<?php echo base_url('reporte/creditosasesor'); ?>" class="menu-item">Créditos por Asesor</a>
-							<a href="<?php echo base_url('reporte/creditoscliente'); ?>" class="menu-item">Créditos por Cliente</a>
-							<a href="<?php echo base_url('reporte/creditosasesorfechasestado'); ?>" class="menu-item">Créditos por Asesor,<br> Fecha y Estado</a>
+							<a href="<?php echo base_url('reporte'); ?>" class="menu-item">CrÃ©ditos por Fechas</a>
+							<a href="<?php echo base_url('reporte/creditosasesor'); ?>" class="menu-item">CrÃ©ditos por Asesor</a>
+							<a href="<?php echo base_url('reporte/creditoscliente'); ?>" class="menu-item">CrÃ©ditos por Cliente</a>
+							<a href="<?php echo base_url('reporte/creditosasesorfechasestado'); ?>" class="menu-item">CrÃ©ditos por Asesor,<br> Fecha y Estado</a>
 							<a href="<?php echo base_url('reporte/estadocuentacliente'); ?>" class="menu-item">Estado de Cuenta por Cliente</a>
 							<a href="<?php echo base_url('reporte/estadocuentafechas'); ?>" class="menu-item">Estado de Cuenta por Fechas</a>
 							<a href="<?php echo base_url('reporte/pagosclientesfechas'); ?>" class="menu-item">Pagos por Clientes y Fechas</a>
@@ -534,7 +554,7 @@ try {
 						<a href="<?php echo base_url('usuarios'); ?>"><i class="ik ik-users"></i><span>Usuarios</span></a>
 					</div>
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'feriados' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('feriados'); ?>"><i class="fas fa-calendar-day"></i><span>Feriados</span></a>
+						<a href="<?php echo base_url('feriados'); ?>"><i class="fas fa-calendar-alt"></i><span>Feriados</span></a>
 					</div>
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'sistema' ? 'active' : ''); ?>">
 						<a href="<?php echo base_url('sistema'); ?>"><i class="ik ik-settings"></i><span>Sistema</span></a>
@@ -592,34 +612,41 @@ try {
 					</div>
 					<?php endif; ?>
 					<?php if ($is_konami) : ?>
-					<div class="nav-item has-sub active open">
-						<a href="#"><i class="fas fa-wallet"></i><span>Tesorería</span></a>
+					<div class="nav-item has-sub <?php echo ((in_array($this->router->fetch_method(), array('bancos','conciliacion','reporte_bancos')) || ($this->router->fetch_method() == 'movimientos' && $this->input->get('modo') === 'banco')) ? 'active open' : ''); ?>">
+						<a href="#" class="menu-group-title"><i class="fas fa-university"></i><span>Banco</span></a>
 						<div class="submenu-content">
-							<a href="<?php echo base_url('tesoreria'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'index' ? 'active' : ''); ?>">Inicio</a>
-							<a href="<?php echo base_url('tesoreria/cajas_bancos'); ?>" class="menu-item">Bancario</a>
-							<a href="<?php echo base_url('tesoreria/movimientos'); ?>" class="menu-item">Documentos</a>
-							<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item">Conciliación</a>
-							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item">Pagos de Credito</a>
-							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item">Cobros</a>
-							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item">Arqueos de Credito</a>
-							<a href="<?php echo base_url('tesoreria/flujo'); ?>" class="menu-item">Flujo de Efectivo</a>
-							<a href="<?php echo base_url('tesoreria/integracion'); ?>" class="menu-item">Integración Bancaria</a>
-							<a href="<?php echo base_url('tesoreria/reportes'); ?>" class="menu-item">Reportería</a>
-							<!-- Seguridad y Roles removed for Tesorería -->
+							<a href="<?php echo base_url('tesoreria/bancos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'bancos' ? 'active' : ''); ?>"><i class="fas fa-university"></i><span>Banco</span></a>
+					<a href="<?php echo base_url('tesoreria/movimientos?modo=banco'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'movimientos' && $this->input->get('modo') === 'banco' ? 'active' : ''); ?>"><i class="fas fa-file-invoice"></i><span>Movimientos</span></a>
+							<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'conciliacion' ? 'active' : ''); ?>"><i class="fas fa-check-circle"></i><span>ConciliaciÃ³n</span></a>
+							<a href="<?php echo base_url('tesoreria/reporte_bancos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'reporte_bancos' ? 'active' : ''); ?>"><i class="fas fa-chart-bar"></i><span>Reporte de Bancos</span></a>
 						</div>
 					</div>
+					<div class="nav-item has-sub <?php echo (in_array($this->router->fetch_method(), array('cajas','pagos','movimientos','arqueos','cobros','reporte_caja')) ? 'active open' : ''); ?>">
+						<a href="#" class="menu-group-title"><i class="fas fa-cash-register"></i><span>Caja</span></a>
+						<div class="submenu-content">
+							<a href="<?php echo base_url('tesoreria/cajas'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cajas' ? 'active' : ''); ?>"><i class="fas fa-cash-register"></i><span>Caja</span></a>
+							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'pagos' ? 'active' : ''); ?>"><i class="fas fa-credit-card"></i><span>Pagos de CrÃ©dito</span></a>
+							<a href="<?php echo base_url('tesoreria/movimientos?modo=caja'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'movimientos' && $this->input->get('modo') === 'caja' ? 'active' : ''); ?>"><i class="fas fa-file-invoice"></i><span>Movimientos</span></a>
+							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'arqueos' ? 'active' : ''); ?>"><i class="fas fa-coins"></i><span>Arqueo de CrÃ©ditos</span></a>
+							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'cobros' ? 'active' : ''); ?>"><i class="fas fa-hand-holding-usd"></i><span>Cobros</span></a>
+							<a href="<?php echo base_url('tesoreria/reporte_caja'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'reporte_caja' ? 'active' : ''); ?>"><i class="fas fa-chart-bar"></i><span>Reporte de Caja</span></a>
+						</div>
+					</div>
+					<div class="nav-item has-sub active open">
+						<a href="#"><i class="fas fa-wallet"></i><span>TesorerÃ­a</span></a>
+						<div class="submenu-content">
 					<?php elseif ($is_admin) : ?>
 					<div class="nav-item has-sub active open">
-						<a href="#"><i class="fas fa-cogs"></i><span>Administración</span></a>
+						<a href="#"><i class="fas fa-cogs"></i><span>AdministraciÃ³n</span></a>
 						<div class="submenu-content">
 							<a href="<?php echo base_url('administracion'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'index' ? 'active' : ''); ?>">Inicio</a>
 							<a href="<?php echo base_url('administracion/usuarios'); ?>" class="menu-item">Usuarios</a>
 							<a href="<?php echo base_url('administracion/roles'); ?>" class="menu-item">Roles y Permisos</a>
-							<a href="<?php echo base_url('administracion/configuracion'); ?>" class="menu-item">Configuración General</a>
+							<a href="<?php echo base_url('administracion/configuracion'); ?>" class="menu-item">ConfiguraciÃ³n General</a>
 							<a href="<?php echo base_url('administracion/seguridad'); ?>" class="menu-item">Seguridad</a>
-							<a href="<?php echo base_url('administracion/auditoria'); ?>" class="menu-item">Auditoría</a>
-							<a href="<?php echo base_url('administracion/parametros'); ?>" class="menu-item">Parámetros de Módulos</a>
-							<a href="<?php echo base_url('administracion/catalogos'); ?>" class="menu-item">Catálogos</a>
+							<a href="<?php echo base_url('administracion/auditoria'); ?>" class="menu-item">AuditorÃ­a</a>
+							<a href="<?php echo base_url('administracion/parametros'); ?>" class="menu-item">ParÃ¡metros de MÃ³dulos</a>
+							<a href="<?php echo base_url('administracion/catalogos'); ?>" class="menu-item">CatÃ¡logos</a>
 							<a href="<?php echo base_url('administracion/integraciones'); ?>" class="menu-item">Integraciones</a>
 							<a href="<?php echo base_url('administracion/respaldo'); ?>" class="menu-item">Respaldos</a>
 							<a href="<?php echo base_url('administracion/plantillas'); ?>" class="menu-item">Plantillas</a>
@@ -630,16 +657,16 @@ try {
 						<a href="#"><i class="fas fa-landmark"></i><span>Conami / CONAMI</span></a>
 						<div class="submenu-content">
 							<a href="<?php echo base_url('konami'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'index' ? 'active' : ''); ?>">Inicio</a>
-							<a href="<?php echo base_url('konami/informes'); ?>" class="menu-item">Información Institucional</a>
+							<a href="<?php echo base_url('konami/informes'); ?>" class="menu-item">InformaciÃ³n Institucional</a>
 							<a href="<?php echo base_url('konami/cartera'); ?>" class="menu-item">Seguimiento Cartera</a>
 							<a href="<?php echo base_url('konami/pld'); ?>" class="menu-item">Usuarios PLD/FT</a>
 							<a href="<?php echo base_url('konami/inusuales'); ?>" class="menu-item">Operaciones Inusuales</a>
 							<a href="<?php echo base_url('konami/gobierno'); ?>" class="menu-item">Gobierno Corporativo</a>
-							<a href="<?php echo base_url('konami/riesgos'); ?>" class="menu-item">Gestión de Riesgos</a>
+							<a href="<?php echo base_url('konami/riesgos'); ?>" class="menu-item">GestiÃ³n de Riesgos</a>
 							<a href="<?php echo base_url('konami/financiero'); ?>" class="menu-item">Reporte Financiero</a>
-							<a href="<?php echo base_url('konami/limites'); ?>" class="menu-item">Límites Regulatorios</a>
-							<a href="<?php echo base_url('konami/integracion'); ?>" class="menu-item">Integración Contable</a>
-							<a href="<?php echo base_url('konami/auditoria'); ?>" class="menu-item">Auditoría Interna</a>
+							<a href="<?php echo base_url('konami/limites'); ?>" class="menu-item">LÃ­mites Regulatorios</a>
+							<a href="<?php echo base_url('konami/integracion'); ?>" class="menu-item">IntegraciÃ³n Contable</a>
+							<a href="<?php echo base_url('konami/auditoria'); ?>" class="menu-item">AuditorÃ­a Interna</a>
 						</div>
 					</div>
 					<?php endif; ?>
@@ -655,10 +682,10 @@ try {
 					<div class="nav-item has-sub">
 						<a href="#"><i class="fas fa-file-pdf"></i><span>Consultas</span></a>
 						<div class="submenu-content">
-							<a href="<?php echo base_url('reporte'); ?>" class="menu-item">Créditos por Fechas</a>
-							<a href="<?php echo base_url('reporte/creditosasesor'); ?>" class="menu-item">Créditos por Asesor</a>
-							<a href="<?php echo base_url('reporte/creditoscliente'); ?>" class="menu-item">Créditos por Cliente</a>
-							<a href="<?php echo base_url('reporte/creditosasesorfechasestado'); ?>" class="menu-item">Créditos por Asesor,<br> Fecha y Estado</a>
+							<a href="<?php echo base_url('reporte'); ?>" class="menu-item">CrÃ©ditos por Fechas</a>
+							<a href="<?php echo base_url('reporte/creditosasesor'); ?>" class="menu-item">CrÃ©ditos por Asesor</a>
+							<a href="<?php echo base_url('reporte/creditoscliente'); ?>" class="menu-item">CrÃ©ditos por Cliente</a>
+							<a href="<?php echo base_url('reporte/creditosasesorfechasestado'); ?>" class="menu-item">CrÃ©ditos por Asesor,<br> Fecha y Estado</a>
 							<a href="<?php echo base_url('reporte/estadocuentacliente'); ?>" class="menu-item">Estado de Cuenta por Cliente</a>
 							<a href="<?php echo base_url('reporte/estadocuentafechas'); ?>" class="menu-item">Estado de Cuenta por Fechas</a>
 							<a href="<?php echo base_url('reporte/pagosclientesfechas'); ?>" class="menu-item">Pagos por Clientes y Fechas</a>
@@ -669,7 +696,7 @@ try {
 					<?php if (! $is_pld && ! $is_teso && ! $is_konami) : ?>
 					<!-- 'Plan de Pago' (report) hidden per request -->
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'analisis_financiero' ? 'active' : ''); ?>">
-						<a href="<?php echo base_url('analisis_financiero'); ?>"><i class="fa fa-file-alt"></i><span>9. Análisis Financiero</span></a>
+						<a href="<?php echo base_url('analisis_financiero'); ?>"><i class="fa fa-file-alt"></i><span>9. AnÃ¡lisis Financiero</span></a>
 					</div>
 					<div class="nav-item <?php echo ($this->router->fetch_class() == 'tipos_productos' ? 'active' : ''); ?>">
 						<a href="<?php echo base_url('tipos_productos'); ?>"><i class="fas fa-box-open"></i><span>Productos</span></a>
@@ -697,19 +724,19 @@ try {
 					<?php endif; ?>
 					<?php if ($is_teso) : ?>
 					<div class="nav-item has-sub active open">
-						<a href="#"><i class="fas fa-wallet"></i><span>Tesorería</span></a>
+						<a href="#"><i class="fas fa-wallet"></i><span>TesorerÃ­a</span></a>
 						<div class="submenu-content">
 							<a href="<?php echo base_url('tesoreria'); ?>" class="menu-item <?php echo ($this->router->fetch_method() == 'index' ? 'active' : ''); ?>">Inicio</a>
 							<a href="<?php echo base_url('tesoreria/cajas_bancos'); ?>" class="menu-item">Bancario</a>
 							<a href="<?php echo base_url('tesoreria/movimientos'); ?>" class="menu-item">Documentos</a>
-							<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item">Conciliación</a>
+							<a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="menu-item">Estados de Cuenta Bancarios</a>
 							<a href="<?php echo base_url('tesoreria/pagos'); ?>" class="menu-item">Pagos de Credito</a>
 							<a href="<?php echo base_url('tesoreria/cobros'); ?>" class="menu-item">Cobros</a>
 							<a href="<?php echo base_url('tesoreria/arqueos'); ?>" class="menu-item">Arqueos de Credito</a>
 							<a href="<?php echo base_url('tesoreria/flujo'); ?>" class="menu-item">Flujo de Efectivo</a>
-							<a href="<?php echo base_url('tesoreria/integracion'); ?>" class="menu-item">Integración Bancaria</a>
-							<a href="<?php echo base_url('tesoreria/reportes'); ?>" class="menu-item">Reportería</a>
-							<!-- Seguridad y Roles removed for Tesorería -->
+							<a href="<?php echo base_url('tesoreria/integracion'); ?>" class="menu-item">IntegraciÃ³n Bancaria</a>
+							<a href="<?php echo base_url('tesoreria/reportes'); ?>" class="menu-item">ReporterÃ­a</a>
+							<!-- Seguridad y Roles removed for TesorerÃ­a -->
 						</div>
 					</div>
 					<?php endif; ?>
@@ -721,10 +748,10 @@ try {
 					<div class="nav-item has-sub">
 						<a href="#"><i class="fas fa-file-pdf"></i><span>Consultas</span></a>
 						<div class="submenu-content">
-							<a href="<?php echo base_url('reporte'); ?>" class="menu-item">Créditos por Fechas</a>
-							<a href="<?php echo base_url('reporte/creditosasesor'); ?>" class="menu-item">Créditos por Asesor</a>
-							<a href="<?php echo base_url('reporte/creditoscliente'); ?>" class="menu-item">Créditos por Cliente</a>
-							<a href="<?php echo base_url('reporte/creditosasesorfechasestado'); ?>" class="menu-item">Créditos por Asesor,<br> Fecha y Estado</a>
+							<a href="<?php echo base_url('reporte'); ?>" class="menu-item">CrÃ©ditos por Fechas</a>
+							<a href="<?php echo base_url('reporte/creditosasesor'); ?>" class="menu-item">CrÃ©ditos por Asesor</a>
+							<a href="<?php echo base_url('reporte/creditoscliente'); ?>" class="menu-item">CrÃ©ditos por Cliente</a>
+							<a href="<?php echo base_url('reporte/creditosasesorfechasestado'); ?>" class="menu-item">CrÃ©ditos por Asesor,<br> Fecha y Estado</a>
 							<a href="<?php echo base_url('reporte/estadocuentacliente'); ?>" class="menu-item">Estado de Cuenta por Cliente</a>
 							<a href="<?php echo base_url('reporte/estadocuentafechas'); ?>" class="menu-item">Estado de Cuenta por Fechas</a>
 							<a href="<?php echo base_url('reporte/pagosclientesfechas'); ?>" class="menu-item">Pagos por Clientes y Fechas</a>
@@ -762,3 +789,6 @@ try {
 		});
 	</script>
 <?php endif; ?>
+
+
+

@@ -10,6 +10,157 @@ class Tesoreria_model extends CI_Model {
             }
             return true;
         }
+
+    public function ensure_movimientos_conciliado_column()
+    {
+        if (!$this->db->table_exists('teso_movimientos')) {
+            return false;
+        }
+        if (!$this->db->field_exists('conciliado', 'teso_movimientos')) {
+            try {
+                $this->db->query("ALTER TABLE teso_movimientos ADD COLUMN conciliado TINYINT(1) NOT NULL DEFAULT 0");
+            } catch (Exception $e) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    public function ensure_teso_conciliaciones_table()
+    {
+        if ($this->db->table_exists('teso_conciliaciones')) {
+            return true;
+        }
+        $fkTable = null;
+        if ($this->db->table_exists('teso_accounts')) {
+            $fkTable = 'teso_accounts';
+        } elseif ($this->db->table_exists('teso_cuentas')) {
+            $fkTable = 'teso_cuentas';
+        }
+        $foreignKey = $fkTable ? "CONSTRAINT fk_teso_conc_cuenta FOREIGN KEY (cuenta_id) REFERENCES {$fkTable}(id)," : '';
+        $sql = "CREATE TABLE IF NOT EXISTS teso_conciliaciones (
+              id BIGINT AUTO_INCREMENT PRIMARY KEY,
+              cuenta_id INT NOT NULL,
+              periodo VARCHAR(7) NOT NULL,
+              saldo_extracto DECIMAL(18,2) NOT NULL,
+              saldo_libros DECIMAL(18,2) NOT NULL,
+              diferencia DECIMAL(18,2) NOT NULL,
+              observaciones VARCHAR(255) NULL,
+              usuario_id INT NULL,
+              estado ENUM('borrador','finalizado','aprobado') NOT NULL DEFAULT 'borrador',
+              created_at DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+              updated_at DATETIME NULL,
+              {$foreignKey}
+              UNIQUE KEY uq_teso_conc_periodo (cuenta_id, periodo)
+            ) ENGINE=InnoDB;";
+        try {
+            $this->db->query($sql);
+            return true;
+        } catch (Exception $e) {
+            return false;
+        }
+    }
+
+    public function ensure_conciliacion_support()
+    {
+        $ok1 = $this->ensure_movimientos_conciliado_column();
+        $ok2 = $this->ensure_teso_conciliaciones_table();
+        return $ok1 && $ok2;
+    }
+
+    public function get_movimientos_para_conciliacion($cuenta_id, $date_from = null, $date_to = null)
+    {
+        if (!$this->ensure_movimientos_conciliado_column()) {
+            return array();
+        }
+        $this->db->from('teso_movimientos');
+        $this->db->where('cuenta_id', intval($cuenta_id));
+        $this->db->where("(estado IS NULL OR estado <> 'anulado')", null, false);
+        if (!empty($date_from)) {
+            $this->db->where("IFNULL(fecha_aplicacion, fecha_registro) >=", $date_from);
+        }
+        if (!empty($date_to)) {
+            $this->db->where("IFNULL(fecha_aplicacion, fecha_registro) <=", $date_to);
+        }
+        $this->db->order_by("IFNULL(fecha_aplicacion, fecha_registro) ASC", null, false);
+        $result = $this->db->get()->result_array();
+        return $result;
+    }
+
+    public function get_saldo_libros_a_fecha($cuenta_id, $date_to = null)
+    {
+        if (!$this->ensure_movimientos_conciliado_column()) {
+            return 0;
+        }
+        $this->db->select("IFNULL(SUM(CASE
+                WHEN tipo_transferencia='abono' THEN COALESCE(monto_total, 0)
+                WHEN tipo_transferencia='cargo' THEN -COALESCE(monto_total, 0)
+                ELSE COALESCE(monto_total, 0)
+            END), 0) as saldo", false);
+        $this->db->from('teso_movimientos');
+        $this->db->where('cuenta_id', intval($cuenta_id));
+        $this->db->where("(estado IS NULL OR estado <> 'anulado')", null, false);
+        if (!empty($date_to)) {
+            $this->db->where("IFNULL(fecha_aplicacion, fecha_registro) <=", $date_to);
+        }
+        $row = $this->db->get()->row();
+        return $row ? floatval($row->saldo) : 0;
+    }
+
+    public function get_conciliaciones_por_cuenta($cuenta_id)
+    {
+        if (!$this->ensure_teso_conciliaciones_table()) {
+            return array();
+        }
+        return $this->db->from('teso_conciliaciones')
+            ->where('cuenta_id', intval($cuenta_id))
+            ->order_by('created_at', 'desc')
+            ->get()
+            ->result_array();
+    }
+
+    public function save_conciliacion($data)
+    {
+        if (!$this->ensure_teso_conciliaciones_table()) {
+            return false;
+        }
+        if (empty($data['cuenta_id']) || empty($data['periodo'])) {
+            return false;
+        }
+        $record = array(
+            'cuenta_id' => intval($data['cuenta_id']),
+            'periodo' => substr(trim($data['periodo']), 0, 7),
+            'saldo_extracto' => isset($data['saldo_extracto']) ? floatval($data['saldo_extracto']) : 0,
+            'saldo_libros' => isset($data['saldo_libros']) ? floatval($data['saldo_libros']) : 0,
+            'diferencia' => isset($data['diferencia']) ? floatval($data['diferencia']) : 0,
+            'observaciones' => isset($data['observaciones']) ? $data['observaciones'] : null,
+            'usuario_id' => isset($data['usuario_id']) ? intval($data['usuario_id']) : null,
+            'estado' => isset($data['estado']) ? $data['estado'] : 'borrador',
+            'updated_at' => date('Y-m-d H:i:s'),
+        );
+        $existing = $this->db->from('teso_conciliaciones')
+            ->where('cuenta_id', $record['cuenta_id'])
+            ->where('periodo', $record['periodo'])
+            ->get()
+            ->row();
+        if ($existing) {
+            $this->db->where('id', intval($existing->id));
+            $this->db->update('teso_conciliaciones', $record);
+            return intval($existing->id);
+        }
+        $record['created_at'] = date('Y-m-d H:i:s');
+        $this->db->insert('teso_conciliaciones', $record);
+        return $this->db->insert_id();
+    }
+
+    public function toggle_movimiento_conciliado($movimiento_id, $conciliado)
+    {
+        if (!$this->ensure_movimientos_conciliado_column()) {
+            return false;
+        }
+        $this->db->where('id', intval($movimiento_id));
+        return $this->db->update('teso_movimientos', ['conciliado' => intval($conciliado)]);
+    }
     public function __construct()
     {
         parent::__construct();

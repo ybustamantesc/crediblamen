@@ -141,7 +141,7 @@
                             <?php echo htmlspecialchars($p_email ?: ''); ?></td>
                         <td style="padding:4px 6px;"><strong>Profesión:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($p_profesion ?: ''); ?></td>
+                            <?php echo isset($perfil->profesion)?htmlspecialchars($perfil->profesion):''; ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Ocupación actual:</strong></td>
@@ -159,7 +159,7 @@
                     <tr>
                         <td style="padding:4px 6px;"><strong>Correo electrónico del centro de trabajo:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($p_email_centro_trabajo ?: ''); ?></td>
+                            <?php echo htmlspecialchars(isset($perfil->email_centro_trabajo) ? $perfil->email_centro_trabajo : (isset($solicitud->email_centro_trabajo) ? $solicitud->email_centro_trabajo : '')); ?></td>
                         <td style="padding:4px 6px;"><strong>Sitio WEB:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
                             <?php echo htmlspecialchars($pf(array('sitio_web_centro_trabajo','sitio_web')) ?: ''); ?></td>
@@ -170,7 +170,7 @@
                             <?php echo htmlspecialchars($p_telefono_centro_trabajo ?: ''); ?></td>
                         <td style="padding:4px 6px;"><strong>N° de fax del centro de trabajo:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo htmlspecialchars($p_fax_centro_trabajo ?: ''); ?></td>
+                            <?php echo htmlspecialchars(isset($perfil->fax_centro_trabajo) ? $perfil->fax_centro_trabajo : (isset($solicitud->fax_centro_trabajo) ? $solicitud->fax_centro_trabajo : '')); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Apartado postal del centro de trabajo:</strong></td>
@@ -211,15 +211,35 @@
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Doc1 - N°</strong></td>
-                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;"><?php echo htmlspecialchars($pf(array('documento_legal_1_numero'))); ?></td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($pf(array('documento_legal_1_numero'))); ?></td>
+                        <td style="padding:4px 6px;"><strong>Doc1 - Municipio</strong></td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($pf(array('doc1_municipio_emision_documento','documento_legal_1_departamento_municipio'))); ?></td>
+                    </tr>
+                    <tr>
                         <td style="padding:4px 6px;"><strong>Doc1 - Fecha emisión</strong></td>
-                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;"><?php echo htmlspecialchars($pf(array('documento_legal_1_fecha_emision'))); ?></td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($pf(array('documento_legal_1_fecha_emision'))); ?></td>
+                        <td style="padding:4px 6px;"><strong>Doc1 - Fecha vencimiento</strong></td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($pf(array('documento_legal_1_fecha_vencimiento'))); ?></td>
                     </tr>
                     <tr>
                         <td style="padding:4px 6px;"><strong>Doc2 - N°</strong></td>
-                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;"><?php echo htmlspecialchars($pf(array('documento_legal_2_numero'))); ?></td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($pf(array('documento_legal_2_numero'))); ?></td>
+                        <td style="padding:4px 6px;"><strong>Doc2 - Municipio</strong></td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($pf(array('doc2_municipio_emision_documento','documento_legal_2_departamento_municipio'))); ?></td>
+                    </tr>
+                    <tr>
                         <td style="padding:4px 6px;"><strong>Doc2 - Fecha emisión</strong></td>
-                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;"><?php echo htmlspecialchars($pf(array('documento_legal_2_fecha_emision'))); ?></td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($pf(array('documento_legal_2_fecha_emision'))); ?></td>
+                        <td style="padding:4px 6px;"><strong>Doc2 - Fecha vencimiento</strong></td>
+                        <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
+                            <?php echo htmlspecialchars($pf(array('documento_legal_2_fecha_vencimiento'))); ?></td>
                     </tr>
                 </table>
             </div>
@@ -244,9 +264,15 @@
                     <tr>
                         <td style="padding:4px 6px; vertical-align:middle;"><strong>Ocupación:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo isset($perfil->ocupacion)?htmlspecialchars($perfil->ocupacion):''; ?>
-                            &nbsp;&nbsp;&nbsp;<strong>Profesión u oficio:</strong> <?php echo isset($perfil->profesion)?htmlspecialchars($perfil->profesion):''; ?>
-                            &nbsp;&nbsp;&nbsp;<strong>Antigüedad:</strong> <?php echo isset($perfil->antiguedad)?htmlspecialchars($perfil->antiguedad):''; ?>
+                            <span style="display:inline-block; white-space:nowrap; margin-right:12px;">
+                                <?php echo isset($perfil->ocupacion)?htmlspecialchars($perfil->ocupacion):''; ?>
+                            </span>
+                            <span style="display:inline-block; white-space:nowrap; margin-right:12px;">
+                                <strong>Profesión u oficio:</strong> <?php echo isset($perfil->profesion)?htmlspecialchars($perfil->profesion):''; ?>
+                            </span>
+                            <span style="display:inline-block; white-space:nowrap;">
+                                <strong>Antigüedad:</strong> <?php echo htmlspecialchars($pf(array('antiguedad_laboral','antiguedad','tiempo_empleo_anios')) ?: ''); ?>
+                            </span>
                         </td>
                     </tr>
                     <tr>
@@ -292,7 +318,7 @@
                         </td>
                         <td style="padding:4px 6px; vertical-align:middle;"><strong>Apartado postal:</strong></td>
                         <td style="padding:4px 6px; border-bottom:1px solid #e6e6e6;">
-                            <?php echo isset($perfil->apartado_postal)?htmlspecialchars($perfil->apartado_postal):(isset($solicitud->apartado_postal)?htmlspecialchars($solicitud->apartado_postal):''); ?>
+                            <?php echo isset($perfil->apartado_postal) ? htmlspecialchars($perfil->apartado_postal) : ''; ?>
                         </td>
                     </tr>
                     <tr>
@@ -472,7 +498,7 @@
                                 </td>
                                 <td style="width:50%; vertical-align:top; padding:2px 6px;">
                                     <div style="line-height:18px;"><span style="display:inline-block;width:18px;height:18px;border:1px solid #333;margin-right:8px;line-height:18px;text-align:center;font-size:12px;vertical-align:middle;color:#0b3d91;font-weight:700;border-radius:2px;">
-                                        <?php echo in_array('salarios',$o)?'✓':''; ?></span>salarios</div>
+                                        <?php echo in_array('Salarios',$o)?'✓':''; ?></span>Salarios</div>
                                     <div style="line-height:18px;"><span style="display:inline-block;width:18px;height:18px;border:1px solid #333;margin-right:8px;line-height:18px;text-align:center;font-size:12px;vertical-align:middle;color:#0b3d91;font-weight:700;border-radius:2px;">
                                         <?php echo in_array('Negocios',$o)?'✓':''; ?></span>Negocios</div>
                                     <div style="line-height:18px;"><span style="display:inline-block;width:18px;height:18px;border:1px solid #333;margin-right:8px;line-height:18px;text-align:center;font-size:12px;vertical-align:middle;color:#0b3d91;font-weight:700;border-radius:2px;">

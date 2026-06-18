@@ -24,7 +24,27 @@ class Tesoreria extends CI_Controller {
             $next = intval($row->max_cheque) + 1;
         }
         header('Content-Type: application/json');
+        @file_put_contents(APPPATH . 'logs/cierre_arqueo_payload.log', "[" . date('Y-m-d H:i:s') . "] ENTER save_cierre_arqueo_serie_ajax\nPOST: " . print_r($_POST, true) . "\n\n", FILE_APPEND);
+        // Additionally write to Apache error log for environments where file write fails
+        error_log('[save_cierre_arqueo_serie_ajax] POST: ' . print_r($_POST, true));
+        // Validate DB connection early to return JSON instead of CI error page
+        try {
+            $this->load->database();
+        } catch (Throwable $e) {
+            if (function_exists('log_message')) log_message('error', '[save_cierre_arqueo_serie_ajax] DB connect exception: ' . $e->getMessage());
+            error_log('[save_cierre_arqueo_serie_ajax] DB connect exception: ' . $e->getMessage());
+            echo json_encode(array('status' => false, 'message' => 'No se pudo conectar a la base de datos. Revise servicio MySQL o credenciales.'));
+            return;
+        }
+
+        if (!isset($this->db) || empty($this->db->conn_id)) {
+            if (function_exists('log_message')) log_message('error', '[save_cierre_arqueo_serie_ajax] DB not available (no conn_id)');
+            error_log('[save_cierre_arqueo_serie_ajax] DB not available (no conn_id)');
+            echo json_encode(array('status' => false, 'message' => 'No se pudo establecer conexión con la base de datos.'));
+            return;
+        }
         echo json_encode(['next_numero' => $next]);
+        return;
     }
     /** @var CI_DB_query_builder */
     public $db;
@@ -233,9 +253,10 @@ class Tesoreria extends CI_Controller {
         $id = $this->db->insert_id();
         header('Content-Type: application/json');
         echo json_encode(['status'=>true, 'id'=>$id]);
-                }
-            // AJAX: Guardar movimiento bancario
-            public function save_movimiento_ajax() {
+    }
+
+    // AJAX: Guardar movimiento bancario
+    public function save_movimiento_ajax() {
         $this->load->database();
         $p = $this->input->post(NULL, TRUE);
         // Validar cuenta_id
@@ -258,8 +279,79 @@ class Tesoreria extends CI_Controller {
                 $numero_cheque = ($row && $row->max_cheque) ? (intval($row->max_cheque) + 1) : 1;
             }
         }
+        
+        // Obtener usuario actual que ejecuta la operación
+        $usuarioTxt = $this->session->userdata('username');
+        if (!$usuarioTxt) {
+            try {
+                $usuario_id = null;
+                if (method_exists($this->ion_auth, 'get_user_id')) {
+                    $tmpUserId = intval($this->ion_auth->get_user_id());
+                    $usuario_id = $tmpUserId > 0 ? $tmpUserId : null;
+                }
+                if ($usuario_id === null) {
+                    $usuarioRow = $this->ion_auth->user()->row();
+                    if ($usuarioRow && isset($usuarioRow->id)) {
+                        $tmpUserId = intval($usuarioRow->id);
+                        $usuario_id = $tmpUserId > 0 ? $tmpUserId : null;
+                    }
+                }
+                $usuarioTxt = $usuario_id ? ('user_' . $usuario_id) : 'sistema';
+            } catch (Exception $e) {
+                $usuarioTxt = 'sistema';
+            }
+        }
+        
+        $journalLines = [];
+        if (isset($p['asiento_lines']) && trim((string)$p['asiento_lines']) !== '') {
+            $asientoLinesRaw = json_decode($p['asiento_lines'], true);
+            if (!is_array($asientoLinesRaw)) {
+                header('Content-Type: application/json');
+                echo json_encode(['status'=>false, 'message'=>'El formato de las líneas del asiento es inválido.']);
+                return;
+            }
+            $totalDebe = 0.0;
+            $totalHaber = 0.0;
+            $totalDebeUsd = 0.0;
+            $totalHaberUsd = 0.0;
+            foreach ($asientoLinesRaw as $line) {
+                $account_id = isset($line['account_id']) ? intval($line['account_id']) : 0;
+                $debit = isset($line['debit']) ? floatval($line['debit']) : 0.0;
+                $credit = isset($line['credit']) ? floatval($line['credit']) : 0.0;
+                $debit_usd = isset($line['debit_usd']) ? floatval($line['debit_usd']) : 0.0;
+                $credit_usd = isset($line['credit_usd']) ? floatval($line['credit_usd']) : 0.0;
+                if ($account_id <= 0) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status'=>false, 'message'=>'Cada línea de asiento debe tener una cuenta contable válida.']);
+                    return;
+                }
+                if ($debit <= 0 && $credit <= 0 && $debit_usd <= 0 && $credit_usd <= 0) {
+                    header('Content-Type: application/json');
+                    echo json_encode(['status'=>false, 'message'=>'Cada línea de asiento debe tener un valor en Debe o Haber, en NIO o USD.']);
+                    return;
+                }
+                $totalDebe += $debit;
+                $totalHaber += $credit;
+                $totalDebeUsd += $debit_usd;
+                $totalHaberUsd += $credit_usd;
+                $journalLines[] = [
+                    'account_id' => $account_id,
+                    'debit' => $debit,
+                    'credit' => $credit,
+                    'debit_usd' => $debit_usd,
+                    'credit_usd' => $credit_usd,
+                    'description' => isset($line['description']) ? $line['description'] : null
+                ];
+            }
+            if (abs($totalDebe - $totalHaber) > 0.009 || abs($totalDebeUsd - $totalHaberUsd) > 0.009) {
+                header('Content-Type: application/json');
+                echo json_encode(['status'=>false, 'message'=>'El desglose contable no está balanceado. Total Debe y Total Haber deben coincidir en cada moneda.']);
+                return;
+            }
+        }
+
         $data = [
-            'tipo_movimiento' => ($forma_pago && strtoupper($forma_pago) === 'CHEQUE') ? 'cheque' : 'transferencia',
+            'tipo_movimiento' => isset($p['tipo_movimiento']) ? $p['tipo_movimiento'] : (($forma_pago && strtoupper($forma_pago) === 'CHEQUE') ? 'cheque' : 'transferencia'),
             'concepto' => isset($p['concepto']) ? $p['concepto'] : null,
             'forma_pago' => $forma_pago,
             'fecha_registro' => isset($p['fecha_registro']) ? $p['fecha_registro'] : null,
@@ -277,11 +369,54 @@ class Tesoreria extends CI_Controller {
             'cuenta_id' => $cuenta_id,
             'tipo_transferencia' => isset($p['tipo_transferencia']) ? $p['tipo_transferencia'] : null,
             'numero_cheque' => $numero_cheque,
+            'comision' => isset($p['comision']) ? $p['comision'] : 0,
+            'id_transaccion' => isset($p['id_transaccion']) ? $p['id_transaccion'] : null,
+            'tasa_cambio' => isset($p['tasa_cambio']) ? $p['tasa_cambio'] : null,
+            'creado_por' => $usuarioTxt,
+            'fecha_creacion' => date('Y-m-d H:i:s'),
             'created_at' => date('Y-m-d H:i:s')
         ];
         $this->db->insert('teso_movimientos', $data);
         $id = $this->db->insert_id();
+        $journal_id = null;
         if ($id) {
+            // Crear asiento contable si viene el desglose
+            if (!empty($journalLines)) {
+                $this->load->model('Contabilidad_model');
+                $journalDescription = trim((string)(isset($p['descripcion']) ? $p['descripcion'] : ''));
+                if ($journalDescription === '' && isset($p['concepto'])) {
+                    $journalDescription = trim((string)$p['concepto']);
+                }
+                if ($journalDescription === '') {
+                    $journalDescription = 'Transferencia de tesorería';
+                }
+                if (!empty($p['tipo_transferencia'])) {
+                    $journalDescription .= ' - ' . strtoupper(trim((string)$p['tipo_transferencia']));
+                }
+                if (!empty($p['beneficiario'])) {
+                    $journalDescription .= ' - ' . trim((string)$p['beneficiario']);
+                }
+                $journalPayload = [
+                    'date' => isset($p['fecha_registro']) ? $p['fecha_registro'] : date('Y-m-d'),
+                    'description' => $journalDescription,
+                    'created_by' => $this->session->userdata('user_id') ? intval($this->session->userdata('user_id')) : null,
+                    'source_type' => 'teso_movimiento',
+                    'source_id' => $id,
+                    'document_type' => 'CT',
+                    'entry_type' => 'CT',
+                    'lines' => $journalLines
+                ];
+                $journal_id = $this->Contabilidad_model->create_journal($journalPayload);
+                if (!$journal_id) {
+                    $this->db->where('id', $id)->delete('teso_movimientos');
+                    header('Content-Type: application/json');
+                    echo json_encode(['status'=>false, 'message'=>'No se pudo crear el asiento contable.']);
+                    return;
+                }
+                if ($this->db->field_exists('contabilizado', 'teso_movimientos')) {
+                    $this->db->where('id', $id)->update('teso_movimientos', ['contabilizado' => 1]);
+                }
+            }
             // Si es cheque, incrementar el consecutivo en la cuenta
             if (strtoupper((string)$forma_pago) === 'CHEQUE') {
                 $this->db->set('sig_cheque', 'sig_cheque+1', false);
@@ -289,19 +424,27 @@ class Tesoreria extends CI_Controller {
                 $this->db->update('teso_accounts');
             }
             header('Content-Type: application/json');
-            echo json_encode(['status'=>true, 'id'=>$id]);
+            echo json_encode(['status'=>true, 'id'=>$id, 'journal_id'=>$journal_id]);
         } else {
             $error = $this->db->error();
             header('Content-Type: application/json');
             echo json_encode(['status'=>false, 'message'=>'Error MySQL: '.$error['message']]);
         }
-            }
-        // AJAX: Obtener movimientos filtrados
-        public function get_movimientos_ajax() {
+    }
+
+    // AJAX: Obtener movimientos filtrados
+    public function get_movimientos_ajax() {
             $cuenta_id = $this->input->get('cuenta_id');
             $desde = trim((string)$this->input->get('desde'));
             $hasta = trim((string)$this->input->get('hasta'));
             $tipo = trim((string)$this->input->get('tipo'));
+            $modo = strtolower(trim((string)$this->input->get('modo')));
+            if (!in_array($modo, ['caja', 'banco'])) {
+                $modo = '';
+            }
+            $page = max(1, intval($this->input->get('page')));
+            $page_size = max(1, intval($this->input->get('page_size')) ?: 25);
+            $offset = ($page - 1) * $page_size;
 
             $this->db->from('teso_movimientos');
             if ($cuenta_id) $this->db->where('cuenta_id', $cuenta_id);
@@ -322,6 +465,25 @@ class Tesoreria extends CI_Controller {
                 }
             }
 
+            // Filtrar por modo de documentos Caja/Banco cuando no se haya aplicado otro tipo o para reforzar la selección
+            if ($modo === 'caja') {
+                if ($tipo === '') {
+                    $this->db->where('UPPER(forma_pago) =', 'EFECTIVO');
+                } elseif (strtolower($tipo) !== 'efectivo') {
+                    $this->db->where('1 = 0');
+                }
+            } elseif ($modo === 'banco') {
+                if ($tipo === '') {
+                    $this->db->group_start();
+                    $this->db->where('UPPER(forma_pago) =', 'CHEQUE');
+                    $this->db->or_where('UPPER(forma_pago) =', 'TRANSFERENCIA');
+                    $this->db->or_where('LOWER(tipo_transferencia) =', 'traslado');
+                    $this->db->group_end();
+                } elseif (!in_array(strtolower($tipo), ['cheque','transferencia','traslado'])) {
+                    $this->db->where('1 = 0');
+                }
+            }
+
             // Filtrar por rango de fechas (fecha_registro)
             if ($desde !== '' && $hasta !== '') {
                 $this->db->where('fecha_registro >=', $desde);
@@ -333,6 +495,9 @@ class Tesoreria extends CI_Controller {
             }
 
             $this->db->order_by('fecha_registro', 'desc');
+            $this->db->order_by('id', 'desc');
+            $total = $this->db->count_all_results('', false);
+            $this->db->limit($page_size, $offset);
             $movs = $this->db->get()->result_array();
 
             // Resolver nombres de usuario para evitar mostrar IDs en la columna Ejecutado por.
@@ -418,7 +583,13 @@ class Tesoreria extends CI_Controller {
                 $m['fecha_aplicacion_display'] = $formatDate(isset($m['fecha_aplicacion']) ? $m['fecha_aplicacion'] : '');
             }
             header('Content-Type: application/json');
-            echo json_encode(['status'=>true, 'movimientos'=>$movs]);
+            echo json_encode([
+                'status' => true,
+                'movimientos' => $movs,
+                'total' => $total,
+                'page' => $page,
+                'page_size' => $page_size,
+            ]);
         }
 
         // AJAX: Obtener siguiente número de cheque
@@ -442,6 +613,20 @@ class Tesoreria extends CI_Controller {
             if (!$id) { echo json_encode(['status'=>false,'message'=>'ID requerido']); return; }
             $mov = $this->db->get_where('teso_movimientos', ['id' => $id])->row();
             if ($mov) {
+                $mov->journal_id = null;
+                if ($this->db->table_exists('tb_journal') && $this->db->field_exists('source_type', 'tb_journal') && $this->db->field_exists('source_id', 'tb_journal')) {
+                    $journal = $this->db->select('id')
+                        ->from('tb_journal')
+                        ->where('source_type', 'teso_movimiento')
+                        ->where('source_id', $id)
+                        ->order_by('id', 'desc')
+                        ->limit(1)
+                        ->get()
+                        ->row();
+                    if ($journal && isset($journal->id)) {
+                        $mov->journal_id = intval($journal->id);
+                    }
+                }
                 echo json_encode(['status'=>true,'movimiento'=>$mov]);
             } else {
                 echo json_encode(['status'=>false,'message'=>'No encontrado']);
@@ -608,6 +793,20 @@ class Tesoreria extends CI_Controller {
                 ]);
             }
 
+            // Ajustar saldo de cuenta si el movimiento ya había impactado la cuenta
+            if ($this->db->table_exists('teso_accounts')) {
+                $montoTotal = floatval($mov->monto_total);
+                if ($montoTotal !== 0) {
+                    if ($this->db->field_exists('total_abonos', 'teso_accounts')) {
+                        $this->db->set('total_abonos', 'COALESCE(total_abonos,0) - ' . $this->db->escape($montoTotal), false);
+                    }
+                    if ($this->db->field_exists('saldo_actual', 'teso_accounts')) {
+                        $this->db->set('saldo_actual', 'COALESCE(saldo_actual,0) - ' . $this->db->escape($montoTotal), false);
+                    }
+                    $this->db->where('id', intval($mov->cuenta_id))->update('teso_accounts');
+                }
+            }
+
             // Si está contabilizado, anular el asiento contable relacionado
             $q = $this->db->select('id')->from('tb_journal')
                 ->where('source_type', 'teso_movimiento')
@@ -674,17 +873,24 @@ class Tesoreria extends CI_Controller {
     }
 
     public function cajas_bancos() { $this->_page('Cajas y Bancos', 'tesoreria/cajas_bancos'); }
+    public function cajas() { $this->_page('Cajas', 'tesoreria/cajas_bancos', ['default_tipo' => 'caja', 'subtitulo' => 'Solo Cajas']); }
+    public function bancos() { $this->_page('Bancos', 'tesoreria/cajas_bancos', ['default_tipo' => 'banco', 'subtitulo' => 'Solo Bancos']); }
     public function movimientos() {
         // Permitir filtrar por cuenta
         $this->load->database();
         $cuenta_id = $this->input->get('cuenta_id');
+        $doc_context = strtolower(trim((string)$this->input->get('modo')));
+        if (!in_array($doc_context, ['caja', 'banco'])) {
+            $doc_context = '';
+        }
         // Cargar solo cuentas activas (estado=1)
         $cuentas = $this->db->order_by('name','asc')->get_where('teso_accounts', "estado = 1")->result();
         $data = [
             'titulo' => 'Movimientos',
             'icono' => 'fas fa-wallet',
             'cuenta_id' => $cuenta_id,
-            'cuentas' => $cuentas
+            'cuentas' => $cuentas,
+            'doc_context' => $doc_context
         ];
         $this->load->view('layout/header', $data);
         $this->load->view('tesoreria/movimientos', $data);
@@ -693,10 +899,300 @@ class Tesoreria extends CI_Controller {
     public function conciliacion() {
         // Permitir filtrar por cuenta
         $cuenta_id = $this->input->get('cuenta_id');
-        $data = ['titulo' => 'Conciliación Bancaria', 'icono' => 'fas fa-wallet', 'cuenta_id' => $cuenta_id];
+        $data = [
+            'titulo' => 'Estados de Cuenta Bancarios',
+            'icono' => 'fas fa-wallet',
+            'cuenta_id' => $cuenta_id
+        ];
         $this->load->view('layout/header', $data);
         $this->load->view('tesoreria/conciliacion', $data);
         $this->load->view('layout/footer');
+    }
+
+    public function get_conciliacion_data_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+        $this->Tesoreria_model->ensure_conciliacion_support();
+
+        $cuenta_id = intval($this->input->get('cuenta_id'));
+        $periodo = trim((string)$this->input->get('periodo'));
+        if ($periodo === '') {
+            $periodo = date('Y-m');
+        }
+        $fecha_desde = date('Y-m-01', strtotime($periodo . '-01'));
+        $fecha_hasta = date('Y-m-t', strtotime($periodo . '-01'));
+
+        $cuentas = $this->_get_tesoreria_cuentas(true, 'banco');
+        if (empty($cuenta_id) && !empty($cuentas)) {
+            $cuenta_id = intval($cuentas[0]['id']);
+        }
+
+        $cuenta = null;
+        $movimientos = [];
+        $saldo_inicial = 0;
+        $saldo_final = 0;
+        $total_abonos = 0;
+        $total_cargos = 0;
+
+        if ($cuenta_id > 0) {
+            $cuenta = $this->_find_tesoreria_cuenta($cuenta_id, $cuentas);
+            $movimientos = $this->Tesoreria_model->get_movimientos_para_conciliacion($cuenta_id, $fecha_desde, $fecha_hasta);
+            $saldo_inicial = $this->Tesoreria_model->get_saldo_libros_a_fecha($cuenta_id, date('Y-m-d', strtotime($fecha_desde . ' -1 day')));
+            $saldo_final = $this->Tesoreria_model->get_saldo_libros_a_fecha($cuenta_id, $fecha_hasta);
+
+            foreach ($movimientos as $mov) {
+                $monto = isset($mov['monto_total']) ? floatval($mov['monto_total']) : 0;
+                if (isset($mov['tipo_transferencia']) && $mov['tipo_transferencia'] === 'abono') {
+                    $total_abonos += $monto;
+                } elseif (isset($mov['tipo_transferencia']) && $mov['tipo_transferencia'] === 'cargo') {
+                    $total_cargos += $monto;
+                } else {
+                    if ($monto >= 0) {
+                        $total_abonos += $monto;
+                    } else {
+                        $total_cargos += abs($monto);
+                    }
+                }
+            }
+        }
+
+        echo json_encode([
+            'status' => true,
+            'cuentas' => $cuentas,
+            'cuenta_id' => $cuenta_id,
+            'cuenta' => $cuenta,
+            'periodo' => $periodo,
+            'fecha_desde' => $fecha_desde,
+            'fecha_hasta' => $fecha_hasta,
+            'saldo_inicial' => round($saldo_inicial, 2),
+            'saldo_final' => round($saldo_final, 2),
+            'total_abonos' => round($total_abonos, 2),
+            'total_cargos' => round($total_cargos, 2),
+            'movimientos' => $movimientos
+        ]);
+    }
+
+    public function save_conciliacion_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+        $this->Tesoreria_model->ensure_conciliacion_support();
+
+        $p = $this->input->post(NULL, TRUE);
+        $cuenta_id = isset($p['cuenta_id']) ? intval($p['cuenta_id']) : 0;
+        $periodo = isset($p['periodo']) ? trim((string)$p['periodo']) : '';
+        $saldo_extracto = isset($p['saldo_extracto']) ? floatval($p['saldo_extracto']) : 0;
+        $saldo_libros = isset($p['saldo_libros']) ? floatval($p['saldo_libros']) : 0;
+        $observaciones = isset($p['observaciones']) ? trim((string)$p['observaciones']) : null;
+
+        if ($cuenta_id <= 0 || $periodo === '') {
+            echo json_encode(['status' => false, 'message' => 'Cuenta y periodo son obligatorios.']);
+            return;
+        }
+
+        $diferencia = $saldo_extracto - $saldo_libros;
+        $usuario_id = null;
+        try {
+            if (method_exists($this->ion_auth, 'get_user_id')) {
+                $tmpUserId = intval($this->ion_auth->get_user_id());
+                if ($tmpUserId > 0) {
+                    $usuario_id = $tmpUserId;
+                }
+            }
+        } catch (Exception $e) {
+            $usuario_id = null;
+        }
+
+        $savedId = $this->Tesoreria_model->save_conciliacion([
+            'cuenta_id' => $cuenta_id,
+            'periodo' => $periodo,
+            'saldo_extracto' => $saldo_extracto,
+            'saldo_libros' => $saldo_libros,
+            'diferencia' => $diferencia,
+            'observaciones' => $observaciones,
+            'usuario_id' => $usuario_id,
+            'estado' => 'finalizado'
+        ]);
+
+        if ($savedId) {
+            echo json_encode(['status' => true, 'id' => $savedId, 'message' => 'Estado de cuenta guardado.']);
+        } else {
+            echo json_encode(['status' => false, 'message' => 'No se pudo guardar el estado de cuenta.']);
+        }
+    }
+
+    public function conciliacion_pdf()
+    {
+        $this->load->database();
+        $this->Tesoreria_model->ensure_conciliacion_support();
+
+        $cuenta_id = intval($this->input->get('cuenta_id'));
+        $periodo = trim((string)$this->input->get('periodo'));
+
+        if ($cuenta_id <= 0 || $periodo === '') {
+            show_error('Cuenta o periodo no especificados.');
+            return;
+        }
+
+        $fecha_desde = date('Y-m-01', strtotime($periodo . '-01'));
+        $fecha_hasta = date('Y-m-t', strtotime($periodo . '-01'));
+
+        $cuentas = $this->_get_tesoreria_cuentas(true, 'banco');
+        $cuenta = $this->_find_tesoreria_cuenta($cuenta_id, $cuentas);
+        if (!$cuenta) {
+            show_error('Cuenta bancaria no encontrada.');
+            return;
+        }
+
+        $movimientos = $this->Tesoreria_model->get_movimientos_para_conciliacion($cuenta_id, $fecha_desde, $fecha_hasta);
+        $saldo_inicial = $this->Tesoreria_model->get_saldo_libros_a_fecha($cuenta_id, date('Y-m-d', strtotime($fecha_desde . ' -1 day')));
+        $total_abonos = 0;
+        $total_cargos = 0;
+        foreach ($movimientos as $mov) {
+            $monto = isset($mov['monto_total']) ? floatval($mov['monto_total']) : (isset($mov['monto']) ? floatval($mov['monto']) : 0);
+            if (isset($mov['tipo_transferencia']) && $mov['tipo_transferencia'] === 'abono') {
+                $total_abonos += $monto;
+            } elseif (isset($mov['tipo_transferencia']) && $mov['tipo_transferencia'] === 'cargo') {
+                $total_cargos += $monto;
+            } else {
+                if ($monto >= 0) {
+                    $total_abonos += $monto;
+                } else {
+                    $total_cargos += abs($monto);
+                }
+            }
+        }
+
+        $saldo_final = $saldo_inicial + $total_abonos - $total_cargos;
+
+        $data = [
+            'titulo' => 'Reporte de Estado de Cuenta Bancario',
+            'cuenta' => $cuenta,
+            'periodo' => $periodo,
+            'fecha_desde' => $fecha_desde,
+            'fecha_hasta' => $fecha_hasta,
+            'saldo_inicial' => $saldo_inicial,
+            'saldo_final' => $saldo_final,
+            'total_abonos' => $total_abonos,
+            'total_cargos' => $total_cargos,
+            'movimientos' => $movimientos,
+            'hora_impresion' => date('Y-m-d H:i:s')
+        ];
+
+        // Incluir logotipo del sistema si existe (embed como base64 para Dompdf)
+        $logoData = null;
+        if ($this->db->table_exists('tb_sistema')) {
+            $sys = $this->db->from('tb_sistema')->limit(1)->get()->row();
+            if ($sys && !empty($sys->logotipo)) {
+                $logoPath = FCPATH . 'public/img/sistema/' . $sys->logotipo;
+                if (file_exists($logoPath)) {
+                    $mime = mime_content_type($logoPath);
+                    $contents = @file_get_contents($logoPath);
+                    if ($contents !== false) {
+                        $logoData = 'data:' . $mime . ';base64,' . base64_encode($contents);
+                    }
+                }
+            }
+        }
+        // If no logo found in tb_sistema, check for user-provided Logo/Logo.png
+        if (empty($logoData)) {
+            $userLogo = FCPATH . 'Logo/Logo.png';
+            if (file_exists($userLogo)) {
+                $mime = mime_content_type($userLogo);
+                $contents = @file_get_contents($userLogo);
+                if ($contents !== false) {
+                    $logoData = 'data:' . $mime . ';base64,' . base64_encode($contents);
+                }
+            }
+        }
+        $data['logo_data'] = $logoData;
+
+        $html = $this->load->view('tesoreria/conciliacion_pdf', $data, TRUE);
+        $dompdf = new Dompdf();
+        $dompdf->loadHtml($html);
+        $dompdf->setPaper('a4', 'landscape');
+        $dompdf->render();
+
+        $filename = 'estado_cuenta_' . preg_replace('/[^0-9\-]/', '', $periodo) . '_' . intval($cuenta_id) . '.pdf';
+        header('Content-type: application/pdf');
+        header('Content-Disposition: inline; filename=' . $filename);
+        echo $dompdf->output();
+    }
+
+    public function toggle_movimiento_conciliado_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+        $this->Tesoreria_model->ensure_movimientos_conciliado_column();
+
+        $movimiento_id = isset($_POST['movimiento_id']) ? intval($_POST['movimiento_id']) : 0;
+        $conciliado = isset($_POST['conciliado']) ? intval($_POST['conciliado']) : 0;
+
+        if ($movimiento_id <= 0) {
+            echo json_encode(['status' => false, 'message' => 'Movimiento requerido']);
+            return;
+        }
+
+        $ok = $this->Tesoreria_model->toggle_movimiento_conciliado($movimiento_id, $conciliado);
+        echo json_encode(['status' => $ok ? true : false]);
+    }
+
+    private function _get_tesoreria_cuentas($onlyActive = true, $type = null)
+    {
+        $cuentas = [];
+        if ($this->db->table_exists('teso_accounts')) {
+            $this->db->from('teso_accounts');
+            if ($onlyActive) {
+                $this->db->where('estado', 1);
+            }
+            if ($type !== null) {
+                $this->db->where('type', $type);
+            }
+            $this->db->order_by('name', 'asc');
+            $rows = $this->db->get()->result_array();
+            foreach ($rows as $row) {
+                $cuentas[] = array(
+                    'id' => intval($row['id']),
+                    'code' => isset($row['code']) ? $row['code'] : '',
+                    'name' => isset($row['name']) ? $row['name'] : '',
+                    'type' => isset($row['type']) ? $row['type'] : '',
+                    'currency' => isset($row['currency']) ? $row['currency'] : '',
+                    'bank_name' => isset($row['bank_name']) ? $row['bank_name'] : ''
+                );
+            }
+        } elseif ($this->db->table_exists('teso_cuentas')) {
+            $this->db->from('teso_cuentas');
+            if ($onlyActive) {
+                $this->db->where('activo', 1);
+            }
+            if ($type !== null) {
+                $this->db->where('tipo', $type);
+            }
+            $this->db->order_by('nombre', 'asc');
+            $rows = $this->db->get()->result_array();
+            foreach ($rows as $row) {
+                $cuentas[] = array(
+                    'id' => intval($row['id']),
+                    'code' => isset($row['codigo']) ? $row['codigo'] : '',
+                    'name' => isset($row['nombre']) ? $row['nombre'] : '',
+                    'type' => isset($row['tipo']) ? $row['tipo'] : '',
+                    'currency' => isset($row['moneda']) ? $row['moneda'] : '',
+                    'bank_name' => ''
+                );
+            }
+        }
+        return $cuentas;
+    }
+
+    private function _find_tesoreria_cuenta($cuenta_id, $cuentas)
+    {
+        foreach ($cuentas as $c) {
+            if (intval($c['id']) === intval($cuenta_id)) {
+                return $c;
+            }
+        }
+        return null;
     }
     public function pagos()
     {
@@ -937,6 +1433,11 @@ class Tesoreria extends CI_Controller {
         }
 
         if ($this->db->table_exists('tb_cierre_arqueos_series')) {
+            $primaryExists = $this->db->query("SHOW INDEX FROM tb_cierre_arqueos_series WHERE Key_name = 'PRIMARY'")->num_rows() > 0;
+            $this->db->query("ALTER TABLE tb_cierre_arqueos_series MODIFY COLUMN id INT NOT NULL AUTO_INCREMENT");
+            if (!$primaryExists) {
+                $this->db->query("ALTER TABLE tb_cierre_arqueos_series ADD PRIMARY KEY (id)");
+            }
             if (!$this->db->field_exists('edit_autorizado_por', 'tb_cierre_arqueos_series')) {
                 $this->db->query("ALTER TABLE tb_cierre_arqueos_series ADD COLUMN edit_autorizado_por VARCHAR(150) NULL");
             }
@@ -1113,6 +1614,13 @@ class Tesoreria extends CI_Controller {
             $this->db->trans_rollback();
             echo json_encode(array('status' => false, 'message' => $e->getMessage()));
             return;
+        } catch (Throwable $t) {
+            // Catch PHP fatal errors (PHP 7+)
+            $this->db->trans_rollback();
+            $logMsg = "[" . date('Y-m-d H:i:s') . "] save_cierre_arqueo_serie_ajax fatal: " . $t->getMessage() . "\n" . $t->getTraceAsString() . "\n\n";
+            @file_put_contents(APPPATH . 'logs/cierre_arqueo_error.log', $logMsg, FILE_APPEND);
+            echo json_encode(array('status' => false, 'message' => 'Error interno del servidor. Revise logs: application/logs/cierre_arqueo_error.log'));
+            return;
         }
     }
 
@@ -1230,6 +1738,7 @@ class Tesoreria extends CI_Controller {
                 'tipo_transferencia' => 'abono',
                 'estado' => 'activo',
                 'creado_por' => $usuarioTxt,
+                'fecha_creacion' => date('Y-m-d H:i:s'),
                 'created_at' => date('Y-m-d H:i:s')
             );
             $this->db->insert('teso_movimientos', $mov);
@@ -1268,6 +1777,12 @@ class Tesoreria extends CI_Controller {
         } catch (Exception $e) {
             $this->db->trans_rollback();
             echo json_encode(array('status' => false, 'message' => $e->getMessage()));
+            return;
+        } catch (Throwable $t) {
+            $this->db->trans_rollback();
+            $logMsg = "[" . date('Y-m-d H:i:s') . "] save_cierre_arqueo_serie_ajax fatal: " . $t->getMessage() . "\n" . $t->getTraceAsString() . "\n\n";
+            @file_put_contents(APPPATH . 'logs/cierre_arqueo_error.log', $logMsg, FILE_APPEND);
+            echo json_encode(array('status' => false, 'message' => 'Error interno del servidor. Revise logs: application/logs/cierre_arqueo_error.log'));
             return;
         }
     }
@@ -1431,18 +1946,18 @@ class Tesoreria extends CI_Controller {
     public function save_cierre_arqueo_serie_ajax()
     {
         header('Content-Type: application/json');
-        if (!$this->input->is_ajax_request()) {
-            echo json_encode(array('status' => false, 'message' => 'Solicitud inválida'));
-            return;
-        }
+            if (!$this->input->is_ajax_request()) {
+                echo json_encode(array('status' => false, 'message' => 'Solicitud inválida'));
+                return;
+            }
 
-        $this->ensure_cierre_arqueo_tables();
-        $cierre_id = intval($this->input->post('cierre_id'));
-        $serie = strtoupper(trim((string)$this->input->post('serie_codigo')));
-        if ($cierre_id <= 0 || $serie === '') {
-            echo json_encode(array('status' => false, 'message' => 'Datos de cierre o serie inválidos'));
-            return;
-        }
+            $this->ensure_cierre_arqueo_tables();
+            $cierre_id = intval($this->input->post('cierre_id'));
+            $serie = strtoupper(trim((string)$this->input->post('serie_codigo')));
+            if ($cierre_id <= 0 || $serie === '') {
+                echo json_encode(array('status' => false, 'message' => 'Datos de cierre o serie inválidos'));
+                return;
+            }
 
         $cierre = $this->db->get_where('tb_cierres_caja', array('id' => $cierre_id))->row();
         if (!$cierre) {
@@ -1579,7 +2094,24 @@ class Tesoreria extends CI_Controller {
             $this->db->trans_rollback();
             echo json_encode(array('status' => false, 'message' => $e->getMessage()));
             return;
+        } catch (Throwable $t) {
+            // Log fatal errors via CI logger (will appear in daily log)
+            $msg = '[save_cierre_arqueo_serie_ajax] Fatal: ' . $t->getMessage() . "\n" . $t->getTraceAsString();
+            if (function_exists('log_message')) log_message('error', $msg);
+            // fallback file write
+            @file_put_contents(APPPATH . 'logs/cierre_arqueo_error.log', "[" . date('Y-m-d H:i:s') . "] " . $msg . "\n\n", FILE_APPEND);
+            echo json_encode(array('status' => false, 'message' => 'Error interno del servidor. Revise los logs de aplicación'));
+            return;
+        
+        // Outer catch to capture any errors happening outside the transaction block
+        } catch (Throwable $_t_outer) {
+            $m = '[save_cierre_arqueo_serie_ajax][outer] ' . $_t_outer->getMessage() . "\n" . $_t_outer->getTraceAsString();
+            if (function_exists('log_message')) log_message('error', $m);
+            @file_put_contents(APPPATH . 'logs/cierre_arqueo_error.log', "[" . date('Y-m-d H:i:s') . "] " . $m . "\n\n", FILE_APPEND);
+            echo json_encode(array('status' => false, 'message' => 'Error interno del servidor (outer).'));
+            return;
         }
+
     }
 
     public function save_cierre_arqueo_ajax()
@@ -2420,6 +2952,33 @@ class Tesoreria extends CI_Controller {
         $this->load->view('layout/footer');
     }
     public function cobros() { $this->_page('Gestión de Cobros', 'tesoreria/cobros'); }
+
+    public function cobros_list() { $this->_page('Listado de Cobros', 'tesoreria/cobros_list'); }
+
+    public function recibo_cobro($id = null)
+    {
+        if (!$id || !is_numeric($id)) {
+            show_error('ID de recibo inválido');
+        }
+
+        $mov = $this->db
+            ->select('m.*, a.name as cuenta_nombre, a.code as cuenta_codigo, s.codigo as serie_codigo, s.nombre as serie_descripcion')
+            ->from('teso_movimientos m')
+            ->join('teso_accounts a', 'a.id = m.cuenta_id', 'left')
+            ->join('tb_series_recibos s', 's.idserie = m.idserie', 'left')
+            ->where('m.id', intval($id))
+            ->limit(1)
+            ->get()
+            ->row();
+
+        if (!$mov) {
+            show_error('Cobro no encontrado');
+        }
+
+        $data = array('mov' => $mov);
+        $this->load->view('tesoreria/recibo_cobro', $data);
+    }
+
     public function arqueos()
     {
         if (!$this->db->table_exists('tb_cierres_caja')) {
@@ -2555,7 +3114,10 @@ class Tesoreria extends CI_Controller {
         echo $dompdf->output();
     }
 
-    public function flujo() { $this->_page('Flujo de Efectivo', 'tesoreria/flujo'); }
+    public function flujo()
+    {
+        $this->_page('Flujo de Efectivo', 'tesoreria/flujo', array('scripts' => array('js/contabilidad_flujo.js')));
+    }
     public function integracion()
     {
         $filters = array();
@@ -2628,9 +3190,9 @@ class Tesoreria extends CI_Controller {
     public function reportes() { $this->_page('Reportería', 'tesoreria/reportes'); }
     public function seguridad() { $this->_page('Seguridad y Roles', 'tesoreria/seguridad'); }
 
-    private function _page($titulo, $view)
+    private function _page($titulo, $view, $extra = array())
     {
-        $data = ['titulo' => $titulo, 'icono' => 'fas fa-wallet'];
+        $data = array_merge(['titulo' => $titulo, 'icono' => 'fas fa-wallet'], $extra);
         $this->load->view('layout/header', $data);
         $this->load->view($view, $data);
         $this->load->view('layout/footer');
@@ -2712,6 +3274,25 @@ class Tesoreria extends CI_Controller {
         echo json_encode(['status'=>true,'cuentas'=>$result, 'using' => 'teso_accounts']);
     }
 
+    // AJAX: Obtener datos de una cuenta específica (para editar)
+    public function get_cuenta_by_id_ajax()
+    {
+        header('Content-Type: application/json');
+        $cuenta_id = $this->input->get('cuenta_id');
+        if (!$cuenta_id || !is_numeric($cuenta_id)) {
+            echo json_encode(['status'=>false, 'message'=>'ID requerido']);
+            return;
+        }
+        
+        $cuenta = $this->db->get_where('teso_accounts', ['id' => intval($cuenta_id)])->row();
+        if (!$cuenta) {
+            echo json_encode(['status'=>false, 'message'=>'Cuenta no encontrada']);
+            return;
+        }
+        
+        echo json_encode(['status'=>true, 'cuenta'=>$cuenta]);
+    }
+
     public function save_cuenta_ajax()
     {
         if (!$this->ion_auth->is_admin()) { echo json_encode(['status'=>false,'message'=>'Sin permisos']); return; }
@@ -2726,6 +3307,17 @@ class Tesoreria extends CI_Controller {
             'estado' => isset($p['estado']) ? intval($p['estado']) : 1,
             'sig_cheque' => isset($p['sig_cheque']) ? intval($p['sig_cheque']) : null,
             'formato' => (isset($p['formato']) && $p['formato'] !== '' ? $p['formato'] : NULL),
+            // Nuevos campos
+            'fecha_apertura' => (isset($p['fecha_apertura']) && $p['fecha_apertura'] !== '' ? $p['fecha_apertura'] : NULL),
+            'clabe' => (isset($p['clabe']) && $p['clabe'] !== '' ? $p['clabe'] : NULL),
+            'dia_corte' => isset($p['dia_corte']) ? intval($p['dia_corte']) : NULL,
+            'ultimo_dia_mes' => isset($p['ultimo_dia_mes']) ? intval($p['ultimo_dia_mes']) : 0,
+            'clave_banco' => (isset($p['clave_banco']) && $p['clave_banco'] !== '' ? $p['clave_banco'] : NULL),
+            'sucursal' => (isset($p['sucursal']) && $p['sucursal'] !== '' ? $p['sucursal'] : NULL),
+            'funcionario' => (isset($p['funcionario']) && $p['funcionario'] !== '' ? $p['funcionario'] : NULL),
+            'telefono' => (isset($p['telefono']) && $p['telefono'] !== '' ? $p['telefono'] : NULL),
+            'cuenta_contable' => (isset($p['cuenta_contable']) && $p['cuenta_contable'] !== '' ? $p['cuenta_contable'] : NULL),
+            'banco_extranjero' => isset($p['banco_extranjero']) ? intval($p['banco_extranjero']) : 0,
         ];
         if (isset($p['id']) && intval($p['id'])>0) {
             // No permitir actualizar code ni saldo_inicial
@@ -3282,5 +3874,487 @@ class Tesoreria extends CI_Controller {
         } catch (Exception $e) {
             echo json_encode(array('status' => false, 'message' => $e->getMessage()));
         }
+    }
+
+    // AJAX: Obtener datos iniciales para cobros
+    public function get_cobro_datos_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+
+        // Obtener cuentas (caja y banco)
+        $cuentas = $this->_get_tesoreria_cuentas(true);
+
+        // Obtener series de recibos
+        $series = [];
+        if ($this->db->table_exists('tb_series_recibos')) {
+            $series = $this->db->order_by('codigo', 'ASC')->get('tb_series_recibos')->result_array();
+        }
+
+        // Obtener tasa de cambio actual
+        $tasaCambio = 33.50;
+        if ($this->db->table_exists('tb_tasa_cambio')) {
+            $tasaRow = $this->db->order_by('fecha', 'DESC')->limit(1)->get('tb_tasa_cambio')->row();
+            if ($tasaRow && isset($tasaRow->tasa_cambio)) {
+                $tasaCambio = floatval($tasaRow->tasa_cambio);
+            }
+        }
+
+        echo json_encode([
+            'status' => true,
+            'cuentas' => $cuentas,
+            'series' => $series,
+            'tasa_cambio' => $tasaCambio
+        ]);
+    }
+
+    // AJAX: Guardar cobro
+    public function save_cobro_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+
+        if (!$this->input->is_ajax_request()) {
+            echo json_encode(['status' => false, 'message' => 'Solicitud inválida']);
+            return;
+        }
+
+        $p = $this->input->post(NULL, TRUE);
+        $cuenta_id = isset($p['cuenta_id']) ? intval($p['cuenta_id']) : 0;
+        $tipo_transferencia = isset($p['tipo_transferencia']) ? trim((string)$p['tipo_transferencia']) : '';
+        $nombre_persona = isset($p['nombre_persona']) ? trim((string)$p['nombre_persona']) : '';
+        $descripcion = isset($p['descripcion']) ? trim((string)$p['descripcion']) : '';
+        $monto_total = isset($p['monto_total']) ? floatval($p['monto_total']) : 0;
+        $moneda = isset($p['moneda']) ? trim((string)$p['moneda']) : 'NIO';
+        $tc_aplicada = isset($p['tc_aplicada']) ? floatval($p['tc_aplicada']) : 0;
+        $idserie = isset($p['idserie']) && !empty($p['idserie']) ? intval($p['idserie']) : null;
+        $observaciones = isset($p['observaciones']) ? trim((string)$p['observaciones']) : null;
+
+        // Validaciones
+        if ($cuenta_id <= 0) {
+            echo json_encode(['status' => false, 'message' => 'Cuenta requerida']);
+            return;
+        }
+        if (!in_array($tipo_transferencia, ['abono', 'cargo'])) {
+            echo json_encode(['status' => false, 'message' => 'Tipo de pago inválido']);
+            return;
+        }
+        if (empty($idserie)) {
+            echo json_encode(['status' => false, 'message' => 'Serie del Documento requerida']);
+            return;
+        }
+        if (empty($nombre_persona)) {
+            echo json_encode(['status' => false, 'message' => 'Nombre de la persona requerido']);
+            return;
+        }
+        if (empty($descripcion)) {
+            echo json_encode(['status' => false, 'message' => 'Descripción requerida']);
+            return;
+        }
+        if ($monto_total <= 0) {
+            echo json_encode(['status' => false, 'message' => 'Monto debe ser mayor a 0']);
+            return;
+        }
+
+        // Obtener usuario actual
+        $usuario_id = null;
+        try {
+            if (method_exists($this->ion_auth, 'get_user_id')) {
+                $tmpUserId = intval($this->ion_auth->get_user_id());
+                $usuario_id = $tmpUserId > 0 ? $tmpUserId : null;
+            }
+        } catch (Exception $e) {
+            $usuario_id = null;
+        }
+
+        // Preparar datos para guardar en teso_movimientos
+        $movimiento_data = [
+            'cuenta_id' => $cuenta_id,
+            'tipo_transferencia' => $tipo_transferencia,
+            'descripcion' => $descripcion,
+            'beneficiario' => $nombre_persona,
+            'monto_total' => $monto_total,
+            'moneda' => $moneda,
+            'fecha_registro' => date('Y-m-d H:i:s'),
+            'fecha_aplicacion' => date('Y-m-d'),
+            'concepto' => 'COBRO_ADICIONAL',
+            'usuario_id' => $usuario_id,
+            'conciliado' => 0,
+            'estado' => 'registrado'
+        ];
+
+        // Si se seleccionó serie
+        if ($idserie !== null) {
+            $movimiento_data['idserie'] = $idserie;
+            if ($this->db->table_exists('tb_series_recibos')) {
+                $sr = $this->db->query('SELECT * FROM tb_series_recibos WHERE idserie = ? FOR UPDATE', array($idserie))->row();
+                if (!$sr) {
+                    echo json_encode(['status' => false, 'message' => 'Serie del Documento no encontrada']);
+                    return;
+                }
+                $current = isset($sr->consecutivo) ? intval($sr->consecutivo) : 0;
+                $next = $current + 1;
+                $this->db->where('idserie', $idserie)->update('tb_series_recibos', array(
+                    'consecutivo' => $next,
+                    'ultimo_emitido' => $next,
+                    'updated_on' => time()
+                ));
+                $serieCodigo = trim((string)$sr->codigo);
+                if ($serieCodigo === '') {
+                    $serieCodigo = 'SERIE';
+                }
+                $numeroRecibo = $serieCodigo . str_pad($next, 10, '0', STR_PAD_LEFT);
+                $movimiento_data['referencia1'] = $numeroRecibo;
+            }
+        }
+
+        // Si es USD, guardar tasa de cambio
+        if ($moneda === 'USD' && $tc_aplicada > 0) {
+            $movimiento_data['tc_aplicada'] = $tc_aplicada;
+            $movimiento_data['monto_nio'] = $monto_total * $tc_aplicada;
+        }
+
+        // Si hay observaciones
+        if ($observaciones !== null) {
+            $movimiento_data['observaciones'] = $observaciones;
+        }
+
+        // Guardar en teso_movimientos
+        try {
+            if ($this->db->table_exists('teso_movimientos')) {
+                $this->db->trans_begin();
+                $this->db->insert('teso_movimientos', $movimiento_data);
+                $movimiento_id = $this->db->insert_id();
+
+                if ($this->db->table_exists('teso_accounts')) {
+                    if ($this->db->field_exists('total_abonos', 'teso_accounts')) {
+                        $this->db->set('total_abonos', 'COALESCE(total_abonos,0) + ' . $this->db->escape($monto_total), false);
+                    }
+                    if ($this->db->field_exists('saldo_actual', 'teso_accounts')) {
+                        $this->db->set('saldo_actual', 'COALESCE(saldo_actual,0) + ' . $this->db->escape($monto_total), false);
+                    }
+                    $this->db->where('id', $cuenta_id)->update('teso_accounts');
+                }
+
+                if ($this->db->trans_status() === false) {
+                    $this->db->trans_rollback();
+                    echo json_encode(['status' => false, 'message' => 'Error al actualizar saldo de cuenta']);
+                    return;
+                }
+                $this->db->trans_commit();
+            } else {
+                echo json_encode(['status' => false, 'message' => 'Tabla de movimientos no disponible']);
+                return;
+            }
+        } catch (Exception $e) {
+            $this->db->trans_rollback();
+            echo json_encode(['status' => false, 'message' => 'Error al guardar: ' . $e->getMessage()]);
+            return;
+        }
+
+        $recibo_url = null;
+        if ($movimiento_id) {
+            $recibo_url = site_url('tesoreria/recibo_cobro/' . intval($movimiento_id));
+        }
+
+        echo json_encode([
+            'status' => true,
+            'message' => 'Cobro registrado exitosamente',
+            'movimiento_id' => $movimiento_id,
+            'monto_registrado' => $monto_total,
+            'moneda' => $moneda,
+            'recibo_url' => $recibo_url
+        ]);
+    }
+
+    // AJAX: Obtener últimos cobros registrados
+    public function get_ultimos_cobros_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+
+        $cobros = [];
+        if ($this->db->table_exists('teso_movimientos')) {
+            $this->db->select('id, descripcion, beneficiario, monto_total, moneda, fecha_registro');
+            $this->db->where('concepto', 'COBRO_ADICIONAL');
+            $this->db->order_by('fecha_registro', 'DESC');
+            $this->db->limit(5);
+            $cobros = $this->db->get('teso_movimientos')->result_array();
+        }
+
+        echo json_encode([
+            'status' => true,
+            'cobros' => $cobros
+        ]);
+    }
+
+    // AJAX: Obtener lista completa de cobros
+    private function _get_cobros_filters_from_input()
+    {
+        return [
+            'date_from' => trim((string)$this->input->get('date_from')),
+            'date_to' => trim((string)$this->input->get('date_to')),
+            'estado' => trim((string)$this->input->get('estado')),
+            'q' => trim((string)$this->input->get('q'))
+        ];
+    }
+
+    private function _get_cobros_list_data(array $filters = [])
+    {
+        if (!$this->db->table_exists('teso_movimientos')) {
+            return [];
+        }
+
+        $amountFields = [];
+        if ($this->db->field_exists('monto_total', 'teso_movimientos')) {
+            $amountFields[] = 'm.monto_total';
+        }
+        if ($this->db->field_exists('monto', 'teso_movimientos')) {
+            $amountFields[] = 'm.monto';
+        }
+        if ($this->db->field_exists('monto_nio', 'teso_movimientos')) {
+            $amountFields[] = 'm.monto_nio';
+        }
+        if ($this->db->field_exists('monto_usd', 'teso_movimientos')) {
+            $amountFields[] = 'm.monto_usd';
+        }
+        if (empty($amountFields)) {
+            $amountFields[] = '0';
+        }
+
+        $currencyFields = [];
+        if ($this->db->field_exists('moneda', 'teso_movimientos')) {
+            $currencyFields[] = "NULLIF(TRIM(m.moneda), '')";
+        }
+        if ($this->db->field_exists('currency', 'teso_accounts')) {
+            $currencyFields[] = "NULLIF(TRIM(a.currency), '')";
+        }
+        $currencyFields[] = "'NIO'";
+
+        $this->db->select('m.id, m.descripcion, m.beneficiario, m.fecha_registro, m.estado, m.referencia1, m.observaciones, a.name as cuenta_nombre, a.code as cuenta_codigo, s.codigo as serie_codigo', false);
+        $this->db->select('COALESCE(' . implode(', ', $amountFields) . ') AS monto_total', false);
+        $this->db->select('COALESCE(' . implode(', ', $currencyFields) . ') AS moneda', false);
+        $this->db->from('teso_movimientos m');
+        $this->db->join('teso_accounts a', 'a.id = m.cuenta_id', 'left');
+        $this->db->join('tb_series_recibos s', 's.idserie = m.idserie', 'left');
+        $this->db->where('m.concepto', 'COBRO_ADICIONAL');
+
+        if (!empty($filters['date_from'])) {
+            $this->db->where('DATE(m.fecha_registro) >=', $filters['date_from']);
+        }
+        if (!empty($filters['date_to'])) {
+            $this->db->where('DATE(m.fecha_registro) <=', $filters['date_to']);
+        }
+        if (!empty($filters['estado'])) {
+            $this->db->where('LOWER(m.estado)', strtolower($filters['estado']));
+        }
+        if (!empty($filters['q'])) {
+            $this->db->group_start();
+            $this->db->like('m.descripcion', $filters['q']);
+            $this->db->or_like('m.beneficiario', $filters['q']);
+            $this->db->or_like('a.name', $filters['q']);
+            $this->db->or_like('a.code', $filters['q']);
+            $this->db->or_like('s.codigo', $filters['q']);
+            $this->db->or_like('m.referencia1', $filters['q']);
+            $this->db->or_like('m.estado', $filters['q']);
+            $this->db->group_end();
+        }
+
+        $this->db->order_by('m.fecha_registro', 'DESC');
+        $this->db->order_by('m.id', 'DESC');
+
+        return $this->db->get()->result_array();
+    }
+
+    public function get_cobros_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+
+        $filters = $this->_get_cobros_filters_from_input();
+        $cobros = $this->_get_cobros_list_data($filters);
+
+        echo json_encode([
+            'status' => true,
+            'cobros' => $cobros
+        ]);
+    }
+
+    public function cobros_export_xlsx()
+    {
+        $this->load->database();
+        $filters = $this->_get_cobros_filters_from_input();
+        $cobros = $this->_get_cobros_list_data($filters);
+
+        $spreadsheet = new \PhpOffice\PhpSpreadsheet\Spreadsheet();
+        $sheet = $spreadsheet->getActiveSheet();
+        $sheet->setTitle('Cobros');
+
+        $headers = ['Orden', 'Fecha', 'Persona', 'Descripción', 'Cuenta', 'Serie / Recibo', 'Monto', 'Moneda', 'Estado'];
+        foreach ($headers as $index => $text) {
+            $col = chr(65 + $index);
+            $sheet->setCellValue($col . '1', $text);
+            $sheet->getStyle($col . '1')->getFont()->setBold(true);
+            $sheet->getColumnDimension($col)->setAutoSize(true);
+        }
+
+        $row = 2;
+        foreach ($cobros as $index => $cobro) {
+            $sheet->setCellValue('A' . $row, $index + 1);
+            $sheet->setCellValue('B' . $row, isset($cobro['fecha_registro']) ? substr($cobro['fecha_registro'], 0, 10) : '');
+            $sheet->setCellValue('C' . $row, $cobro['beneficiario']);
+            $sheet->setCellValue('D' . $row, $cobro['descripcion']);
+            $sheet->setCellValue('E' . $row, trim(($cobro['cuenta_nombre'] ?: '') . ' (' . ($cobro['cuenta_codigo'] ?: '') . ')'));
+            $sheet->setCellValue('F' . $row, trim(($cobro['serie_codigo'] ?: '') . ' ' . ($cobro['referencia1'] ?: '')));
+            $sheet->setCellValue('G' . $row, floatval($cobro['monto_total']));
+            $sheet->setCellValue('H' . $row, $cobro['moneda'] ?: 'NIO');
+            $sheet->setCellValue('I' . $row, $cobro['estado']);
+            $row++;
+        }
+
+        $fileName = 'cobros_' . date('Ymd_His');
+        $writer = new \PhpOffice\PhpSpreadsheet\Writer\Xlsx($spreadsheet);
+        header('Content-Type: application/vnd.openxmlformats-officedocument.spreadsheetml.sheet');
+        header('Content-Disposition: attachment;filename="' . $fileName . '.xlsx"');
+        header('Cache-Control: max-age=0');
+        $writer->save('php://output');
+    }
+
+    public function cobros_export_pdf()
+    {
+        $this->load->database();
+        $filters = $this->_get_cobros_filters_from_input();
+        $cobros = $this->_get_cobros_list_data($filters);
+
+        $data = [
+            'titulo' => 'Listado de Cobros',
+            'cobros' => $cobros,
+            'date_from' => $filters['date_from'],
+            'date_to' => $filters['date_to']
+        ];
+
+        $html = $this->load->view('tesoreria/cobros_list_pdf', $data, TRUE);
+        $this->load->library('pdf');
+        $filename = 'cobros_' . date('Ymd_His');
+        $this->pdf->createPDF($html, $filename, TRUE, 'A4', 'landscape');
+    }
+
+    public function update_cobro_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+        $p = $this->input->post(NULL, TRUE);
+
+        $id = isset($p['id']) ? intval($p['id']) : 0;
+        if ($id <= 0) {
+            echo json_encode(['status' => false, 'message' => 'ID de cobro requerido']);
+            return;
+        }
+
+        $mov = $this->db->get_where('teso_movimientos', ['id' => $id])->row();
+        if (!$mov) {
+            echo json_encode(['status' => false, 'message' => 'Cobro no encontrado']);
+            return;
+        }
+
+        $beneficiario = isset($p['beneficiario']) ? trim((string)$p['beneficiario']) : '';
+        $descripcion = isset($p['descripcion']) ? trim((string)$p['descripcion']) : '';
+        $monto_total = isset($p['monto_total']) ? floatval($p['monto_total']) : floatval($mov->monto_total);
+        $observaciones = isset($p['observaciones']) ? trim((string)$p['observaciones']) : null;
+
+        if ($beneficiario === '') {
+            echo json_encode(['status' => false, 'message' => 'Beneficiario requerido']);
+            return;
+        }
+        if ($descripcion === '') {
+            echo json_encode(['status' => false, 'message' => 'Descripción requerida']);
+            return;
+        }
+        if ($monto_total <= 0) {
+            echo json_encode(['status' => false, 'message' => 'Monto debe ser mayor a 0']);
+            return;
+        }
+
+        $this->db->trans_begin();
+
+        $updateData = [
+            'beneficiario' => $beneficiario,
+            'descripcion' => $descripcion,
+            'monto_total' => $monto_total,
+        ];
+        if ($observaciones !== null) {
+            $updateData['observaciones'] = $observaciones;
+        }
+
+        $montoAnterior = floatval($mov->monto_total);
+        $diferencia = $monto_total - $montoAnterior;
+
+        if ($diferencia !== 0 && $this->db->table_exists('teso_accounts')) {
+            if ($this->db->field_exists('total_abonos', 'teso_accounts')) {
+                $this->db->set('total_abonos', 'COALESCE(total_abonos,0) + ' . $this->db->escape($diferencia), false);
+            }
+            if ($this->db->field_exists('saldo_actual', 'teso_accounts')) {
+                $this->db->set('saldo_actual', 'COALESCE(saldo_actual,0) + ' . $this->db->escape($diferencia), false);
+            }
+            $this->db->where('id', intval($mov->cuenta_id))->update('teso_accounts');
+        }
+
+        $this->db->where('id', $id)->update('teso_movimientos', $updateData);
+
+        if ($this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            echo json_encode(['status' => false, 'message' => 'Error al actualizar el cobro']);
+            return;
+        }
+
+        $this->db->trans_commit();
+        echo json_encode(['status' => true, 'message' => 'Cobro actualizado correctamente']);
+    }
+
+    public function delete_cobro_ajax()
+    {
+        header('Content-Type: application/json');
+        $this->load->database();
+        $id = intval($this->input->post('id'));
+
+        if ($id <= 0) {
+            echo json_encode(['status' => false, 'message' => 'ID de cobro requerido']);
+            return;
+        }
+
+        $mov = $this->db->get_where('teso_movimientos', ['id' => $id])->row();
+        if (!$mov) {
+            echo json_encode(['status' => false, 'message' => 'Cobro no encontrado']);
+            return;
+        }
+
+        if ($this->db->field_exists('contabilizado', 'teso_movimientos') && intval($mov->contabilizado) === 1) {
+            echo json_encode(['status' => false, 'message' => 'No se puede eliminar un cobro contabilizado']);
+            return;
+        }
+
+        $this->db->trans_begin();
+
+        if ($this->db->table_exists('teso_accounts')) {
+            $monto_total = floatval($mov->monto_total);
+            if ($this->db->field_exists('total_abonos', 'teso_accounts')) {
+                $this->db->set('total_abonos', 'COALESCE(total_abonos,0) - ' . $this->db->escape($monto_total), false);
+            }
+            if ($this->db->field_exists('saldo_actual', 'teso_accounts')) {
+                $this->db->set('saldo_actual', 'COALESCE(saldo_actual,0) - ' . $this->db->escape($monto_total), false);
+            }
+            $this->db->where('id', intval($mov->cuenta_id))->update('teso_accounts');
+        }
+
+        $this->db->where('id', $id)->delete('teso_movimientos');
+
+        if ($this->db->trans_status() === false) {
+            $this->db->trans_rollback();
+            echo json_encode(['status' => false, 'message' => 'Error al eliminar el cobro']);
+            return;
+        }
+
+        $this->db->trans_commit();
+        echo json_encode(['status' => true, 'message' => 'Cobro eliminado correctamente']);
     }
 }

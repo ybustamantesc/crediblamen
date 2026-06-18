@@ -72,6 +72,27 @@
                             <small class="text-muted">Filtrar por estado o buscar por cliente/código.</small>
                         </div>
                     </div>
+                    <style>
+                        @media (max-width: 767.98px) {
+                            #solicitudes-table th:nth-child(2),
+                            #solicitudes-table td:nth-child(2) {
+                                font-size: 0.76rem;
+                                line-height: 1.05;
+                            }
+
+                            #solicitudes-table th:nth-child(4),
+                            #solicitudes-table td:nth-child(4),
+                            #solicitudes-table th:nth-child(6),
+                            #solicitudes-table td:nth-child(6) {
+                                display: none;
+                            }
+
+                            #solicitudes-table th:nth-child(7),
+                            #solicitudes-table td:nth-child(7) {
+                                white-space: nowrap;
+                            }
+                        }
+                    </style>
                     <div class="table-responsive">
                         <table id="solicitudes-table" class="table table-sm table-striped table-bordered table-compact">
                             <thead>
@@ -109,7 +130,15 @@
                                         <td><?php echo 'SOL-' . str_pad($s->idsolicitud, 4, '0', STR_PAD_LEFT); ?></td>
                                         <td><?php echo htmlspecialchars($s->rubro_credito ?? ''); ?></td>
                                         <td><?php echo htmlspecialchars($s->nombre_asesor ?? ''); ?></td>
-                                        <td><?php echo (!empty($s->fecha_recepcion) ? $s->fecha_recepcion : (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : '')); ?></td>
+                                        <td><?php
+                                            $fecha = !empty($s->fecha_recepcion) ? $s->fecha_recepcion : (!empty($s->fecha_solicitud) ? $s->fecha_solicitud : '');
+                                            if ($fecha) {
+                                                $dt = date_create($fecha);
+                                                echo $dt ? date_format($dt, 'd-m-Y') : htmlspecialchars($fecha);
+                                            } else {
+                                                echo '';
+                                            }
+                                        ?></td>
                                         <td>
                                             <div class="btn-group">
                                                 <button type="button" class="btn btn-sm btn-secondary dropdown-toggle" data-toggle="dropdown" data-boundary="scrollParent" data-display="static" aria-haspopup="true" aria-expanded="false">Acciones</button>
@@ -128,12 +157,12 @@
                                                     <?php endif; ?>
                                                     <div class="dropdown-divider"></div>
                                                     <?php if ($status === 'annulled'): ?>
-                                                        <span class="dropdown-item text-muted disabled" data-action="garantia" style="pointer-events:none;">Garantia (bloqueado por anulación)</span>
+                                                        <span class="dropdown-item text-muted disabled" data-action="garantia" style="pointer-events:none;">Garantía (bloqueado por anulación)</span>
                                                         <span class="dropdown-item text-muted disabled" data-action="pic" style="pointer-events:none;">PIC (bloqueado por anulación)</span>
                                                         <span class="dropdown-item text-muted disabled" data-action="fotos" style="pointer-events:none;">Fotos (bloqueado por anulación)</span>
                                                         <span class="dropdown-item text-muted disabled" data-action="documentos" style="pointer-events:none;">Documentos (bloqueado por anulación)</span>
                                                     <?php else: ?>
-                                                        <a class="dropdown-item" data-action="garantia" href="<?php echo base_url('garantias/create/' . $s->idsolicitud); ?>">Garantia</a>
+                                                        <a class="dropdown-item" data-action="garantia" href="<?php echo base_url('garantias/create/' . $s->idsolicitud); ?>">Garantía</a>
                                                         <a class="dropdown-item" data-action="pic" href="<?php echo base_url('perfil_integral/create/' . $s->idsolicitud); ?>">PIC</a>
                                                         <a class="dropdown-item" data-action="fotos" href="<?php echo base_url('solicitudes/photos/' . intval($s->idsolicitud)); ?>">Fotos</a>
                                                         <a class="dropdown-item" data-action="documentos" href="<?php echo base_url('solicitudes/documents/' . intval($s->idsolicitud)); ?>">Documentos</a>
@@ -141,10 +170,10 @@
                                                     <a class="dropdown-item" data-action="pdf" href="<?php echo base_url('solicitudes/download_solicitud_pdf_force/' . intval($s->idsolicitud)); ?>"><i class="fas fa-file-pdf"></i> PDF</a>
                                                     <div class="dropdown-divider"></div>
                                                     <?php if ($status === 'annulled'): ?>
-                                                        <span class="dropdown-item text-muted disabled" data-action="uso" style="pointer-events:none;">Uso Credito (bloqueado por anulación)</span>
+                                                        <span class="dropdown-item text-muted disabled" data-action="uso" style="pointer-events:none;">Uso Crédito (bloqueado por anulación)</span>
                                                         <span class="dropdown-item text-muted disabled" data-action="referencias" style="pointer-events:none;">Referencias (bloqueado por anulación)</span>
                                                     <?php else: ?>
-                                                        <a class="dropdown-item btn-uso" data-action="uso" href="#" data-id="<?php echo $s->idsolicitud; ?>">Uso Credito</a>
+                                                        <a class="dropdown-item btn-uso" data-action="uso" href="#" data-id="<?php echo $s->idsolicitud; ?>">Uso Crédito</a>
                                                         <a class="dropdown-item btn-referencias" data-action="referencias" href="<?php echo base_url('solicitudes/referencias?idsolicitud=' . $s->idsolicitud); ?>" data-id="<?php echo $s->idsolicitud; ?>">Referencias</a>
                                                     <?php endif; ?>
                                                 </div>

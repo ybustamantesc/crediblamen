@@ -76,7 +76,7 @@ $query_builder = TRUE;
 $db_host = getenv('DB_HOST') !== false ? getenv('DB_HOST') : 'localhost';
 $db_user = getenv('DB_USER') !== false ? getenv('DB_USER') : 'root';
 $db_pass = getenv('DB_PASS') !== false ? getenv('DB_PASS') : '';
-$db_name = getenv('DB_NAME') !== false ? getenv('DB_NAME') : 'u987557742_crediblamensis';
+$db_name = getenv('DB_NAME') !== false ? getenv('DB_NAME') : 'u987557742_crediblamen10062026';
 $db_port = getenv('DB_PORT') !== false ? (int) getenv('DB_PORT') : 3306;
 $db_socket = getenv('DB_SOCKET') !== false ? getenv('DB_SOCKET') : '';
 $db_host_fallback = getenv('DB_HOST_FALLBACK') !== false ? getenv('DB_HOST_FALLBACK') : '127.0.0.1';

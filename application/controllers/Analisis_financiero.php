@@ -451,6 +451,7 @@ class Analisis_financiero extends CI_Controller
         $this->db->select('tb_solicitudes.*, COALESCE(tb_asesores.nombres, "") as nombre_asesor');
         $this->db->from('tb_solicitudes');
         $this->db->join('tb_asesores', 'tb_solicitudes.idasesor = tb_asesores.idasesor', 'left');
+        $this->db->order_by('tb_solicitudes.idsolicitud', 'DESC');
         $solicitudes = $this->db->get()->result();
         $rows_afa = $this->db->select('idsolicitud')->from('tb_analisis_financiero_asalariado')->get()->result();
         $rows_afc = $this->db->select('idsolicitud')->from('tb_analisis_financiero_comerciante')->get()->result();

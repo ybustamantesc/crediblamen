@@ -87,6 +87,9 @@
                             /* Keep table visible on small screens so DataTables pagination works and hide cards */
                             #garantias-table-wrap { display: block !important; }
                             #garantias-cards-wrap { display: none !important; }
+                            /* Hide the Solicitud and Destino Conami columns in mobile to free up horizontal space */
+                            #garantias-table th:first-child, #garantias-table td:first-child,
+                            #garantias-table th:nth-child(4), #garantias-table td:nth-child(4) { display: none; }
                             #garantias-table td:last-child .btn { padding: .16rem .28rem; font-size: .72rem; }
                         }
                         @media (min-width: 768px) {

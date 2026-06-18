@@ -63,6 +63,14 @@
             background: #073a5b;
             text-transform: uppercase;
         }
+        .section-block {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
+        .section-block table {
+            page-break-inside: avoid;
+            break-inside: avoid;
+        }
         .value-col {
             width: 210px;
             text-align: right;
@@ -189,7 +197,7 @@
             </tr>
             <tr>
                 <td>P. Entretenimiento (incluye gastos derivados del uso celulares e internet)</td>
-                <td class="value-col"><?= $money_or_currency_dash($analisis['p_entretenimiento'] ?? 0) ?></td>
+                <td class="value-col"><?= $money_or_currency_dash($analisis['entretenimiento'] ?? 0) ?></td>
             </tr>
             <tr class="subtle-row">
                 <td>Q. Otros Gastos (Especifique)</td>
@@ -226,31 +234,33 @@
         </tbody>
     </table>
 
-    <div class="section-title">Canasta Basica</div>
-    <table>
-        <tbody>
-            <tr>
-                <td><b>Canasta basica C$</b></td>
-                <td class="value-col"><?= $money($analisis['canasta_basica'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td><b>Cantidad promedio</b></td>
-                <td class="value-col"><?= number_format((float)($analisis['cantidad_promedio'] ?? 0), 0) ?></td>
-            </tr>
-            <tr>
-                <td><b>Monto por persona</b></td>
-                <td class="value-col"><?= $money($analisis['monto_por_persona'] ?? 0) ?></td>
-            </tr>
-            <tr>
-                <td><b>Cantidad de personas dependientes</b></td>
-                <td class="value-col"><?= number_format((float)($analisis['personas_dependientes'] ?? 0), 0) ?></td>
-            </tr>
-            <tr>
-                <td><b>Gastos de alimentación</b></td>
-                <td class="value-col"><?= $money($analisis['gastos_alimentacion_canasta'] ?? 0) ?></td>
-            </tr>
-        </tbody>
-    </table>
+    <div class="section-block">
+        <div class="section-title">Canasta Básica</div>
+        <table>
+            <tbody>
+                <tr>
+                    <td><b>Canasta Básica C$</b></td>
+                    <td class="value-col"><?= $money($analisis['canasta_basica'] ?? 0) ?></td>
+                </tr>
+                <tr>
+                    <td><b>Cantidad promedio</b></td>
+                    <td class="value-col"><?= number_format((float)($analisis['cantidad_promedio'] ?? 0), 0) ?></td>
+                </tr>
+                <tr>
+                    <td><b>Monto por persona</b></td>
+                    <td class="value-col"><?= $money($analisis['monto_por_persona'] ?? 0) ?></td>
+                </tr>
+                <tr>
+                    <td><b>Cantidad de personas dependientes</b></td>
+                    <td class="value-col"><?= number_format((float)($analisis['personas_dependientes'] ?? 0), 0) ?></td>
+                </tr>
+                <tr>
+                    <td><b>Gastos de alimentación</b></td>
+                    <td class="value-col"><?= $money($analisis['gastos_alimentacion_canasta'] ?? 0) ?></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
 
     <div class="section-title">Tipo De Transporte</div>
     <table>

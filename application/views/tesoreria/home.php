@@ -132,7 +132,7 @@
                         <div class="card-body d-flex flex-column flex-lg-row justify-content-between align-items-lg-center">
                             <div class="mb-3 mb-lg-0">
                                 <h4 class="teso-hero-title">Módulo de Tesorería</h4>
-                                <p class="teso-hero-sub">Administra cajas y bancos, controla movimientos, programa pagos y ejecuta conciliaciones con trazabilidad completa.</p>
+                                <p class="teso-hero-sub">Administra cajas y bancos, controla movimientos, programa pagos y valida estados de cuenta bancarios con trazabilidad completa.</p>
                             </div>
                             <div class="teso-actions d-flex flex-wrap">
                                 <button id="btnNuevoMovimiento" class="btn btn-primary mr-2 mb-2"><i class="fas fa-plus-circle mr-1"></i> Nuevo Movimiento</button>
@@ -140,7 +140,7 @@
                                 <button id="btnArqueo" class="btn btn-outline-info mr-2 mb-2"><i class="fas fa-cash-register mr-1"></i> Arqueo</button>
                                 <a href="<?php echo base_url('tesoreria/movimientos'); ?>" class="btn btn-outline-secondary mr-2 mb-2">Movimientos</a>
                                 <a href="<?php echo base_url('tesoreria/pagos'); ?>" class="btn btn-outline-secondary mr-2 mb-2">Pagos</a>
-                                <a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="btn btn-outline-secondary mb-2">Conciliación</a>
+                                <a href="<?php echo base_url('tesoreria/conciliacion'); ?>" class="btn btn-outline-secondary mb-2">Estados de Cuenta Bancarios</a>
                             </div>
                         </div>
                     </div>
@@ -160,9 +160,9 @@
                 <div class="col-lg-3 col-md-6 mb-3">
                     <div class="card teso-kpi">
                         <div class="card-body">
-                            <div class="kpi-label">Conciliación</div>
+                            <div class="kpi-label">Estado de Cuenta</div>
                             <div class="kpi-value">Bancos</div>
-                            <div class="kpi-note">Valida saldos y operaciones pendientes.</div>
+                            <div class="kpi-note">Valida saldos incluyendo el extracto bancario.</div>
                         </div>
                     </div>
                 </div>
@@ -218,7 +218,7 @@
                             <ul class="teso-info-list">
                                 <li><strong>Movimientos:</strong> registra cada transacción con soporte y trazabilidad.</li>
                                 <li><strong>Pagos:</strong> programa y ejecuta pagos con control de estado.</li>
-                                <li><strong>Conciliación:</strong> compara operaciones registradas contra cuentas bancarias.</li>
+                                <li><strong>Estado de Cuenta:</strong> compara operaciones registradas contra cuentas bancarias.</li>
                                 <li><strong>Flujo:</strong> consulta comportamiento de efectivo para decisiones diarias.</li>
                             </ul>
                         </div>
